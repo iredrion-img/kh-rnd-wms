@@ -20,8 +20,8 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
 
     const menuItems = [
         { id: 'dashboard', label: '대시보드', icon: LayoutDashboard },
+        { id: 'weekly-meeting', label: '주간공정회의', icon: Users },
         { id: 'timesheet', label: '업무 기록', icon: Clock },
-        // Removed 'team' and 'reports' as requested
     ];
 
 

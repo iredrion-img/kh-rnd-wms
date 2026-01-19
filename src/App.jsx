@@ -3,6 +3,7 @@ import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Timesheet from './pages/Timesheet';
 import Login from './pages/Login';
+import WeeklyMeeting from './pages/WeeklyMeeting';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -142,6 +143,8 @@ function App() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />;
+      case 'weekly-meeting':
+        return <WeeklyMeeting />;
       case 'timesheet':
         return <Timesheet currentUser={currentUser} />;
       default:

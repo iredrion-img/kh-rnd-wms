@@ -1,0 +1,48 @@
+@echo off
+cd /d "%~dp0"
+echo ====================================================
+echo      Kunhwa WMS - Client Setup (Final Fix)
+echo ====================================================
+echo.
+
+set "PSFile=%TEMP%\setup_wms_v7.ps1"
+if exist "%PSFile%" del "%PSFile%"
+
+echo $url = 'https://jesenia-indiscrete-laraine.ngrok-free.dev' > "%PSFile%"
+echo $iconPath = Join-Path $env:USERPROFILE 'Kunhwa_WMS_Icon.ico' >> "%PSFile%"
+echo. >> "%PSFile%"
+echo Write-Host "Connecting to Server to download icon..." >> "%PSFile%"
+echo try { >> "%PSFile%"
+echo     # CORE FIX: Add header to bypass Ngrok warning page >> "%PSFile%"
+echo     $p = @{'ngrok-skip-browser-warning'='true'} >> "%PSFile%"
+echo     Invoke-WebRequest -Uri "$url/favicon.ico" -OutFile $iconPath -Headers $p -TimeoutSec 5 -ErrorAction Stop >> "%PSFile%"
+echo     Write-Host " [OK] Icon Downloaded (Valid Image)." -ForegroundColor Green >> "%PSFile%"
+echo } catch { >> "%PSFile%"
+echo     Write-Host " [FAILED] Could not download Icon." -ForegroundColor Red >> "%PSFile%"
+echo     $iconPath = '' >> "%PSFile%"
+echo } >> "%PSFile%"
+echo. >> "%PSFile%"
+echo $content = "[InternetShortcut]`r`nURL=$url" >> "%PSFile%"
+echo if ($iconPath) { $content += "`r`nIconFile=$iconPath`r`nIconIndex=0" } >> "%PSFile%"
+echo. >> "%PSFile%"
+echo $desktop = [Environment]::GetFolderPath('Desktop') >> "%PSFile%"
+echo $target = Join-Path $desktop 'Kunhwa WMS.url' >> "%PSFile%"
+echo. >> "%PSFile%"
+echo try { >> "%PSFile%"
+echo     Set-Content -Path $target -Value $content -Force >> "%PSFile%"
+echo     Write-Host "[Success] Shortcut created on Desktop: $target" -ForegroundColor Green >> "%PSFile%"
+echo } catch { >> "%PSFile%"
+echo     $current = Get-Location >> "%PSFile%"
+echo     $targetCurrent = Join-Path $current 'Kunhwa WMS.url' >> "%PSFile%"
+echo     Set-Content -Path $targetCurrent -Value $content -Force >> "%PSFile%"
+echo     Write-Host "[Success] Backup shortcut created in: $targetCurrent" -ForegroundColor Green >> "%PSFile%"
+echo } >> "%PSFile%"
+echo. >> "%PSFile%"
+echo Write-Host 'Refreshing Icon Cache...' >> "%PSFile%"
+echo ie4uinit.exe -show >> "%PSFile%"
+echo. >> "%PSFile%"
+echo Write-Host 'Press Enter to exit...' >> "%PSFile%"
+echo Read-Host >> "%PSFile%"
+
+powershell -NoProfile -ExecutionPolicy Bypass -File "%PSFile%"
+if exist "%PSFile%" del "%PSFile%"
