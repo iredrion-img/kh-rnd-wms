@@ -155,7 +155,11 @@ const readUsers = () => {
     if (!fs.existsSync(USERS_FILE)) return [];
     try {
         const content = fs.readFileSync(USERS_FILE, 'utf8');
-        return parse(content, { columns: true, skip_empty_lines: true });
+        return parse(content, {
+            columns: true,
+            skip_empty_lines: true,
+            trim: true // Critical: Trim whitespace from CSV values
+        });
     } catch (e) {
         return [];
     }
@@ -194,7 +198,11 @@ app.post('/api/login', (req, res) => {
 // POST: Add new user
 app.post('/api/users', (req, res) => {
     try {
-        const { name, department, password } = req.body;
+        let { name, department, password } = req.body;
+
+        // Normalize input
+        name = name.trim();
+        department = department.trim();
 
         // Check for duplicates
         const users = readUsers();

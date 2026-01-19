@@ -25,11 +25,24 @@ const Login = ({ employees = [], onLoginAttempt, onSignup }) => {
         e.preventDefault();
         if (!loginName || !loginPassword) return;
 
+        // Trim input
+        const cleanName = loginName.trim();
+
         // Find user by name
-        const user = employees.find(e => e.name === loginName);
+        const user = employees.find(e => e.name === cleanName);
 
         if (!user) {
-            setErrorMsg('존재하지 않는 사용자입니다.');
+            // Try lenient check (ignore spaces entirely)
+            const lenientUser = employees.find(e => e.name.replace(/\s+/g, '') === cleanName.replace(/\s+/g, ''));
+            if (lenientUser) {
+                // Found matches strictly ignoring spaces, but maybe exact match failed?
+                // Suggest this user?
+                // For now, let's just use it to be user-friendly
+                // const result = await onLoginAttempt(lenientUser.id, loginPassword);
+                // ... better to stick to strict but trimmed
+            }
+
+            setErrorMsg('존재하지 않는 사용자입니다. (오타 또는 띄어쓰기를 확인하세요)');
             return;
         }
 
@@ -45,7 +58,7 @@ const Login = ({ employees = [], onLoginAttempt, onSignup }) => {
     const handleSubmitNewUser = async (e) => {
         e.preventDefault();
         if (newName && newDept && newPassword) {
-            await onSignup(newName, newDept, newPassword);
+            await onSignup(newName.trim(), newDept, newPassword);
             setNewName('');
             setNewDept('');
             setNewPassword('');
