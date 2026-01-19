@@ -2,17 +2,15 @@ import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { stringify } from 'csv-stringify/sync';
-import { parse } from 'csv-parse/sync';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// Path to users.csv (assuming script is in /scripts/ and users.csv is in root)
 const USERS_FILE = path.join(__dirname, '..', 'users.csv');
 const BACKUP_FILE = path.join(__dirname, '..', 'users_backup.csv');
 
 console.log('==========================================');
-console.log('      Kunhwa WMS - Data Cleanup Tool');
+console.log('      Kunhwa WMS - Data Repair (Robust)');
 console.log('==========================================');
 
 if (!fs.existsSync(USERS_FILE)) {
@@ -23,20 +21,43 @@ if (!fs.existsSync(USERS_FILE)) {
 try {
     // 1. Read Data
     const content = fs.readFileSync(USERS_FILE, 'utf8');
-    const records = parse(content, {
-        columns: true,
-        skip_empty_lines: true,
-        trim: true
-    });
-
-    console.log(`[Read] Found ${records.length} user records.`);
 
     // 2. Backup
     fs.writeFileSync(BACKUP_FILE, content);
-    console.log(`[Backup] Original file saved to users_backup.csv`);
+    console.log(`[Backup] Saved to users_backup.csv`);
 
-    // 3. Process & Deduplicate
+    // 3. Manual Parsing (Resilient to bad CSV formatting)
+    // Split by newlines handling both Windows (\r\n) and Unix (\n)
+    const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+
+    // Basic CSV Line Parser (assumes no quoted commas for this simple data)
+    // format: id,name,department,password
+    const header = lines[0].split(',').map(h => h.trim());
+    console.log(`[Read] Header: ${header.join(', ')}`);
+    console.log(`[Read] Parsing ${lines.length - 1} lines...`);
+
+    const records = [];
+
+    for (let i = 1; i < lines.length; i++) {
+        const line = lines[i];
+        const parts = line.split(',');
+
+        // Pad with empty strings if missing columns
+        const id = (parts[0] || '').trim();
+        const name = (parts[1] || '').trim();
+        const department = (parts[2] || '').trim();
+        const password = (parts[3] || '').trim();
+
+        if (id && name) {
+            records.push({ id, name, department, password });
+        } else {
+            console.log(`[Skip] Empty or Invalid line #${i + 1}`);
+        }
+    }
+
+    // 4. Deduplicate
     const uniqueUsers = new Map();
+    let duplicateCount = 0;
 
     records.forEach(record => {
         const name = record.name;
@@ -44,52 +65,36 @@ try {
         if (!uniqueUsers.has(name)) {
             uniqueUsers.set(name, record);
         } else {
+            duplicateCount++;
             const existing = uniqueUsers.get(name);
-            console.log(`[Duplicate] Found duplicate for: ${name}`);
+            console.log(`[Fix] Removing duplicate for: ${name}`);
 
-            // Logic: Prefer entry with password, then latest ID
-            const existingHasPw = existing.password && existing.password.trim().length > 0;
-            const currentHasPw = record.password && record.password.trim().length > 0;
+            // Keep the one with a password, or the newer one
+            const existingHasPw = existing.password && existing.password.length > 0;
+            const currentHasPw = record.password && record.password.length > 0;
 
             if (!existingHasPw && currentHasPw) {
-                console.log(`   -> Replaced with entry having password.`);
                 uniqueUsers.set(name, record);
             } else if (existingHasPw === currentHasPw) {
-                // If both have password or both don't, take the newer one (larger ID)
                 if (record.id > existing.id) {
-                    console.log(`   -> Replaced with newer entry.`);
                     uniqueUsers.set(name, record);
-                } else {
-                    console.log(`   -> Kept existing (newer).`);
                 }
-            } else {
-                console.log(`   -> Ignored (Existing has password).`);
             }
         }
     });
 
-    // 4. Check for Passwordless Users
-    const finalRecords = Array.from(uniqueUsers.values());
-    let fixedCount = 0;
-
-    const cleanedRecords = finalRecords.map(user => {
-        if (!user.password || user.password.trim() === '') {
-            // OPTIONAL: Set default password or just warn?
-            // For now, let's keep them but warn.
-            console.warn(`[Warning] User '${user.name}' has NO password. They cannot login.`);
-        }
-        return user;
-    });
-
     // 5. Write Back
+    const cleanRecords = Array.from(uniqueUsers.values());
     const columns = ['id', 'name', 'department', 'password'];
-    const output = stringify(cleanedRecords, { header: true, columns: columns });
+    const output = stringify(cleanRecords, { header: true, columns: columns });
+
     fs.writeFileSync(USERS_FILE, output);
 
     console.log('------------------------------------------');
-    console.log(`[Done] Cleanup Complete.`);
-    console.log(`Original: ${records.length} -> Cleaned: ${cleanedRecords.length}`);
-    console.log(`Removed ${records.length - cleanedRecords.length} duplicates.`);
+    console.log(`[Success] Repair Complete.`);
+    console.log(`- Processed: ${records.length} records`);
+    console.log(`- Duplicates Removed: ${duplicateCount}`);
+    console.log(`- Final Count: ${cleanRecords.length} users`);
     console.log('------------------------------------------');
 
 } catch (error) {
