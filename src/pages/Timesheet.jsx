@@ -113,6 +113,7 @@ const Timesheet = ({ currentUser }) => {
             const dayData = {
                 name: format(dayDate, 'EEE', { locale: ko }),
                 date: format(dayDate, 'M/d'),
+                label: `${format(dayDate, 'M/d')} (${format(dayDate, 'EEE', { locale: ko })})`,
                 total: 0
             };
 
@@ -319,7 +320,7 @@ const Timesheet = ({ currentUser }) => {
                         <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={weeklyChartData} margin={{ bottom: 0 }}>
                                 <XAxis
-                                    dataKey="date"
+                                    dataKey="label"
                                     axisLine={false}
                                     tickLine={false}
                                     tick={{ fontSize: 10, fill: '#9ca3af' }}
