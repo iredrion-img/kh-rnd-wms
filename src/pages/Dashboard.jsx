@@ -589,9 +589,9 @@ const Dashboard = () => {
                         <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10">
                             <tr>
                                 <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">구분</th>
-                                <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">총 시간</th>
+                                <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10 w-[12%]">총 시간</th>
                                 {processedData.CATEGORIES.map(cat => (
-                                    <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm whitespace-nowrap border-r border-neutral/10 last:border-r-0" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
+                                    <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm whitespace-nowrap border-r border-neutral/10 last:border-r-0 w-[12%]" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
                                         {cat}
                                     </th>
                                 ))}
@@ -695,9 +695,9 @@ const Dashboard = () => {
                                     <tr>
                                         <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">직원명</th>
                                         <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">소속</th>
-                                        <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">총 시간</th>
+                                        <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10 w-[12%]">총 시간</th>
                                         {processedData.CATEGORIES.map(cat => (
-                                            <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm bg-gray-50 whitespace-nowrap border-r border-neutral/10 last:border-r-0" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
+                                            <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm bg-gray-50 whitespace-nowrap border-r border-neutral/10 last:border-r-0 w-[12%]" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
                                                 {cat}
                                             </th>
                                         ))}
