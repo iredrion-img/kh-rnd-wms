@@ -37,6 +37,7 @@ const Dashboard = () => {
     const [showOvertimeModal, setShowOvertimeModal] = useState(false);
     const [viewMode, setViewMode] = useState('hours'); // 'hours' | 'percent' specifically for monthly view
     const [showStaffDetail, setShowStaffDetail] = useState(false);
+    const [filterDept, setFilterDept] = useState('전체');
 
     // Fetch Data on Mount
     useEffect(() => {
@@ -577,7 +578,7 @@ const Dashboard = () => {
                 <div className="p-6 border-b border-neutral/10 flex justify-between items-center">
                     <h3 className="text-lg font-bold text-dark">팀별 업무 현황 (항목별 비중 %)</h3>
                     <button
-                        onClick={() => setShowStaffDetail(true)}
+                        onClick={() => { setShowStaffDetail(true); setFilterDept('전체'); }}
                         className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
                     >
                         상세 보기
@@ -661,15 +662,34 @@ const Dashboard = () => {
             {showStaffDetail && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
                     <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900">팀원별 업무 상세 현황</h3>
-                                <p className="text-sm text-gray-500 mt-1">{formatDateLabel()}</p>
+                        <div className="p-6 border-b border-gray-100 flex flex-col gap-4 bg-gray-50/50">
+                            <div className="flex justify-between items-center">
+                                <div>
+                                    <h3 className="text-xl font-bold text-gray-900">팀원별 업무 상세 현황</h3>
+                                    <p className="text-sm text-gray-500 mt-1">{formatDateLabel()}</p>
+                                </div>
+                                <button onClick={() => setShowStaffDetail(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                </button>
                             </div>
-                            <button onClick={() => setShowStaffDetail(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                            </button>
+
+                            {/* Department Tabs */}
+                            <div className="flex flex-wrap gap-2">
+                                {['전체', ...processedData.departmentRows.map(d => d.name)].map((dept) => (
+                                    <button
+                                        key={dept}
+                                        onClick={() => setFilterDept(dept)}
+                                        className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${filterDept === dept
+                                                ? 'bg-primary text-white shadow-sm'
+                                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                            }`}
+                                    >
+                                        {dept}
+                                    </button>
+                                ))}
+                            </div>
                         </div>
+
                         <div className="p-0 overflow-y-auto">
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10 sticky top-0 z-10">
@@ -685,24 +705,26 @@ const Dashboard = () => {
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-neutral/10">
-                                    {processedData.staff.map((item, i) => (
-                                        <tr key={i} className="hover:bg-gray-50/50 transition-colors">
-                                            <td className="px-6 py-4 font-medium text-dark">{item.name}</td>
-                                            <td className="px-6 py-4 text-gray-500 font-medium">{item.department}</td>
-                                            <td className="px-6 py-4 text-right font-bold text-dark">{item.hours}h</td>
-                                            {processedData.CATEGORIES.map(cat => (
-                                                <td key={cat} className="px-4 py-4 text-center">
-                                                    {item[cat] > 0 ? (
-                                                        <span className={`font-medium ${item[cat] >= 50 ? 'text-dark' : 'text-gray-600'}`}>
-                                                            {item[cat]}%
-                                                        </span>
-                                                    ) : (
-                                                        <span className="text-gray-200">-</span>
-                                                    )}
-                                                </td>
-                                            ))}
-                                        </tr>
-                                    ))}
+                                    {processedData.staff
+                                        .filter(item => filterDept === '전체' || item.department === filterDept)
+                                        .map((item, i) => (
+                                            <tr key={i} className="hover:bg-gray-50/50 transition-colors">
+                                                <td className="px-6 py-4 font-medium text-dark">{item.name}</td>
+                                                <td className="px-6 py-4 text-gray-500 font-medium">{item.department}</td>
+                                                <td className="px-6 py-4 text-right font-bold text-dark">{item.hours}h</td>
+                                                {processedData.CATEGORIES.map(cat => (
+                                                    <td key={cat} className="px-4 py-4 text-center">
+                                                        {item[cat] > 0 ? (
+                                                            <span className={`font-medium ${item[cat] >= 50 ? 'text-dark' : 'text-gray-600'}`}>
+                                                                {item[cat]}%
+                                                            </span>
+                                                        ) : (
+                                                            <span className="text-gray-200">-</span>
+                                                        )}
+                                                    </td>
+                                                ))}
+                                            </tr>
+                                        ))}
                                 </tbody>
                             </table>
                         </div>
