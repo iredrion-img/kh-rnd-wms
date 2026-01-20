@@ -586,26 +586,32 @@ const Dashboard = () => {
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
-                        <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10">
+                        <thead className="bg-slate-800 text-white font-medium">
                             <tr>
-                                <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">구분</th>
-                                <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10 w-[12%]">총 시간</th>
+                                <th className="px-6 py-4 whitespace-nowrap text-center text-gray-300 font-medium border-r border-slate-700/50">구분</th>
+                                <th className="px-6 py-4 whitespace-nowrap text-center text-gray-300 font-medium border-r border-slate-700/50 w-[12%]">총 시간</th>
                                 {processedData.CATEGORIES.map(cat => (
-                                    <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm whitespace-nowrap border-r border-neutral/10 last:border-r-0 w-[12%]" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
+                                    <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm whitespace-nowrap border-r border-slate-700/50 last:border-r-0 w-[12%] font-bold text-white" style={{ borderBottom: `3px solid ${processedData.CATEGORY_COLORS[cat]}` }}>
                                         {cat}
                                     </th>
                                 ))}
                             </tr>
                         </thead>
-                        <tbody className="divide-y divide-neutral/10">
+                        <tbody className="divide-y divide-gray-100">
                             {/* Department Rows */}
                             {processedData.departmentRows && processedData.departmentRows.map(dept => (
-                                <tr key={dept.name} className="bg-white transition-colors hover:bg-gray-50/50">
-                                    <td className="px-6 py-4 font-bold text-primary whitespace-nowrap text-center border-r border-neutral/10">{dept.name}</td>
-                                    <td className="px-6 py-4 font-bold text-dark whitespace-nowrap text-center border-r border-neutral/10">{dept.hours.toLocaleString()}h</td>
+                                <tr key={dept.name} className="bg-white transition-colors hover:bg-slate-50">
+                                    <td className="px-6 py-4 font-bold text-gray-800 whitespace-nowrap text-center border-r border-gray-100 text-sm">{dept.name}</td>
+                                    <td className="px-6 py-4 font-bold text-gray-800 whitespace-nowrap text-center border-r border-gray-100 text-sm">{dept.hours.toLocaleString()}h</td>
                                     {processedData.CATEGORIES.map(cat => (
-                                        <td key={cat} className="px-4 py-4 text-center border-r border-neutral/10 last:border-r-0">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${dept[cat] > 0 ? 'bg-primary/5 text-primary font-bold' : 'text-gray-300'}`}>
+                                        <td key={cat} className="px-4 py-4 text-center border-r border-gray-100 last:border-r-0">
+                                            <span
+                                                className={`px-2 py-1 rounded-md text-xs font-bold block w-full transition-all ${dept[cat] > 0 ? '' : 'text-gray-300 bg-gray-50'}`}
+                                                style={dept[cat] > 0 ? {
+                                                    backgroundColor: `${processedData.CATEGORY_COLORS[cat]}15`,
+                                                    color: processedData.CATEGORY_COLORS[cat]
+                                                } : {}}
+                                            >
                                                 {dept[cat] > 0 ? `${dept[cat]}%` : '-'}
                                             </span>
                                         </td>
@@ -618,122 +624,128 @@ const Dashboard = () => {
             </div>
 
             {/* Overtime Details Modal */}
-            {showOvertimeModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    {/* ... (Existing Overtime Modal Content - Kept generic for brevity, assumed unchanged logic but just ensuring structure) ... */}
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
-                            <div>
-                                <h3 className="text-xl font-bold text-gray-900">초과 근무 상세 분석</h3>
-                                <p className="text-sm text-gray-500 mt-1">{formatDateLabel()}</p>
-                            </div>
-                            <button onClick={() => setShowOvertimeModal(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                            </button>
-                        </div>
-                        <div className="p-6 overflow-y-auto">
-                            {processedData.overtimeList.length > 0 ? (
-                                <div className="space-y-8">
-                                    <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
-                                        <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center"><Users size={16} className="mr-2 text-orange-500" />초과 근무 상위 5명</h4>
-                                        <div className="h-48"><ResponsiveContainer width="100%" height="100%"><BarChart data={processedData.overtimeList.slice(0, 5)} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}><XAxis type="number" hide /><YAxis dataKey="name" type="category" width={60} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} /><Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} /><Bar dataKey="hours" fill="#f97316" radius={[0, 4, 4, 0]} barSize={24} /></BarChart></ResponsiveContainer></div>
-                                    </div>
-                                    <div>
-                                        <h4 className="text-sm font-semibold text-gray-700 mb-4">전체 명단</h4>
-                                        <div className="border rounded-lg overflow-hidden">
-                                            <table className="w-full text-sm text-left">
-                                                <thead className="bg-gray-50 text-gray-500"><tr><th className="px-4 py-3 font-medium">순위</th><th className="px-4 py-3 font-medium">이름</th><th className="px-4 py-3 font-medium text-right">초과 시간</th></tr></thead>
-                                                <tbody className="divide-y divide-gray-100">{processedData.overtimeList.map((item, idx) => (<tr key={idx} className="hover:bg-gray-50 transition-colors"><td className="px-4 py-3 text-gray-500 w-16">{idx + 1}</td><td className="px-4 py-3 font-medium text-gray-900">{item.name}</td><td className="px-4 py-3 text-right font-bold text-orange-600">+{item.hours}h</td></tr>))}</tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                </div>
-                            ) : (<div className="text-center py-12"><div className="bg-green-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><Clock className="text-green-600" size={32} /></div><h3 className="text-lg font-medium text-gray-900">초과 근무자가 없습니다</h3><p className="text-gray-500 mt-2">선택한 기간 동안 모든 직원이 정규 시간 내에 업무를 완료했습니다.</p></div>)}
-                        </div>
-                        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
-                            <button onClick={() => setShowOvertimeModal(false)} className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors shadow-sm">닫기</button>
-                        </div>
-                    </div>
-                </div>
-            )}
-
-            {/* Staff Details Modal (New) */}
-            {showStaffDetail && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
-                    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
-                        <div className="p-6 border-b border-gray-100 flex flex-col gap-4 bg-gray-50/50">
-                            <div className="flex justify-between items-center">
+            {
+                showOvertimeModal && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        {/* ... (Existing Overtime Modal Content - Kept generic for brevity, assumed unchanged logic but just ensuring structure) ... */}
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+                            <div className="p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50/50">
                                 <div>
-                                    <h3 className="text-xl font-bold text-gray-900">팀원별 업무 상세 현황</h3>
+                                    <h3 className="text-xl font-bold text-gray-900">초과 근무 상세 분석</h3>
                                     <p className="text-sm text-gray-500 mt-1">{formatDateLabel()}</p>
                                 </div>
-                                <button onClick={() => setShowStaffDetail(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+                                <button onClick={() => setShowOvertimeModal(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
                                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
                                 </button>
                             </div>
-
-                            {/* Department Tabs */}
-                            <div className="flex flex-wrap gap-2">
-                                {['전체', ...processedData.departmentRows.map(d => d.name)].map((dept) => (
-                                    <button
-                                        key={dept}
-                                        onClick={() => setFilterDept(dept)}
-                                        className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${filterDept === dept
-                                            ? 'bg-primary text-white shadow-sm'
-                                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
-                                            }`}
-                                    >
-                                        {dept}
-                                    </button>
-                                ))}
+                            <div className="p-6 overflow-y-auto">
+                                {processedData.overtimeList.length > 0 ? (
+                                    <div className="space-y-8">
+                                        <div className="bg-white rounded-xl border border-gray-100 p-4 shadow-sm">
+                                            <h4 className="text-sm font-semibold text-gray-700 mb-4 flex items-center"><Users size={16} className="mr-2 text-orange-500" />초과 근무 상위 5명</h4>
+                                            <div className="h-48"><ResponsiveContainer width="100%" height="100%"><BarChart data={processedData.overtimeList.slice(0, 5)} layout="vertical" margin={{ top: 0, right: 30, left: 40, bottom: 0 }}><XAxis type="number" hide /><YAxis dataKey="name" type="category" width={60} tick={{ fontSize: 12 }} axisLine={false} tickLine={false} /><Tooltip cursor={{ fill: '#f9fafb' }} contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }} /><Bar dataKey="hours" fill="#f97316" radius={[0, 4, 4, 0]} barSize={24} /></BarChart></ResponsiveContainer></div>
+                                        </div>
+                                        <div>
+                                            <h4 className="text-sm font-semibold text-gray-700 mb-4">전체 명단</h4>
+                                            <div className="border rounded-lg overflow-hidden">
+                                                <table className="w-full text-sm text-left">
+                                                    <thead className="bg-gray-50 text-gray-500"><tr><th className="px-4 py-3 font-medium">순위</th><th className="px-4 py-3 font-medium">이름</th><th className="px-4 py-3 font-medium text-right">초과 시간</th></tr></thead>
+                                                    <tbody className="divide-y divide-gray-100">{processedData.overtimeList.map((item, idx) => (<tr key={idx} className="hover:bg-gray-50 transition-colors"><td className="px-4 py-3 text-gray-500 w-16">{idx + 1}</td><td className="px-4 py-3 font-medium text-gray-900">{item.name}</td><td className="px-4 py-3 text-right font-bold text-orange-600">+{item.hours}h</td></tr>))}</tbody>
+                                                </table>
+                                            </div>
+                                        </div>
+                                    </div>
+                                ) : (<div className="text-center py-12"><div className="bg-green-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"><Clock className="text-green-600" size={32} /></div><h3 className="text-lg font-medium text-gray-900">초과 근무자가 없습니다</h3><p className="text-gray-500 mt-2">선택한 기간 동안 모든 직원이 정규 시간 내에 업무를 완료했습니다.</p></div>)}
+                            </div>
+                            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                                <button onClick={() => setShowOvertimeModal(false)} className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors shadow-sm">닫기</button>
                             </div>
                         </div>
+                    </div>
+                )
+            }
 
-                        <div className="p-0 overflow-y-auto">
-                            <table className="w-full text-sm text-left">
-                                <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10 sticky top-0 z-10">
-                                    <tr>
-                                        <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">직원명</th>
-                                        <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">소속</th>
-                                        <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10 w-[12%]">총 시간</th>
-                                        {processedData.CATEGORIES.map(cat => (
-                                            <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm bg-gray-50 whitespace-nowrap border-r border-neutral/10 last:border-r-0 w-[12%]" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
-                                                {cat}
-                                            </th>
-                                        ))}
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-neutral/10">
-                                    {processedData.staff
-                                        .filter(item => filterDept === '전체' || item.department === filterDept)
-                                        .map((item, i) => (
-                                            <tr key={i} className="hover:bg-gray-50/50 transition-colors">
-                                                <td className="px-6 py-4 font-medium text-dark whitespace-nowrap text-center border-r border-neutral/10">{item.name}</td>
-                                                <td className="px-6 py-4 text-gray-500 font-medium whitespace-nowrap text-center border-r border-neutral/10">{item.department}</td>
-                                                <td className="px-6 py-4 font-bold text-dark whitespace-nowrap text-center border-r border-neutral/10">{item.hours}h</td>
-                                                {processedData.CATEGORIES.map(cat => (
-                                                    <td key={cat} className="px-4 py-4 text-center border-r border-neutral/10 last:border-r-0">
-                                                        {item[cat] > 0 ? (
-                                                            <span className={`font-medium ${item[cat] >= 50 ? 'text-dark' : 'text-gray-600'}`}>
-                                                                {item[cat]}%
+            {/* Staff Details Modal (New) */}
+            {
+                showStaffDetail && (
+                    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm">
+                        <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in duration-200">
+                            <div className="p-6 border-b border-gray-100 flex flex-col gap-4 bg-gray-50/50">
+                                <div className="flex justify-between items-center">
+                                    <div>
+                                        <h3 className="text-xl font-bold text-gray-900">팀원별 업무 상세 현황</h3>
+                                        <p className="text-sm text-gray-500 mt-1">{formatDateLabel()}</p>
+                                    </div>
+                                    <button onClick={() => setShowStaffDetail(false)} className="p-2 hover:bg-gray-100 rounded-full text-gray-500 transition-colors">
+                                        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                                    </button>
+                                </div>
+
+                                {/* Department Tabs */}
+                                <div className="flex flex-wrap gap-2">
+                                    {['전체', ...processedData.departmentRows.map(d => d.name)].map((dept) => (
+                                        <button
+                                            key={dept}
+                                            onClick={() => setFilterDept(dept)}
+                                            className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${filterDept === dept
+                                                ? 'bg-primary text-white shadow-sm'
+                                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                                }`}
+                                        >
+                                            {dept}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+
+                            <div className="p-0 overflow-y-auto">
+                                <table className="w-full text-sm text-left">
+                                    <thead className="bg-slate-800 text-white font-medium sticky top-0 z-10 shadow-md">
+                                        <tr>
+                                            <th className="px-6 py-4 whitespace-nowrap text-center text-gray-300 font-medium border-r border-slate-700/50">직원명</th>
+                                            <th className="px-6 py-4 whitespace-nowrap text-center text-gray-300 font-medium border-r border-slate-700/50">소속</th>
+                                            <th className="px-6 py-4 whitespace-nowrap text-center text-gray-300 font-medium border-r border-slate-700/50 w-[12%]">총 시간</th>
+                                            {processedData.CATEGORIES.map(cat => (
+                                                <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm whitespace-nowrap border-r border-slate-700/50 last:border-r-0 w-[12%] font-bold text-white" style={{ borderBottom: `3px solid ${processedData.CATEGORY_COLORS[cat]}` }}>
+                                                    {cat}
+                                                </th>
+                                            ))}
+                                        </tr>
+                                    </thead>
+                                    <tbody className="divide-y divide-gray-100">
+                                        {processedData.staff
+                                            .filter(item => filterDept === '전체' || item.department === filterDept)
+                                            .map((item, i) => (
+                                                <tr key={i} className="hover:bg-slate-50 transition-colors">
+                                                    <td className="px-6 py-4 font-medium text-gray-800 whitespace-nowrap text-center border-r border-gray-100">{item.name}</td>
+                                                    <td className="px-6 py-4 text-gray-500 font-medium whitespace-nowrap text-center border-r border-gray-100">{item.department}</td>
+                                                    <td className="px-6 py-4 font-bold text-gray-800 whitespace-nowrap text-center border-r border-gray-100">{item.hours}h</td>
+                                                    {processedData.CATEGORIES.map(cat => (
+                                                        <td key={cat} className="px-4 py-4 text-center border-r border-gray-100 last:border-r-0">
+                                                            <span
+                                                                className={`px-2 py-1 rounded-md text-xs font-bold block w-full transition-all ${item[cat] > 0 ? '' : 'text-gray-300 bg-gray-50'}`}
+                                                                style={item[cat] > 0 ? {
+                                                                    backgroundColor: `${processedData.CATEGORY_COLORS[cat]}15`,
+                                                                    color: processedData.CATEGORY_COLORS[cat]
+                                                                } : {}}
+                                                            >
+                                                                {item[cat] > 0 ? `${item[cat]}%` : '-'}
                                                             </span>
-                                                        ) : (
-                                                            <span className="text-gray-200">-</span>
-                                                        )}
-                                                    </td>
-                                                ))}
-                                            </tr>
-                                        ))}
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
-                            <button onClick={() => setShowStaffDetail(false)} className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors shadow-sm">닫기</button>
+                                                        </td>
+                                                    ))}
+                                                </tr>
+                                            ))}
+                                    </tbody>
+                                </table>
+                            </div>
+                            <div className="p-4 border-t border-gray-100 bg-gray-50 flex justify-end">
+                                <button onClick={() => setShowStaffDetail(false)} className="px-4 py-2 bg-white border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors shadow-sm">닫기</button>
+                            </div>
                         </div>
                     </div>
-                </div>
-            )}
-        </div>
+                )
+            }
+        </div >
     );
 };
 
