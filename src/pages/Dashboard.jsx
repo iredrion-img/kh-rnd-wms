@@ -6,11 +6,11 @@ import { ko } from 'date-fns/locale';
 
 const CATEGORIES = ['AI', 'BIM', 'Digital Technology', 'Smart R&D', 'Etc'];
 const CATEGORY_COLORS = {
-    'AI': '#2563eb', // Blue
-    'BIM': '#059669', // Emerald
-    'Smart R&D': '#d97706', // Amber
-    'Digital Technology': '#7c3aed', // Violet
-    'Etc': '#9ca3af' // Gray
+    'AI': '#6366f1', // Indigo-500: Primary, Tech-focused
+    'BIM': '#0ea5e9', // Sky-500: Clean, Structural, Blue-ish Cyan
+    'Smart R&D': '#f59e0b', // Amber-500: Innovation, Bright but not harsh
+    'Digital Technology': '#ec4899', // Pink-500: Distinct, Modern
+    'Etc': '#94a3b8' // Slate-400: Neutral, unobtrusive
 };
 
 // Helper to map project names to categories
