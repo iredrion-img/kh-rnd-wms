@@ -588,10 +588,10 @@ const Dashboard = () => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10">
                             <tr>
-                                <th className="px-6 py-4 whitespace-nowrap">구분</th>
-                                <th className="px-6 py-4 text-right whitespace-nowrap">총 시간</th>
+                                <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">구분</th>
+                                <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">총 시간</th>
                                 {processedData.CATEGORIES.map(cat => (
-                                    <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm whitespace-nowrap" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
+                                    <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm whitespace-nowrap border-r border-neutral/10 last:border-r-0" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
                                         {cat}
                                     </th>
                                 ))}
@@ -601,10 +601,10 @@ const Dashboard = () => {
                             {/* Department Rows */}
                             {processedData.departmentRows && processedData.departmentRows.map(dept => (
                                 <tr key={dept.name} className="bg-white transition-colors hover:bg-gray-50/50">
-                                    <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{dept.name}</td>
-                                    <td className="px-6 py-4 text-right font-bold text-dark whitespace-nowrap">{dept.hours.toLocaleString()}h</td>
+                                    <td className="px-6 py-4 font-bold text-primary whitespace-nowrap text-center border-r border-neutral/10">{dept.name}</td>
+                                    <td className="px-6 py-4 font-bold text-dark whitespace-nowrap text-center border-r border-neutral/10">{dept.hours.toLocaleString()}h</td>
                                     {processedData.CATEGORIES.map(cat => (
-                                        <td key={cat} className="px-4 py-4 text-center">
+                                        <td key={cat} className="px-4 py-4 text-center border-r border-neutral/10 last:border-r-0">
                                             <span className={`px-2 py-1 rounded-full text-xs ${dept[cat] > 0 ? 'bg-primary/5 text-primary font-bold' : 'text-gray-300'}`}>
                                                 {dept[cat] > 0 ? `${dept[cat]}%` : '-'}
                                             </span>
@@ -693,11 +693,11 @@ const Dashboard = () => {
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10 sticky top-0 z-10">
                                     <tr>
-                                        <th className="px-6 py-4 whitespace-nowrap">직원명</th>
-                                        <th className="px-6 py-4 whitespace-nowrap">소속</th>
-                                        <th className="px-6 py-4 text-right whitespace-nowrap">총 시간</th>
+                                        <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">직원명</th>
+                                        <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">소속</th>
+                                        <th className="px-6 py-4 whitespace-nowrap text-center border-r border-neutral/10">총 시간</th>
                                         {processedData.CATEGORIES.map(cat => (
-                                            <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm bg-gray-50 whitespace-nowrap" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
+                                            <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm bg-gray-50 whitespace-nowrap border-r border-neutral/10 last:border-r-0" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
                                                 {cat}
                                             </th>
                                         ))}
@@ -708,11 +708,11 @@ const Dashboard = () => {
                                         .filter(item => filterDept === '전체' || item.department === filterDept)
                                         .map((item, i) => (
                                             <tr key={i} className="hover:bg-gray-50/50 transition-colors">
-                                                <td className="px-6 py-4 font-medium text-dark whitespace-nowrap">{item.name}</td>
-                                                <td className="px-6 py-4 text-gray-500 font-medium whitespace-nowrap">{item.department}</td>
-                                                <td className="px-6 py-4 text-right font-bold text-dark whitespace-nowrap">{item.hours}h</td>
+                                                <td className="px-6 py-4 font-medium text-dark whitespace-nowrap text-center border-r border-neutral/10">{item.name}</td>
+                                                <td className="px-6 py-4 text-gray-500 font-medium whitespace-nowrap text-center border-r border-neutral/10">{item.department}</td>
+                                                <td className="px-6 py-4 font-bold text-dark whitespace-nowrap text-center border-r border-neutral/10">{item.hours}h</td>
                                                 {processedData.CATEGORIES.map(cat => (
-                                                    <td key={cat} className="px-4 py-4 text-center">
+                                                    <td key={cat} className="px-4 py-4 text-center border-r border-neutral/10 last:border-r-0">
                                                         {item[cat] > 0 ? (
                                                             <span className={`font-medium ${item[cat] >= 50 ? 'text-dark' : 'text-gray-600'}`}>
                                                                 {item[cat]}%
