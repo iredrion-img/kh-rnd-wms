@@ -65,12 +65,12 @@ function App() {
   const handleLogin = (user) => setCurrentUser(user);
   const handleLogout = () => setCurrentUser(null);
 
-  const handleLoginAttempt = async (id, password) => {
+  const handleLoginAttempt = async (name, password) => {
     try {
       const res = await fetch('/api/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id, password })
+        body: JSON.stringify({ name, password })
       });
       const data = await res.json();
       if (res.ok && data.success) {

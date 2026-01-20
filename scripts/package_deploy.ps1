@@ -15,7 +15,7 @@ Copy-Item "C:\KH_RnD\Run_All.bat" -Destination $deployDir
 Copy-Item "C:\KH_RnD\Run_WMS.bat" -Destination $deployDir
 Copy-Item "C:\KH_RnD\server.js" -Destination $deployDir
 Copy-Item "C:\KH_RnD\package.json" -Destination $deployDir
-Copy-Item "C:\KH_RnD\database.csv" -Destination $deployDir
+Get-ChildItem "C:\KH_RnD\database_*.csv" | Copy-Item -Destination $deployDir
 if (Test-Path "C:\KH_RnD\users.csv") { Copy-Item "C:\KH_RnD\users.csv" -Destination $deployDir }
 
 # Copy Directories

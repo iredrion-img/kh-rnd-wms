@@ -23,31 +23,16 @@ const Login = ({ employees = [], onLoginAttempt, onSignup }) => {
 
     const handleLoginSubmit = async (e) => {
         e.preventDefault();
-        if (!loginName || !loginPassword) return;
+        const trimmedName = loginName.trim();
+        const trimmedPassword = loginPassword.trim();
 
-        // Trim input
-        const cleanName = loginName.trim();
-
-        // Find user by name
-        const user = employees.find(e => e.name === cleanName);
-
-        if (!user) {
-            // Try lenient check (ignore spaces entirely)
-            const lenientUser = employees.find(e => e.name.replace(/\s+/g, '') === cleanName.replace(/\s+/g, ''));
-            if (lenientUser) {
-                // Found matches strictly ignoring spaces, but maybe exact match failed?
-                // Suggest this user?
-                // For now, let's just use it to be user-friendly
-                // const result = await onLoginAttempt(lenientUser.id, loginPassword);
-                // ... better to stick to strict but trimmed
-            }
-
-            setErrorMsg('존재하지 않는 사용자입니다. (오타 또는 띄어쓰기를 확인하세요)');
+        if (!trimmedName || !trimmedPassword) {
+            setErrorMsg('이름과 비밀번호를 모두 입력해주세요.');
             return;
         }
 
         if (onLoginAttempt) {
-            const result = await onLoginAttempt(user.id, loginPassword);
+            const result = await onLoginAttempt(trimmedName, trimmedPassword);
             if (!result.success) {
                 setErrorMsg(result.message);
                 setLoginPassword('');

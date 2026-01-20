@@ -14,35 +14,62 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 3001; // HTTPS Port
-const DB_FILE = path.join(__dirname, 'database.csv');
+const PORT = 3001;
 
-app.use(cors());
-app.use(bodyParser.json());
-
-// --- Backup Service ---
+// --- CONFIG & PATHS ---
+const USERS_FILE = path.join(__dirname, 'users.csv');
+const USER_COLUMNS = ['id', 'name', 'department', 'password'];
 const BACKUP_DIR = path.join(__dirname, 'backups');
-if (!fs.existsSync(BACKUP_DIR)) {
-    fs.mkdirSync(BACKUP_DIR);
+
+const getDbFile = (year) => {
+    const y = year || new Date().getFullYear();
+    return path.join(__dirname, `database_${y}.csv`);
+};
+
+const DB_COLUMNS = ['employee', 'department', 'project_name', 'project_code', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'total', 'week_start'];
+
+// --- INITIALIZATION ---
+if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
+
+// Initialize current year DB if not exists
+const currentDb = getDbFile();
+if (!fs.existsSync(currentDb)) {
+    // Migration: Check for legacy database.csv
+    const legacyDb = path.join(__dirname, 'database.csv');
+    if (fs.existsSync(legacyDb)) {
+        console.log(`[Migration] Legacy database.csv found. Migrating to ${currentDb}...`);
+        fs.renameSync(legacyDb, currentDb);
+    } else {
+        fs.writeFileSync(currentDb, stringify([DB_COLUMNS]));
+    }
 }
 
+// Initialize Users DB if not exists
+if (!fs.existsSync(USERS_FILE)) {
+    fs.writeFileSync(USERS_FILE, stringify([USER_COLUMNS]));
+}
+
+// --- BACKUP LOGIC ---
 const performBackup = () => {
     try {
-        const timestamp = new Date().toISOString().slice(0, 7); // YYYY-MM
-        const filesToBackup = ['users.csv', 'database.csv'];
+        const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 10); // YYYY-MM-DD
+        console.log(`[Backup] Starting backup ${timestamp}...`);
 
-        console.log(`[Backup] Starting backup for ${timestamp}...`);
+        // Backup users
+        if (fs.existsSync(USERS_FILE)) {
+            fs.copyFileSync(USERS_FILE, path.join(BACKUP_DIR, `${timestamp}_users.csv`));
+        }
 
-        filesToBackup.forEach(file => {
-            const sourcePath = path.join(__dirname, file);
-            if (fs.existsSync(sourcePath)) {
-                const destPath = path.join(BACKUP_DIR, `${timestamp}_${file}`);
-                fs.copyFileSync(sourcePath, destPath);
-                console.log(`[Backup] Copied ${file} to ${destPath}`);
-            } else {
-                console.warn(`[Backup] Source file not found: ${file}`);
+        // Backup all database_*.csv files
+        const files = fs.readdirSync(__dirname);
+        files.forEach(file => {
+            if (file.startsWith('database_') && file.endsWith('.csv')) {
+                fs.copyFileSync(path.join(__dirname, file), path.join(BACKUP_DIR, `${timestamp}_${file}`));
             }
         });
+
+        // Update last backup marker
+        fs.writeFileSync(path.join(BACKUP_DIR, '.last_backup'), new Date().toISOString().slice(0, 7)); // YYYY-MM
         return true;
     } catch (error) {
         console.error('[Backup] Failed:', error);
@@ -50,69 +77,144 @@ const performBackup = () => {
     }
 };
 
-// Schedule: At 00:00 on day-of-month 1 (Monthly)
-cron.schedule('0 0 1 * *', () => {
-    console.log('[Scheduler] Running monthly backup...');
-    performBackup();
-});
+// Startup Check: Monthly Backup
+const checkStartupBackup = () => {
+    const markerFile = path.join(BACKUP_DIR, '.last_backup');
+    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
+    let lastMonth = '';
 
-// Manual Backup Endpoint (for testing/admin)
-app.post('/api/admin/backup', (req, res) => {
-    const success = performBackup();
-    if (success) res.json({ success: true, message: 'Backup completed' });
-    else res.status(500).json({ error: 'Backup failed' });
-});
-// ----------------------
+    if (fs.existsSync(markerFile)) {
+        lastMonth = fs.readFileSync(markerFile, 'utf8').trim();
+    }
 
-// Initialize DB if not exists
-if (!fs.existsSync(DB_FILE)) {
-    const columns = ['employee', 'department', 'project_name', 'project_code', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'total', 'week_start'];
-    fs.writeFileSync(DB_FILE, stringify([columns]));
-}
+    if (currentMonth !== lastMonth) {
+        console.log(`[Startup] New month detected (${currentMonth}). Running monthly backup...`);
+        performBackup();
+    } else {
+        console.log(`[Startup] Monthly backup already performed for ${currentMonth}.`);
+    }
+};
 
-// GET: Fetch all timesheets
-app.get('/api/timesheets', (req, res) => {
+checkStartupBackup();
+
+// --- MIDDLEWARE ---
+app.use(cors());
+app.use(bodyParser.json());
+
+// --- HELPERS ---
+const readCsvResilient = (filePath) => {
+    if (!fs.existsSync(filePath)) return [];
     try {
-        const fileContent = fs.readFileSync(DB_FILE, 'utf8');
-        const records = parse(fileContent, {
+        const content = fs.readFileSync(filePath, 'utf8');
+        // Robust line splitting
+        const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
+        if (lines.length <= 1) return []; // Header only or empty
+
+        return parse(content, {
             columns: true,
-            skip_empty_lines: true
+            skip_empty_lines: true,
+            trim: true,
+            relax_column_count: true
         });
-        res.json(records);
+    } catch (e) {
+        console.error(`[CSV Error] Failed to read ${filePath}:`, e);
+        return [];
+    }
+};
+
+// --- USER API ---
+app.post('/api/login', (req, res) => {
+    try {
+        const { name, password } = req.body;
+        if (!name || !password) return res.status(400).json({ error: '정보가 누락되었습니다.' });
+
+        const users = readCsvResilient(USERS_FILE);
+        const cleanInputName = name.trim().replace(/\s+/g, '');
+
+        // Match by name (lenient)
+        const user = users.find(u =>
+            u.name.trim().replace(/\s+/g, '') === cleanInputName &&
+            u.password.trim() === password.trim()
+        );
+
+        if (user) {
+            const { password, ...safeUser } = user;
+            res.json({ success: true, user: safeUser });
+        } else {
+            res.status(401).json({ success: false, message: '이름 또는 비밀번호가 일치하지 않습니다.' });
+        }
     } catch (error) {
-        res.status(500).json({ error: 'Failed to read database' });
+        res.status(500).json({ error: '로그인 도중 오류가 발생했습니다.' });
     }
 });
 
-// POST: Save timesheet entry
+app.post('/api/users', (req, res) => {
+    try {
+        let { name, department, password } = req.body;
+        name = name.trim();
+        department = department.trim();
+
+        const users = readCsvResilient(USERS_FILE);
+        if (users.some(u => u.name.trim().replace(/\s+/g, '') === name.replace(/\s+/g, ''))) {
+            return res.status(409).json({ success: false, message: '이미 존재하는 이름입니다.' });
+        }
+
+        const id = Date.now().toString();
+        const userRow = stringify([{ id, name, department, password }], { header: false, columns: USER_COLUMNS });
+        fs.appendFileSync(USERS_FILE, userRow);
+
+        res.json({ success: true, user: { id, name, department } });
+    } catch (error) {
+        res.status(500).json({ error: '사용자 추가 실패' });
+    }
+});
+
+app.get('/api/users', (req, res) => {
+    const users = readCsvResilient(USERS_FILE);
+    res.json(users.map(({ password, ...u }) => u));
+});
+
+// --- TIMESHEET API ---
+app.get('/api/timesheets', (req, res) => {
+    try {
+        // Load data from current and previous year potentially, but for now just all database_*.csv
+        const files = fs.readdirSync(__dirname).filter(f => f.startsWith('database_') && f.endsWith('.csv'));
+        let allRecords = [];
+
+        files.forEach(file => {
+            const records = readCsvResilient(path.join(__dirname, file));
+            allRecords = [...allRecords, ...records];
+        });
+
+        res.json(allRecords);
+    } catch (error) {
+        res.status(500).json({ error: '데이터 로드 실패' });
+    }
+});
+
 app.post('/api/timesheets', (req, res) => {
     try {
         const { rows, weekStart, employee, department } = req.body;
+        if (!weekStart) return res.status(400).json({ error: '날짜 정보가 없습니다.' });
 
-        // Read existing data
-        let existingRecords = [];
-        if (fs.existsSync(DB_FILE)) {
-            const fileContent = fs.readFileSync(DB_FILE, 'utf8');
-            existingRecords = parse(fileContent, {
-                columns: true,
-                skip_empty_lines: true,
-                trim: true
-            });
+        // Determine Year from weekStart (expected YYYY-MM-DD)
+        const year = weekStart.split('-')[0];
+        const dbFile = getDbFile(year);
+
+        if (!fs.existsSync(dbFile)) {
+            fs.writeFileSync(dbFile, stringify([DB_COLUMNS]));
         }
 
-        // Filter out records for this specific user and week
-        const initialCount = existingRecords.length;
+        let existingRecords = readCsvResilient(dbFile);
+
+        // Filter out old records for THIS USER and THIS WEEK in THIS YEAR'S FILE
         const filteredRecords = existingRecords.filter(record =>
             !(record.employee === employee && record.week_start === weekStart)
         );
-        const filteredCount = filteredRecords.length;
 
-        console.log(`[Save] Employee: ${employee}, Week: ${weekStart}`);
-        console.log(`[Save] Existing Records: ${initialCount}, After Filter: ${filteredCount} (Removed ${initialCount - filteredCount})`);
-
-        const recordsToSave = rows.map(row => ({
-            employee: employee || 'John Doe',
-            department: department || 'Engineering',
+        const newRecords = rows.map(row => ({
+            employee: employee,
+            department: department,
             project_name: row.project,
             project_code: row.code,
             mon: row.hours.mon,
@@ -126,172 +228,23 @@ app.post('/api/timesheets', (req, res) => {
             week_start: weekStart
         }));
 
-        // Combine and Write
-        const finalRecords = [...filteredRecords, ...recordsToSave];
-        const columns = ['employee', 'department', 'project_name', 'project_code', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'total', 'week_start'];
+        const finalRecords = [...filteredRecords, ...newRecords];
+        fs.writeFileSync(dbFile, stringify(finalRecords, { header: true, columns: DB_COLUMNS }));
 
-        const csvString = stringify(finalRecords, { header: true, columns: columns });
-        fs.writeFileSync(DB_FILE, csvString);
-
-        console.log(`Updated timesheet for ${employee} (Week: ${weekStart}). Total records: ${finalRecords.length}`);
-        res.json({ success: true, message: 'Saved successfully' });
+        res.json({ success: true, message: '저장되었습니다.' });
     } catch (error) {
         console.error(error);
-        res.status(500).json({ error: 'Failed to save data' });
+        res.status(500).json({ error: '저장 실패' });
     }
 });
 
-// START: User Management API
-const USERS_FILE = path.join(__dirname, 'users.csv');
-const USER_COLUMNS = ['id', 'name', 'department', 'password'];
-
-// Initialize Users DB if not exists
-if (!fs.existsSync(USERS_FILE)) {
-    fs.writeFileSync(USERS_FILE, stringify([USER_COLUMNS]));
-}
-
-// Helper to read users
-const readUsers = () => {
-    if (!fs.existsSync(USERS_FILE)) return [];
-    try {
-        const content = fs.readFileSync(USERS_FILE, 'utf8');
-        return parse(content, {
-            columns: true,
-            skip_empty_lines: true,
-            trim: true // Critical: Trim whitespace from CSV values
-        });
-    } catch (e) {
-        return [];
-    }
-};
-
-// GET: Fetch all users (Excluding password)
-app.get('/api/users', (req, res) => {
-    try {
-        const users = readUsers();
-        // Return users without password field
-        const publicUsers = users.map(({ password, ...user }) => user);
-        res.json(publicUsers);
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to read users' });
-    }
-});
-
-// POST: Login verify
-app.post('/api/login', (req, res) => {
-    try {
-        const { id, password } = req.body;
-        const users = readUsers();
-        const user = users.find(u => u.id === id);
-
-        if (user && user.password === password) {
-            const { password, ...userWithoutPassword } = user;
-            res.json({ success: true, user: userWithoutPassword });
-        } else {
-            res.status(401).json({ success: false, message: '비밀번호가 일치하지 않습니다.' });
-        }
-    } catch (error) {
-        res.status(500).json({ error: 'Login failed' });
-    }
-});
-
-// POST: Add new user
-app.post('/api/users', (req, res) => {
-    try {
-        let { name, department, password } = req.body;
-
-        // Normalize input
-        name = name.trim();
-        department = department.trim();
-
-        // Check for duplicates
-        const users = readUsers();
-        if (users.some(user => user.name === name)) {
-            return res.status(409).json({ success: false, message: '이미 존재하는 사용자 이름입니다.' });
-        }
-
-        const id = Date.now().toString(); // Simple ID generation
-
-        // Append to file
-        const userRow = stringify([{ id, name, department, password }], { header: false, columns: USER_COLUMNS });
-
-        // Check if file needs headers (e.g. was empty)
-        if (fs.existsSync(USERS_FILE) && fs.statSync(USERS_FILE).size > 0) {
-            fs.appendFileSync(USERS_FILE, userRow);
-        } else {
-            fs.writeFileSync(USERS_FILE, stringify([{ id, name, department, password }], { header: true, columns: USER_COLUMNS }));
-        }
-
-        res.json({ success: true, user: { id, name, department } }); // Do not return password
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to add user' });
-    }
-});
-
-// PUT: Update user
-app.put('/api/users/:id', (req, res) => {
-    try {
-        const { id } = req.params;
-        const { name, department } = req.body;
-        let users = readUsers();
-        let updated = false;
-
-        users = users.map(user => {
-            if (user.id === id) {
-                updated = true;
-                return { ...user, name, department };
-            }
-            return user;
-        });
-
-        if (!updated) return res.status(404).json({ error: 'User not found' });
-
-        // Rewrite file with explicit columns to preserve header if empty
-        const csvString = stringify(users, { header: true, columns: USER_COLUMNS });
-        fs.writeFileSync(USERS_FILE, csvString);
-
-        res.json({ success: true });
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Failed to update user' });
-    }
-});
-
-// DELETE: Delete user
-app.delete('/api/users/:id', (req, res) => {
-    try {
-        const { id } = req.params;
-        let users = readUsers();
-        const initialLength = users.length;
-        users = users.filter(user => user.id !== id);
-
-        if (users.length === initialLength) return res.status(404).json({ error: 'User not found' });
-
-        // Rewrite file with explicit columns to preserve header if empty
-        const csvString = stringify(users, { header: true, columns: USER_COLUMNS });
-        fs.writeFileSync(USERS_FILE, csvString);
-
-        res.json({ success: true });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to delete user' });
-    }
-});
-// END: User Management API
-
-// Serve static files from React app
+// --- STATIC & START ---
 const distPath = path.join(__dirname, 'dist');
 if (fs.existsSync(distPath)) {
     app.use(express.static(distPath));
-    // The "catchall" handler: for any request that doesn't match above, send back React's index.html file.
-    app.get(/(.*)/, (req, res) => {
-        res.sendFile(path.join(distPath, 'index.html'));
-    });
-} else {
-    // Fallback for dev mode
-    console.log('Running in API-only/Dev mode.');
+    app.get(/(.*)/, (req, res) => res.sendFile(path.join(distPath, 'index.html')));
 }
 
-// Start Server (HTTP only - ngrok will handle HTTPS)
 app.listen(PORT, '0.0.0.0', () => {
     console.log(`Server running on http://localhost:${PORT}`);
 });
