@@ -83,6 +83,9 @@ const Dashboard = () => {
 
     // Process and Aggregate Data
     const processedData = useMemo(() => {
+        // Debug Log
+        console.log(`[Dashboard] Raw: ${rawTimesheets.length}, Range: ${timeRange}, CurrentDate: ${format(currentDate, 'yyyy-MM-dd')}`);
+
         if (!rawTimesheets.length) return { project: [], staff: [], stats: [], overtimeList: [], areaChartData: [], heatmapData: [], CATEGORIES: [], CATEGORY_COLORS: {}, WEEKDAYS: [] };
 
         // 1. Filter Data by Time Range
@@ -572,7 +575,7 @@ const Dashboard = () => {
             {/* Team Summary Table (Main View) */}
             <div className="bg-surface rounded-xl shadow-sm border border-neutral/10 overflow-hidden">
                 <div className="p-6 border-b border-neutral/10 flex justify-between items-center">
-                    <h3 className="text-lg font-bold text-dark">팀 업무 현황 (항목별 비중 %)</h3>
+                    <h3 className="text-lg font-bold text-dark">팀별 업무 현황 (항목별 비중 %)</h3>
                     <button
                         onClick={() => setShowStaffDetail(true)}
                         className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"

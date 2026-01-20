@@ -118,9 +118,7 @@ const readCsvResilient = (filePath) => {
     if (!fs.existsSync(filePath)) return [];
     try {
         const content = fs.readFileSync(filePath, 'utf8');
-        // Robust line splitting
-        const lines = content.split(/\r?\n/).filter(line => line.trim() !== '');
-        if (lines.length <= 1) return []; // Header only or empty
+        if (!content.trim()) return []; // Empty file check
 
         return parse(content, {
             columns: true,
