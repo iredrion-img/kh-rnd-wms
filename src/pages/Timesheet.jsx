@@ -143,11 +143,8 @@ const Timesheet = ({ currentUser }) => {
                 if (response.ok) {
                     const allRecords = await response.json();
 
-                    // Filter for current user and current week
-                    const weekStart = format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-                    const userRecords = allRecords.filter(r =>
-                        r.employee === currentUser.name && r.week_start === weekStart
-                    );
+                    // Filter for current user (Load ALL history for Heatmap)
+                    const userRecords = allRecords.filter(r => r.employee === currentUser.name);
 
                     // Transform to dailyData map
                     const newDailyData = {};
