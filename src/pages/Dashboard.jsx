@@ -113,55 +113,56 @@ const Dashboard = () => {
             overtime: 0
         })); // Preserves CATEGORIES order (AI -> BIM -> ...)
 
-        // 3. Aggregate Staff (Sum total hours + Category Breakdown)
+        // 3. Aggregate Staff & Department
         const staffMap = {};
-        // Track Team Total for Category Ratio
-        const teamCategoryMap = {};
-        CATEGORIES.forEach(c => teamCategoryMap[c] = 0);
+        const departmentMap = {};
 
         filteredData.forEach(item => {
             const empName = item.employee || 'Unknown';
+            const deptName = item.department || '미소속';
             const category = getCategory(item.project_name);
             const hours = parseFloat(item.total || 0);
 
+            // Staff Aggregation
             if (!staffMap[empName]) {
-                staffMap[empName] = { total: 0 };
+                staffMap[empName] = { total: 0, department: deptName };
                 CATEGORIES.forEach(c => staffMap[empName][c] = 0);
             }
-
             staffMap[empName].total += hours;
             staffMap[empName][category] += hours;
 
-            // Update Team Totals
-            teamCategoryMap[category] += hours;
+            // Department Aggregation
+            if (!departmentMap[deptName]) {
+                departmentMap[deptName] = { total: 0 };
+                CATEGORIES.forEach(c => departmentMap[deptName][c] = 0);
+            }
+            departmentMap[deptName].total += hours;
+            departmentMap[deptName][category] += hours;
         });
 
-        // Convert to Array & Calculate Percentages
+        // Convert Staff Map to Array
         const staff = Object.entries(staffMap).map(([name, data]) => {
-            const person = { name, hours: data.total };
-
-            // Calculate % for each category
+            const person = { name, hours: data.total, department: data.department };
             CATEGORIES.forEach(cat => {
                 const catHours = data[cat];
                 const ratio = data.total > 0 ? (catHours / data.total) * 100 : 0;
-                person[cat] = Math.round(ratio); // Integer %
-                person[`${cat}_hours`] = catHours; // Keep raw hours just in case
+                person[cat] = Math.round(ratio);
+                person[`${cat}_hours`] = catHours;
             });
             return person;
-        }).sort((a, b) => b.hours - a.hours); // Descending Order
+        }).sort((a, b) => b.hours - a.hours);
 
-        // Team Total Calculation
-        const teamTotalTotal = Object.values(teamCategoryMap).reduce((sum, h) => sum + h, 0);
-        const teamTotalRow = {
-            name: 'TEAM TOTAL',
-            hours: teamTotalTotal
-        };
-        CATEGORIES.forEach(cat => {
-            const h = teamCategoryMap[cat];
-            const ratio = teamTotalTotal > 0 ? (h / teamTotalTotal) * 100 : 0;
-            teamTotalRow[cat] = Math.round(ratio);
-            teamTotalRow[`${cat}_hours`] = h;
-        });
+        // Convert Department Map to Array
+        const departmentRows = Object.entries(departmentMap).map(([name, data]) => {
+            const row = { name, hours: data.total };
+            CATEGORIES.forEach(cat => {
+                const catHours = data[cat];
+                const ratio = data.total > 0 ? (catHours / data.total) * 100 : 0;
+                row[cat] = Math.round(ratio);
+                row[`${cat}_hours`] = catHours;
+            });
+            return row;
+        }).sort((a, b) => b.hours - a.hours);
 
         // 4. Calculate Stats
         const totalHours = filteredData.reduce((sum, item) => sum + parseFloat(item.total || 0), 0);
@@ -311,7 +312,7 @@ const Dashboard = () => {
             if (val > maxHeatmapValue) maxHeatmapValue = val;
         });
 
-        return { project, staff, stats, overtimeList, areaChartData, heatmapData, maxHeatmapValue, CATEGORIES, CATEGORY_COLORS, WEEKDAYS, teamTotalRow };
+        return { project, staff, stats, overtimeList, areaChartData, heatmapData, maxHeatmapValue, CATEGORIES, CATEGORY_COLORS, WEEKDAYS, departmentRows };
 
     }, [rawTimesheets, timeRange, currentDate]);
 
@@ -594,19 +595,20 @@ const Dashboard = () => {
                         </thead>
                         <tbody className="divide-y divide-neutral/10">
                             {/* Team Total Row Only */}
-                            {processedData.teamTotalRow && (
-                                <tr className="bg-white transition-colors">
-                                    <td className="px-6 py-4 font-bold text-primary">R&D 센터</td>
-                                    <td className="px-6 py-4 text-right font-bold text-dark">{processedData.teamTotalRow.hours}h</td>
+                            {/* Department Rows */}
+                            {processedData.departmentRows && processedData.departmentRows.map(dept => (
+                                <tr key={dept.name} className="bg-white transition-colors hover:bg-gray-50/50">
+                                    <td className="px-6 py-4 font-bold text-primary">{dept.name}</td>
+                                    <td className="px-6 py-4 text-right font-bold text-dark">{dept.hours.toLocaleString()}h</td>
                                     {processedData.CATEGORIES.map(cat => (
                                         <td key={cat} className="px-4 py-4 text-center">
-                                            <span className={`px-2 py-1 rounded-full text-xs ${processedData.teamTotalRow[cat] > 0 ? 'bg-primary/5 text-primary font-bold' : 'text-gray-300'}`}>
-                                                {processedData.teamTotalRow[cat]}%
+                                            <span className={`px-2 py-1 rounded-full text-xs ${dept[cat] > 0 ? 'bg-primary/5 text-primary font-bold' : 'text-gray-300'}`}>
+                                                {dept[cat] > 0 ? `${dept[cat]}%` : '-'}
                                             </span>
                                         </td>
                                     ))}
                                 </tr>
-                            )}
+                            ))}
                         </tbody>
                     </table>
                 </div>
