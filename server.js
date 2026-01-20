@@ -126,7 +126,8 @@ const readCsvResilient = (filePath) => {
             columns: true,
             skip_empty_lines: true,
             trim: true,
-            relax_column_count: true
+            relax_column_count: true,
+            bom: true
         });
     } catch (e) {
         console.error(`[CSV Error] Failed to read ${filePath}:`, e);
