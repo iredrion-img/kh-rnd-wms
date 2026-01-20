@@ -7,7 +7,28 @@ import MiniCalendar from '../components/ui/MiniCalendar';
 import DailyWorkCard from '../components/ui/DailyWorkCard';
 import ContributionGraph from '../components/ui/ContributionGraph';
 
+// Custom Tick Component for X-Axis
+const CustomXAxisTick = ({ x, y, payload }) => {
+    if (!payload || !payload.value) return null;
+
+    // Value format: "1/20 (Mon)" or "1/20 (월)"
+    const parts = payload.value.split(' (');
+    const date = parts[0];
+    const day = parts[1] ? parts[1].replace(')', '') : '';
+
+    return (
+        <g transform={`translate(${x},${y})`}>
+            <text x={0} y={0} dy={12} textAnchor="middle" fill="#9ca3af" fontSize={10}>
+                <tspan x="0" dy="0">{date}</tspan>
+                <tspan x="0" dy="14">{day}</tspan>
+            </text>
+        </g>
+    );
+};
+
 const Timesheet = ({ currentUser }) => {
+    // ... existing code ...
+
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [dailyData, setDailyData] = useState({}); // { 'yyyy-MM-dd': { 'AI': 0, 'BIM': 0, ... } }
 
@@ -318,13 +339,14 @@ const Timesheet = ({ currentUser }) => {
                     {/* Weekly Bar Chart */}
                     <div className="h-24 w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={weeklyChartData} margin={{ bottom: 0 }}>
+                            <BarChart data={weeklyChartData} margin={{ bottom: 10 }}>
                                 <XAxis
                                     dataKey="label"
                                     axisLine={false}
                                     tickLine={false}
-                                    tick={{ fontSize: 10, fill: '#9ca3af' }}
+                                    tick={CustomXAxisTick}
                                     interval={0}
+                                    height={40}
                                 />
                                 <Bar dataKey="total" radius={[2, 2, 0, 0]}>
                                     {weeklyChartData.map((entry, index) => (
