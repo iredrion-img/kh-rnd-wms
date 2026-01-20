@@ -588,22 +588,21 @@ const Dashboard = () => {
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10">
                             <tr>
-                                <th className="px-6 py-4 w-32">구분</th>
-                                <th className="px-6 py-4 w-24 text-right">총 시간</th>
+                                <th className="px-6 py-4 whitespace-nowrap">구분</th>
+                                <th className="px-6 py-4 text-right whitespace-nowrap">총 시간</th>
                                 {processedData.CATEGORIES.map(cat => (
-                                    <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
+                                    <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm whitespace-nowrap" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
                                         {cat}
                                     </th>
                                 ))}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral/10">
-                            {/* Team Total Row Only */}
                             {/* Department Rows */}
                             {processedData.departmentRows && processedData.departmentRows.map(dept => (
                                 <tr key={dept.name} className="bg-white transition-colors hover:bg-gray-50/50">
-                                    <td className="px-6 py-4 font-bold text-primary">{dept.name}</td>
-                                    <td className="px-6 py-4 text-right font-bold text-dark">{dept.hours.toLocaleString()}h</td>
+                                    <td className="px-6 py-4 font-bold text-primary whitespace-nowrap">{dept.name}</td>
+                                    <td className="px-6 py-4 text-right font-bold text-dark whitespace-nowrap">{dept.hours.toLocaleString()}h</td>
                                     {processedData.CATEGORIES.map(cat => (
                                         <td key={cat} className="px-4 py-4 text-center">
                                             <span className={`px-2 py-1 rounded-full text-xs ${dept[cat] > 0 ? 'bg-primary/5 text-primary font-bold' : 'text-gray-300'}`}>
@@ -694,9 +693,9 @@ const Dashboard = () => {
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10 sticky top-0 z-10">
                                     <tr>
-                                        <th className="px-6 py-4 w-32 bg-gray-50 whitespace-nowrap">직원명</th>
-                                        <th className="px-6 py-4 w-auto bg-gray-50 whitespace-nowrap">소속</th>
-                                        <th className="px-6 py-4 w-24 text-right bg-gray-50 whitespace-nowrap">총 시간</th>
+                                        <th className="px-6 py-4 whitespace-nowrap">직원명</th>
+                                        <th className="px-6 py-4 whitespace-nowrap">소속</th>
+                                        <th className="px-6 py-4 text-right whitespace-nowrap">총 시간</th>
                                         {processedData.CATEGORIES.map(cat => (
                                             <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm bg-gray-50 whitespace-nowrap" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
                                                 {cat}
