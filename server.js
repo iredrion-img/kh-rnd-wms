@@ -188,18 +188,26 @@ app.get('/api/users', (req, res) => {
 // --- TIMESHEET API ---
 app.get('/api/timesheets', (req, res) => {
     try {
-        // Load data from current and previous year potentially, but for now just all database_*.csv
-        const files = fs.readdirSync(__dirname).filter(f => f.startsWith('database_') && f.endsWith('.csv'));
-        let allRecords = [];
+        const { year } = req.query;
+        let records = [];
 
-        files.forEach(file => {
-            const records = readCsvResilient(path.join(__dirname, file));
-            allRecords = [...allRecords, ...records];
-        });
-
-        res.json(allRecords);
+        if (year) {
+            // Specific year
+            const dbFile = getDbFile(year);
+            if (fs.existsSync(dbFile)) {
+                records = readCsvResilient(dbFile);
+            }
+        } else {
+            // Load ALL years (dashboard aggregation)
+            const files = fs.readdirSync(__dirname).filter(f => f.startsWith('database_') && f.endsWith('.csv') && !f.includes('sample'));
+            files.forEach(file => {
+                const fileRecords = readCsvResilient(path.join(__dirname, file));
+                records = [...records, ...fileRecords];
+            });
+        }
+        res.json(records);
     } catch (error) {
-        res.status(500).json({ error: '데이터 로드 실패' });
+        res.status(500).json({ error: '데이터 로딩 실패' });
     }
 });
 
