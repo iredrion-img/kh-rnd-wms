@@ -7,11 +7,19 @@ export default {
     theme: {
         extend: {
             colors: {
-                primary: '#03A63C',
-                secondary: '#9DBF21',
-                neutral: '#A6A6A6',
-                dark: '#0D0D0D',
-                background: '#F2F2F2',
+                // Brand Identity Colors
+                'kh-green': '#009245', // Primary (BIM)
+                'kh-lime': '#8CC63F',  // Accent (AI, Active)
+                'kh-dark-sidebar': '#1E2225', // Sidebar BG
+                'kh-bg-main': '#FFFFFF', // Main Content BG
+                'kh-text-main': '#25282B', // Main Text
+                'kh-table-header': '#25282B',
+                // Legacy mappings for compatibility (can be refactored later)
+                primary: '#009245',
+                secondary: '#8CC63F',
+                neutral: '#9E9E9E',
+                dark: '#25282B',
+                background: '#FFFFFF',
                 surface: '#FFFFFF',
             },
         },

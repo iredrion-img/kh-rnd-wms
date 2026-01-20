@@ -3,7 +3,21 @@
 @tailwind utilities;
 
 @layer base {
+
+  html,
   body {
-    @apply bg-background text-dark font-sans;
+    @apply h-screen w-screen overflow-hidden bg-background text-kh-text-main antialiased m-0 p-0;
+  }
+
+  /* Fluid Typography Root */
+  html {
+    font-size: 16px;
+    /* Base for rem */
+  }
+}
+
+@layer utilities {
+  .fluid-text {
+    font-size: clamp(12px, 0.8vw + 0.5vh, 18px);
   }
 }

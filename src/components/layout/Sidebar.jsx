@@ -44,7 +44,7 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
     };
 
     return (
-        <div className="w-64 h-screen bg-dark text-white flex flex-col fixed left-0 top-0 border-r border-neutral/20 z-50">
+        <div className="w-64 h-full bg-kh-dark-sidebar text-white flex flex-col fixed left-0 top-0 border-r border-white/5 z-50">
             <div className="p-6 border-b border-neutral/20">
                 <h1 className="text-xl font-bold tracking-wider text-white">KH-R&D WMS</h1>
                 <p className="text-xs text-neutral-400 mt-1">통합 업무 관리 시스템</p>
@@ -58,10 +58,10 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
                         <button
                             key={item.id}
                             onClick={() => onTabChange(item.id)}
-                            className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 group
+                            className={`w-full flex items-center space-x-3 px-4 py-3 transition-all duration-200 group relative
                 ${isActive
-                                    ? 'bg-primary text-white shadow-lg shadow-primary/30'
-                                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                    ? 'text-kh-lime font-bold bg-white/5 border-l-4 border-kh-lime'
+                                    : 'text-gray-400 hover:bg-white/5 hover:text-white border-l-4 border-transparent'
                                 }`}
                         >
                             <Icon size={20} className={isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'} />
