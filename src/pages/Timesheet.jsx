@@ -433,7 +433,7 @@ const Timesheet = ({ currentUser }) => {
 
                 {/* Contribution Graph Section */}
                 <div className="flex-none h-auto">
-                    <ContributionGraph dailyData={dailyData} />
+                    <ContributionGraph dailyData={dailyData} onDateClick={setSelectedDate} />
                 </div>
             </div>
             {/* Bg Decoration */}

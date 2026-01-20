@@ -2,7 +2,7 @@ import React from 'react';
 import { format, subDays, eachDayOfInterval, startOfWeek, getDay, isSameDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
-const ContributionGraph = ({ dailyData = {}, year = 2026 }) => {
+const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
     // Generate dates for the specific year
     const startDate = new Date(year, 0, 1);
     const endDate = new Date(year, 11, 31);
@@ -103,6 +103,7 @@ const ContributionGraph = ({ dailyData = {}, year = 2026 }) => {
                                             return (
                                                 <div
                                                     key={dateStr}
+                                                    onClick={() => onDateClick && onDateClick(date)}
                                                     className={`w-full aspect-square rounded-[2px] ${color} transition-all duration-150 cursor-pointer relative group`}
                                                 >
                                                     {/* Hover Ring Effect */}
