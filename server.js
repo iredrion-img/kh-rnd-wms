@@ -32,16 +32,27 @@ const DB_COLUMNS = ['employee', 'department', 'project_name', 'project_code', 'm
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
 
 // Initialize current year DB if not exists
-const currentDb = getDbFile();
+const currentYear = new Date().getFullYear();
+const currentDb = getDbFile(currentYear); // e.g., database_2026.csv
+
 if (!fs.existsSync(currentDb)) {
-    // Migration: Check for legacy database.csv
+    // Check for legacy database.csv
     const legacyDb = path.join(__dirname, 'database.csv');
     if (fs.existsSync(legacyDb)) {
-        console.log(`[Migration] Legacy database.csv found. Migrating to ${currentDb}...`);
-        fs.renameSync(legacyDb, currentDb);
-    } else {
-        fs.writeFileSync(currentDb, stringify([DB_COLUMNS]));
+        // Rename legacy database.csv to database_sample.csv instead of migrating it to current year
+        const sampleDb = path.join(__dirname, 'database_sample.csv');
+        console.log(`[Init] Archiving legacy data to ${sampleDb} (Sample Data)`);
+        try {
+            if (fs.existsSync(sampleDb)) fs.unlinkSync(sampleDb); // Overwrite if exists
+            fs.renameSync(legacyDb, sampleDb);
+        } catch (e) {
+            console.error('[Init] Failed to archive legacy DB:', e);
+        }
     }
+
+    // Create FRESH DB for the current year
+    console.log(`[Init] Creating fresh database for ${currentYear}: ${currentDb}`);
+    fs.writeFileSync(currentDb, stringify([DB_COLUMNS]));
 }
 
 // Initialize Users DB if not exists
