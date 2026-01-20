@@ -26,3 +26,9 @@ dist-ssr
 
 # Ngrok
 38SbeEilRpa2RjlhAPVD3FvFG93_6t7m8Sw3Yjh6sPKmN539v
+
+# Database (Protect live data)
+database.csv
+users.csv
+backups/
+*.csv
