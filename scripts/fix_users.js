@@ -74,9 +74,17 @@ try {
             const currentHasPw = record.password && record.password.length > 0;
 
             if (!existingHasPw && currentHasPw) {
+                // Current has password, existing doesn't -> Replace
                 uniqueUsers.set(name, record);
-            } else if (existingHasPw === currentHasPw) {
-                if (record.id > existing.id) {
+            } else if (existingHasPw && currentHasPw) {
+                // Both have passwords -> Keep the one with the higher (newer) ID
+                // ID is timestamp, so string comparison works or convert to Number
+                if (Number(record.id) > Number(existing.id)) {
+                    uniqueUsers.set(name, record);
+                }
+            } else if (!existingHasPw && !currentHasPw) {
+                // Neither has password -> Keep newer
+                if (Number(record.id) > Number(existing.id)) {
                     uniqueUsers.set(name, record);
                 }
             }
