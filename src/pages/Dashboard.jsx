@@ -680,8 +680,8 @@ const Dashboard = () => {
                                         key={dept}
                                         onClick={() => setFilterDept(dept)}
                                         className={`px-3 py-1.5 text-sm font-medium rounded-full transition-colors ${filterDept === dept
-                                                ? 'bg-primary text-white shadow-sm'
-                                                : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
+                                            ? 'bg-primary text-white shadow-sm'
+                                            : 'bg-white text-gray-600 border border-gray-200 hover:bg-gray-50'
                                             }`}
                                     >
                                         {dept}
@@ -694,11 +694,11 @@ const Dashboard = () => {
                             <table className="w-full text-sm text-left">
                                 <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10 sticky top-0 z-10">
                                     <tr>
-                                        <th className="px-6 py-4 w-32 bg-gray-50">직원명</th>
-                                        <th className="px-6 py-4 w-32 bg-gray-50">소속</th>
-                                        <th className="px-6 py-4 w-24 text-right bg-gray-50">총 시간</th>
+                                        <th className="px-6 py-4 w-32 bg-gray-50 whitespace-nowrap">직원명</th>
+                                        <th className="px-6 py-4 w-auto bg-gray-50 whitespace-nowrap">소속</th>
+                                        <th className="px-6 py-4 w-24 text-right bg-gray-50 whitespace-nowrap">총 시간</th>
                                         {processedData.CATEGORIES.map(cat => (
-                                            <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm bg-gray-50" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
+                                            <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm bg-gray-50 whitespace-nowrap" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
                                                 {cat}
                                             </th>
                                         ))}
@@ -709,9 +709,9 @@ const Dashboard = () => {
                                         .filter(item => filterDept === '전체' || item.department === filterDept)
                                         .map((item, i) => (
                                             <tr key={i} className="hover:bg-gray-50/50 transition-colors">
-                                                <td className="px-6 py-4 font-medium text-dark">{item.name}</td>
-                                                <td className="px-6 py-4 text-gray-500 font-medium">{item.department}</td>
-                                                <td className="px-6 py-4 text-right font-bold text-dark">{item.hours}h</td>
+                                                <td className="px-6 py-4 font-medium text-dark whitespace-nowrap">{item.name}</td>
+                                                <td className="px-6 py-4 text-gray-500 font-medium whitespace-nowrap">{item.department}</td>
+                                                <td className="px-6 py-4 text-right font-bold text-dark whitespace-nowrap">{item.hours}h</td>
                                                 {processedData.CATEGORIES.map(cat => (
                                                     <td key={cat} className="px-4 py-4 text-center">
                                                         {item[cat] > 0 ? (
