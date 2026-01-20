@@ -9,6 +9,7 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import cron from 'node-cron'; // Import node-cron
 import https from 'https'; // Import https
 import os from 'os'; // Import os for IP detection
+import { writeAtomic } from './src/utils/safeStorage.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -211,7 +212,7 @@ app.get('/api/timesheets', (req, res) => {
     }
 });
 
-app.post('/api/timesheets', (req, res) => {
+app.post('/api/timesheets', async (req, res) => {
     try {
         const { rows, weekStart, employee, department } = req.body;
         if (!weekStart) return res.status(400).json({ error: '날짜 정보가 없습니다.' });
@@ -248,7 +249,7 @@ app.post('/api/timesheets', (req, res) => {
         }));
 
         const finalRecords = [...filteredRecords, ...newRecords];
-        fs.writeFileSync(dbFile, stringify(finalRecords, { header: true, columns: DB_COLUMNS }));
+        await writeAtomic(dbFile, stringify(finalRecords, { header: true, columns: DB_COLUMNS }));
 
         res.json({ success: true, message: '저장되었습니다.' });
     } catch (error) {
