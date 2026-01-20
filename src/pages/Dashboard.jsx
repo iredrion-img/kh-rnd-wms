@@ -323,32 +323,74 @@ const Dashboard = () => {
                         <ResponsiveContainer width="100%" height="100%">
                             {timeRange === 'weekly' ? (
                                 <BarChart data={processedData.areaChartData.filter(d => { const day = getDay(new Date(d.date || d.key)); return day >= 1 && day <= 5; })} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" fontSize={11} tickMargin={5} />
-                                    <YAxis stroke="#9CA3AF" fontSize={11} />
-                                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} cursor={{ fill: '#F9FAFB' }} />
-                                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                                    <defs>
+                                        <filter id="glass-shadow" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.15" />
+                                        </filter>
+                                        {processedData.CATEGORIES.map((cat, i) => (
+                                            <linearGradient key={cat} id={`glass-bar-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor={processedData.CATEGORY_COLORS[cat]} stopOpacity={0.9} />
+                                                <stop offset="100%" stopColor={processedData.CATEGORY_COLORS[cat]} stopOpacity={0.4} />
+                                            </linearGradient>
+                                        ))}
+                                    </defs>
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" strokeOpacity={0.5} />
+                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" fontSize={11} tickMargin={5} axisLine={false} tickLine={false} />
+                                    <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} />
+                                    <Tooltip
+                                        cursor={{ fill: 'rgba(0,0,0,0.04)' }}
+                                        contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)', backdropFilter: 'blur(8px)', backgroundColor: 'rgba(255,255,255,0.9)' }}
+                                    />
+                                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} iconType="circle" />
                                     {processedData.CATEGORIES.map((cat, i) => (
-                                        <Bar key={cat} dataKey={cat} stackId="a" fill={processedData.CATEGORY_COLORS[cat]} radius={i === processedData.CATEGORIES.length - 1 ? [4, 4, 0, 0] : [0, 0, 0, 0]} />
+                                        <Bar
+                                            key={cat}
+                                            dataKey={cat}
+                                            stackId="a"
+                                            fill={`url(#glass-bar-${i})`}
+                                            stroke={processedData.CATEGORY_COLORS[cat]}
+                                            strokeWidth={1}
+                                            radius={i === processedData.CATEGORIES.length - 1 ? [6, 6, 0, 0] : [0, 0, 0, 0]}
+                                            filter="url(#glass-shadow)"
+                                        />
                                     ))}
                                 </BarChart>
                             ) : (
                                 <AreaChart data={processedData.areaChartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                                     <defs>
+                                        <filter id="glass-glow" x="-50%" y="-50%" width="200%" height="200%">
+                                            <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+                                            <feColorMatrix in="blur" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 18 -7" result="goo" />
+                                            <feComposite in="SourceGraphic" in2="goo" operator="atop" />
+                                        </filter>
+                                        <filter id="shadow-line" height="200%">
+                                            <feDropShadow dx="0" dy="5" stdDeviation="5" floodColor="#000" floodOpacity="0.2" />
+                                        </filter>
                                         {processedData.CATEGORIES.map((cat, i) => (
-                                            <linearGradient key={cat} id={`grad${i}`} x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="5%" stopColor={processedData.CATEGORY_COLORS[cat]} stopOpacity={0.8} />
-                                                <stop offset="95%" stopColor={processedData.CATEGORY_COLORS[cat]} stopOpacity={0} />
+                                            <linearGradient key={cat} id={`glass-area-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                                <stop offset="0%" stopColor={processedData.CATEGORY_COLORS[cat]} stopOpacity={0.6} />
+                                                <stop offset="90%" stopColor={processedData.CATEGORY_COLORS[cat]} stopOpacity={0.05} />
                                             </linearGradient>
                                         ))}
                                     </defs>
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" fontSize={11} tickMargin={5} />
-                                    <YAxis stroke="#9CA3AF" fontSize={11} />
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" />
-                                    <Tooltip contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} />
-                                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} />
+                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" fontSize={11} tickMargin={5} axisLine={false} tickLine={false} />
+                                    <YAxis stroke="#9CA3AF" fontSize={11} axisLine={false} tickLine={false} />
+                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" strokeOpacity={0.5} />
+                                    <Tooltip
+                                        contentStyle={{ borderRadius: '16px', border: '1px solid rgba(255,255,255,0.8)', boxShadow: '0 8px 32px rgba(0,0,0,0.1)', backdropFilter: 'blur(8px)', backgroundColor: 'rgba(255,255,255,0.9)' }}
+                                    />
+                                    <Legend wrapperStyle={{ fontSize: '11px', paddingTop: '10px' }} iconType="circle" />
                                     {processedData.CATEGORIES.map((cat, i) => (
-                                        <Area key={cat} type="monotone" dataKey={cat} stackId="1" stroke={processedData.CATEGORY_COLORS[cat]} fill={`url(#grad${i})`} fillOpacity={0.6} />
+                                        <Area
+                                            key={cat}
+                                            type="monotone"
+                                            dataKey={cat}
+                                            stackId="1"
+                                            stroke={processedData.CATEGORY_COLORS[cat]}
+                                            strokeWidth={2}
+                                            fill={`url(#glass-area-${i})`}
+                                            filter="url(#shadow-line)"
+                                        />
                                     ))}
                                 </AreaChart>
                             )}
