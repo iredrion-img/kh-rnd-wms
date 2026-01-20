@@ -317,7 +317,14 @@ const Timesheet = ({ currentUser }) => {
                     {/* Weekly Bar Chart */}
                     <div className="h-24 w-full mt-4">
                         <ResponsiveContainer width="100%" height="100%">
-                            <BarChart data={weeklyChartData}>
+                            <BarChart data={weeklyChartData} margin={{ bottom: 0 }}>
+                                <XAxis
+                                    dataKey="date"
+                                    axisLine={false}
+                                    tickLine={false}
+                                    tick={{ fontSize: 10, fill: '#9ca3af' }}
+                                    interval={0}
+                                />
                                 <Bar dataKey="total" radius={[2, 2, 0, 0]}>
                                     {weeklyChartData.map((entry, index) => (
                                         <Cell
