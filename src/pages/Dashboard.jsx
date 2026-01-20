@@ -36,6 +36,7 @@ const Dashboard = () => {
     const [loading, setLoading] = useState(true);
     const [showOvertimeModal, setShowOvertimeModal] = useState(false);
     const [viewMode, setViewMode] = useState('hours'); // 'hours' | 'percent' specifically for monthly view
+    const [showAllStaff, setShowAllStaff] = useState(false);
 
     // Fetch Data on Mount
     useEffect(() => {
@@ -112,18 +113,55 @@ const Dashboard = () => {
             overtime: 0
         })); // Preserves CATEGORIES order (AI -> BIM -> ...)
 
-        // 3. Aggregate Staff (Sum total hours)
+        // 3. Aggregate Staff (Sum total hours + Category Breakdown)
         const staffMap = {};
+        // Track Team Total for Category Ratio
+        const teamCategoryMap = {};
+        CATEGORIES.forEach(c => teamCategoryMap[c] = 0);
+
         filteredData.forEach(item => {
             const empName = item.employee || 'Unknown';
-            if (!staffMap[empName]) staffMap[empName] = 0;
-            staffMap[empName] += parseFloat(item.total || 0);
+            const category = getCategory(item.project_name);
+            const hours = parseFloat(item.total || 0);
+
+            if (!staffMap[empName]) {
+                staffMap[empName] = { total: 0 };
+                CATEGORIES.forEach(c => staffMap[empName][c] = 0);
+            }
+
+            staffMap[empName].total += hours;
+            staffMap[empName][category] += hours;
+
+            // Update Team Totals
+            teamCategoryMap[category] += hours;
         });
 
-        const staff = Object.entries(staffMap).map(([name, hours]) => ({
-            name,
-            hours
-        })).sort((a, b) => b.hours - a.hours).slice(0, 5); // Top 5
+        // Convert to Array & Calculate Percentages
+        const staff = Object.entries(staffMap).map(([name, data]) => {
+            const person = { name, hours: data.total };
+
+            // Calculate % for each category
+            CATEGORIES.forEach(cat => {
+                const catHours = data[cat];
+                const ratio = data.total > 0 ? (catHours / data.total) * 100 : 0;
+                person[cat] = Math.round(ratio); // Integer %
+                person[`${cat}_hours`] = catHours; // Keep raw hours just in case
+            });
+            return person;
+        }).sort((a, b) => b.hours - a.hours); // Descending Order
+
+        // Team Total Calculation
+        const teamTotalTotal = Object.values(teamCategoryMap).reduce((sum, h) => sum + h, 0);
+        const teamTotalRow = {
+            name: 'TEAM TOTAL',
+            hours: teamTotalTotal
+        };
+        CATEGORIES.forEach(cat => {
+            const h = teamCategoryMap[cat];
+            const ratio = teamTotalTotal > 0 ? (h / teamTotalTotal) * 100 : 0;
+            teamTotalRow[cat] = Math.round(ratio);
+            teamTotalRow[`${cat}_hours`] = h;
+        });
 
         // 4. Calculate Stats
         const totalHours = filteredData.reduce((sum, item) => sum + parseFloat(item.total || 0), 0);
@@ -273,7 +311,7 @@ const Dashboard = () => {
             if (val > maxHeatmapValue) maxHeatmapValue = val;
         });
 
-        return { project, staff, stats, overtimeList, areaChartData, heatmapData, maxHeatmapValue, CATEGORIES, CATEGORY_COLORS, WEEKDAYS };
+        return { project, staff, stats, overtimeList, areaChartData, heatmapData, maxHeatmapValue, CATEGORIES, CATEGORY_COLORS, WEEKDAYS, teamTotalRow };
 
     }, [rawTimesheets, timeRange, currentDate]);
 
@@ -533,22 +571,59 @@ const Dashboard = () => {
             {/* Detailed Table */}
             <div className="bg-surface rounded-xl shadow-sm border border-neutral/10 overflow-hidden">
                 <div className="p-6 border-b border-neutral/10 flex justify-between items-center">
-                    <h3 className="text-lg font-bold text-dark">팀원별 상세 현황</h3>
-                    <button className="text-sm text-primary hover:text-primary/80 font-medium">전체 보기</button>
+                    <h3 className="text-lg font-bold text-dark">팀원별 상세 현황 (항목별 비중 %)</h3>
+                    <button
+                        onClick={() => setShowAllStaff(!showAllStaff)}
+                        className="text-sm text-primary hover:text-primary/80 font-medium transition-colors"
+                    >
+                        {showAllStaff ? '접기' : '전체 보기'}
+                    </button>
                 </div>
                 <div className="overflow-x-auto">
                     <table className="w-full text-sm text-left">
                         <thead className="bg-gray-50 text-gray-500 font-medium border-b border-neutral/10">
                             <tr>
-                                <th className="px-6 py-4">직원명</th>
-                                <th className="px-6 py-4">총 업무 시간</th>
+                                <th className="px-6 py-4 w-32">직원명</th>
+                                <th className="px-6 py-4 w-24 text-right">총 시간</th>
+                                {processedData.CATEGORIES.map(cat => (
+                                    <th key={cat} className="px-4 py-4 text-center text-xs lg:text-sm" style={{ color: processedData.CATEGORY_COLORS[cat] }}>
+                                        {cat}
+                                    </th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody className="divide-y divide-neutral/10">
-                            {processedData.staff.map((item, i) => (
+                            {/* Team Total Row (Top Pinned) */}
+                            {processedData.teamTotalRow && (
+                                <tr className="bg-primary/5 font-bold border-b-2 border-primary/10">
+                                    <td className="px-6 py-4 text-primary">TEAM TOTAL</td>
+                                    <td className="px-6 py-4 text-right text-dark">{processedData.teamTotalRow.hours}h</td>
+                                    {processedData.CATEGORIES.map(cat => (
+                                        <td key={cat} className="px-4 py-4 text-center">
+                                            <span className={`px-2 py-1 rounded-full text-xs ${processedData.teamTotalRow[cat] > 0 ? 'bg-white shadow-sm text-dark' : 'text-gray-300'}`}>
+                                                {processedData.teamTotalRow[cat]}%
+                                            </span>
+                                        </td>
+                                    ))}
+                                </tr>
+                            )}
+
+                            {/* Staff Rows */}
+                            {(showAllStaff ? processedData.staff : processedData.staff.slice(0, 5)).map((item, i) => (
                                 <tr key={i} className="hover:bg-gray-50/50 transition-colors">
                                     <td className="px-6 py-4 font-medium text-dark">{item.name}</td>
-                                    <td className="px-6 py-4 font-bold text-dark">{item.hours}h</td>
+                                    <td className="px-6 py-4 text-right font-bold text-dark">{item.hours}h</td>
+                                    {processedData.CATEGORIES.map(cat => (
+                                        <td key={cat} className="px-4 py-4 text-center">
+                                            {item[cat] > 0 ? (
+                                                <span className={`font-medium ${item[cat] >= 50 ? 'text-dark' : 'text-gray-600'}`}>
+                                                    {item[cat]}%
+                                                </span>
+                                            ) : (
+                                                <span className="text-gray-200">-</span>
+                                            )}
+                                        </td>
+                                    ))}
                                 </tr>
                             ))}
                         </tbody>
