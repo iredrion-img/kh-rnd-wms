@@ -185,6 +185,35 @@ app.get('/api/users', (req, res) => {
     res.json(users.map(({ password, ...u }) => u));
 });
 
+app.put('/api/users/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        let { name, department, password } = req.body;
+        name = name ? name.trim() : undefined;
+        department = department ? department.trim() : undefined;
+
+        const users = readCsvResilient(USERS_FILE);
+        const userIndex = users.findIndex(u => u.id === id);
+
+        if (userIndex === -1) {
+            return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
+        }
+
+        // Update fields
+        if (name) users[userIndex].name = name;
+        if (department) users[userIndex].department = department;
+        if (password && password.trim()) users[userIndex].password = password.trim();
+
+        await writeAtomic(USERS_FILE, stringify(users, { header: true, columns: USER_COLUMNS }));
+
+        const { password: _, ...updatedUser } = users[userIndex];
+        res.json({ success: true, user: updatedUser });
+    } catch (error) {
+        console.error('Update User Error:', error);
+        res.status(500).json({ error: '사용자 정보 수정 실패' });
+    }
+});
+
 // --- TIMESHEET API ---
 app.get('/api/timesheets', (req, res) => {
     try {

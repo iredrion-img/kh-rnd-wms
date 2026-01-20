@@ -8,6 +8,7 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
     const [editingUser, setEditingUser] = useState(null); // ID of user being edited
     const [editName, setEditName] = useState('');
     const [editDept, setEditDept] = useState('');
+    const [editPassword, setEditPassword] = useState('');
 
     const DEPARTMENTS = [
         'R&D센터',
@@ -31,12 +32,13 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
         setEditingUser(user.id);
         setEditName(user.name);
         setEditDept(user.department);
+        setEditPassword('');
     };
 
     // Handler to save edit
     const saveEdit = (user) => {
         if (editName && editDept) {
-            onUpdateEmployee(user.id, editName, editDept);
+            onUpdateEmployee(user.id, editName, editDept, editPassword);
             setEditingUser(null);
         }
     };
@@ -143,6 +145,13 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
                                                         </option>
                                                     ))}
                                                 </select>
+                                                <input
+                                                    type="password"
+                                                    value={editPassword}
+                                                    onChange={e => setEditPassword(e.target.value)}
+                                                    className="w-full px-2 py-1 text-sm border rounded"
+                                                    placeholder="새 비밀번호 (변경 시 입력)"
+                                                />
                                             </div>
                                             <div className="flex flex-col space-y-1">
                                                 <button

@@ -103,12 +103,12 @@ function App() {
   };
 
   // Update User
-  const handleUpdateEmployee = async (id, name, department) => {
+  const handleUpdateEmployee = async (id, name, department, password) => {
     try {
       const res = await fetch(`${API_URL}/${id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, department })
+        body: JSON.stringify({ name, department, password })
       });
       if (res.ok) {
         fetchEmployees(); // Refresh list to get clean state
