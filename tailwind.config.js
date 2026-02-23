@@ -14,6 +14,12 @@ export default {
                 'kh-bg-main': '#F3F4F6', // Main Content BG (Light Gray)
                 'kh-text-main': '#25282B', // Main Text
                 'kh-table-header': '#25282B',
+                // Work Categories (Glassy Palette)
+                'cat-ai': '#b06ed3ad',
+                'cat-bim': '#2673cac9',
+                'cat-smart': '#1896319a',
+                'cat-dt': '#e6773cb9',
+                'cat-etc': '#9E9E9E',
                 // Legacy mappings for compatibility (can be refactored later)
                 primary: '#009245',
                 secondary: '#8CC63F',

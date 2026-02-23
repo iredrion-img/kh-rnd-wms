@@ -1,15 +1,26 @@
 import React from 'react';
 import { Plus, Minus, Clock } from 'lucide-react';
 
-const DailyWorkCard = ({ category, hours, onIncrease, onDecrease, colorClass = "bg-primary", icon: Icon }) => {
+const DailyWorkCard = ({ category, hours, onIncrease, onDecrease, colorClass = "cat-ai", icon: Icon }) => {
+    // Static mapping for Tailwind classes (enables literal strings for build-time scanning)
+    const colorMap = {
+        'cat-ai': { bg: 'bg-cat-ai', text: 'text-cat-ai', shadow: 'shadow-cat-ai/30' },
+        'cat-bim': { bg: 'bg-cat-bim', text: 'text-cat-bim', shadow: 'shadow-cat-bim/30' },
+        'cat-smart': { bg: 'bg-cat-smart', text: 'text-cat-smart', shadow: 'shadow-cat-smart/30' },
+        'cat-dt': { bg: 'bg-cat-dt', text: 'text-cat-dt', shadow: 'shadow-cat-dt/30' },
+        'cat-etc': { bg: 'bg-cat-etc', text: 'text-cat-etc', shadow: 'shadow-cat-etc/30' }
+    };
+
+    const activeColors = colorMap[colorClass.replace('bg-', '')] || colorMap['cat-etc'];
+
     return (
         <div className={`bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-neutral/10 hover:shadow-md transition-all duration-300 flex flex-col items-center justify-between h-full min-h-[160px] relative group overflow-hidden`}>
             {/* Background Decoration */}
-            <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-5 ${colorClass}`}></div>
+            <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-5 ${activeColors.bg}`}></div>
 
             {/* Header */}
             <div className="w-full text-center z-10 flex flex-col items-center">
-                {Icon && <Icon size={24} className={`mb-2 ${colorClass.replace('bg-', 'text-').replace('500', '600')}`} />}
+                {Icon && <Icon size={24} className={`mb-2 ${activeColors.text}`} />}
                 <h3 className="text-lg font-bold text-dark">{category}</h3>
                 <p className="text-xs text-gray-400 mt-1">업무 시간 기록</p>
             </div>
@@ -24,7 +35,7 @@ const DailyWorkCard = ({ category, hours, onIncrease, onDecrease, colorClass = "
                 </button>
 
                 <div className="text-center w-24">
-                    <span className={`text-4xl font-black ${hours > 0 ? colorClass.replace('bg-', 'text-') : 'text-gray-300'}`}>
+                    <span className={`text-4xl font-black ${hours > 0 ? activeColors.text : 'text-gray-300'}`}>
                         {hours}
                     </span>
                     <span className="text-sm text-gray-400 ml-1 font-medium">h</span>
@@ -33,7 +44,7 @@ const DailyWorkCard = ({ category, hours, onIncrease, onDecrease, colorClass = "
                 <button
                     onClick={onIncrease}
                     className={`w-12 h-12 shrink-0 rounded-full flex items-center justify-center text-white shadow-lg transition-all active:scale-95
-                        ${colorClass} hover:opacity-90 shadow-${colorClass.replace('bg-', '')}/30`}
+                        ${activeColors.bg} hover:opacity-90 ${activeColors.shadow}`}
                 >
                     <Plus size={24} />
                 </button>
@@ -51,7 +62,7 @@ const DailyWorkCard = ({ category, hours, onIncrease, onDecrease, colorClass = "
             {/* Progress Bar (Visual Feedback) */}
             <div className="absolute bottom-0 left-0 w-full h-1 bg-gray-100">
                 <div
-                    className={`h-full transition-all duration-500 ${colorClass}`}
+                    className={`h-full transition-all duration-500 ${activeColors.bg}`}
                     style={{ width: `${Math.min((hours / 8) * 100, 100)}%` }}
                 ></div>
             </div>

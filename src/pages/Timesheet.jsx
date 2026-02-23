@@ -34,17 +34,16 @@ const Timesheet = ({ currentUser }) => {
 
     // Categories config
     const leaveCategories = [
-        { id: 'vacation', label: '연차', icon: Palmtree, color: 'bg-emerald-500', hex: '#10b981' },
-        { id: 'half-am', label: '오전반차', icon: Sunrise, color: 'bg-amber-500', hex: '#f59e0b' },
-        { id: 'half-pm', label: '오후반차', icon: Sunset, color: 'bg-orange-500', hex: '#f97316' },
+        { id: 'vacation', label: '연차', icon: Palmtree, color: 'bg-emerald-500', hex: '#10b981ad' },
+        { id: 'half', label: '반차', icon: Sun, color: 'bg-amber-500', hex: '#f59e0bad' },
     ];
 
     const workCategories = [
-        { id: 'ai', label: 'AI', icon: Building2, color: 'bg-blue-500', hex: '#3b82f6' },
-        { id: 'bim', label: 'BIM', icon: Building2, color: 'bg-green-500', hex: '#22c55e' },
-        { id: 'smart', label: 'Smart R&D', icon: Building2, color: 'bg-orange-500', hex: '#f97316' },
-        { id: 'dt', label: 'Digital Technology', icon: Building2, color: 'bg-purple-500', hex: '#a855f7' },
-        { id: 'etc', label: '기타 (Etc)', icon: Building2, color: 'bg-gray-500', hex: '#6b7280' },
+        { id: 'ai', label: 'AI', icon: Building2, color: 'bg-cat-ai', hex: '#b06ed3ad' },
+        { id: 'bim', label: 'BIM', icon: Building2, color: 'bg-cat-bim', hex: '#2673cac9' },
+        { id: 'smart', label: 'Smart R&D', icon: Building2, color: 'bg-cat-smart', hex: '#1896319a' },
+        { id: 'dt', label: 'Digital Technology', icon: Building2, color: 'bg-cat-dt', hex: '#e6773cb9' },
+        { id: 'etc', label: '기타 (Etc)', icon: Building2, color: 'bg-cat-etc', hex: '#9E9E9E' },
     ];
 
     const categories = [...leaveCategories, ...workCategories];
@@ -58,7 +57,51 @@ const Timesheet = ({ currentUser }) => {
         return dailyData[dateKey]?.[categoryLabel] || 0;
     };
 
-    // Handler for hour change
+    const handleLeaveToggle = (type) => {
+        const dateKey = format(selectedDate, 'yyyy-MM-dd');
+
+        if (type === 'full') {
+            if (!window.confirm('연차(8h)를 설정하시겠습니까? 다른 모든 업무 입력이 초기화됩니다.')) {
+                return;
+            }
+        } else if (type === 'half') {
+            const currentDayData = dailyData[dateKey] || {};
+            const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차'].includes(k));
+            const currentWorkTotal = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
+
+            if (currentWorkTotal > 4) {
+                if (!window.confirm('반차 설정 시 업무시간은 최대 4시간입니다. 기존 업무시간을 초기화하시겠습니까?')) {
+                    return;
+                }
+            }
+        }
+
+        setDailyData(prev => {
+            const currentDayData = { ...(prev[dateKey] || {}) };
+
+            // Remove existing leaves
+            delete currentDayData['연차'];
+            delete currentDayData['반차'];
+
+            if (type === 'full') {
+                return { ...prev, [dateKey]: { '연차': 8 } };
+            } else if (type === 'half') {
+                const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차'].includes(k));
+                const currentWorkTotal = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
+
+                if (currentWorkTotal > 4) {
+                    workLabels.forEach(k => delete currentDayData[k]);
+                }
+                currentDayData['반차'] = 4;
+                return { ...prev, [dateKey]: currentDayData };
+            }
+
+            // type === 'none'
+            return { ...prev, [dateKey]: currentDayData };
+        });
+    };
+
+    // Handler for hour change (Work categories only)
     const updateHours = (categoryLabel, change) => {
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
@@ -66,99 +109,41 @@ const Timesheet = ({ currentUser }) => {
             const currentDayData = { ...(prev[dateKey] || {}) };
             const currentHours = currentDayData[categoryLabel] || 0;
 
-            // Determine category type
-            const isVacation = categoryLabel === '연차';
-            const isHalfAM = categoryLabel === '오전반차';
-            const isHalfPM = categoryLabel === '오후반차';
-            const isLeave = isVacation || isHalfAM || isHalfPM;
-
-            // --- Logic for Leave Categories ---
-            if (isLeave) {
-                if (change > 0) {
-                    // Activate Leave
-                    if (isVacation) {
-                        // Set Vacation to 8, Clear ALL others
-                        if (confirm('연차(8h)를 설정하시겠습니까? 다른 모든 입력이 초기화됩니다.')) {
-                            return { ...prev, [dateKey]: { '연차': 8 } };
-                        }
-                        return prev;
-                    } else { // Half Day
-                        // Set Half to 4, Clear other Half/Vacation
-                        // Check Work Hours: if > 4, prompt to reset?
-                        // Actually, simplified: If Half day is set, we ensure Total Work <= 4.
-                        // Let's just set Half to 4, clear other leaves.
-                        // If Work > 4, we warn and clamp work to 4?
-                        // Or just clear other leaves and let the user manage work?
-                        // "반차 선택 시 업무시간은 최대 4시간입니다" -> Clamp work to 4 if needed.
-                        const workLabels = Object.keys(currentDayData).filter(k => !['연차', '오전반차', '오후반차'].includes(k));
-                        const currentWorkTotal = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
-
-                        let newDayData = { ...currentDayData };
-                        // Clear other leaves
-                        delete newDayData['연차'];
-                        delete newDayData['오전반차'];
-                        delete newDayData['오후반차'];
-
-                        // Set target half
-                        newDayData[categoryLabel] = 4;
-
-                        if (currentWorkTotal > 4) {
-                            if (confirm('반차 설정 시 업무시간은 최대 4시간입니다. 업무시간을 조정하시겠습니까?')) {
-                                // Clamp work hours: blindly remove from last? or just reset all work to 0?
-                                // Resetting to 0 is safer and cleaner.
-                                workLabels.forEach(k => delete newDayData[k]);
-                            } else {
-                                return prev;
-                            }
-                        }
-                        return { ...prev, [dateKey]: newDayData };
-                    }
-                } else {
-                    // Deactivate Leave (0)
-                    const newDayData = { ...currentDayData };
-                    delete newDayData[categoryLabel];
-                    return { ...prev, [dateKey]: newDayData };
-                }
+            // Check if Vacation is active
+            if (currentDayData['연차'] > 0) {
+                alert('연차 중에는 업무를 기록할 수 없습니다. 휴가 설정을 번경해주세요.');
+                return prev;
             }
 
-            // --- Logic for Work Categories ---
-            else {
-                // Check if Vacation is active
-                if (currentDayData['연차'] > 0) {
-                    alert('연차 중에는 업무를 기록할 수 없습니다. 연차를 해제해주세요.');
-                    return prev;
-                }
+            // Check Half Day limit
+            const isHalfDayActive = (currentDayData['반차'] > 0);
+            const dailyMax = isHalfDayActive ? 4 : 24;
 
-                // Check Half Day limit
-                const isHalfDayActive = (currentDayData['오전반차'] > 0) || (currentDayData['오후반차'] > 0);
-                const dailyMax = isHalfDayActive ? 4 : 24;
+            // Calculate current TOTAL work (excluding leaves)
+            const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차'].includes(k));
+            const currentTotalWork = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
 
-                // Calculate current TOTAL work (excluding leaves)
-                const workLabels = Object.keys(currentDayData).filter(k => !['연차', '오전반차', '오후반차'].includes(k));
-                const currentTotalWork = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
+            // We are changing THIS category. 
+            // projectedWork = (Total - currentCat) + newCat
+            const projectedWork = (currentTotalWork - currentHours) + (currentHours + change);
 
-                // We are changing THIS category. 
-                // projectedWork = (Total - currentCat) + newCat
-                const projectedWork = (currentTotalWork - currentHours) + (currentHours + change);
-
-                if (projectedWork > dailyMax) {
-                    alert(isHalfDayActive ? '반차 시 업무시간은 최대 4시간입니다.' : '하루 24시간을 초과할 수 없습니다.');
-                    return prev;
-                }
-
-                if (projectedWork < 0) return prev; // Should not happen with min 0 check but safe
-
-                const newHours = Math.max(0, currentHours + change);
-
-                // Update
-                return {
-                    ...prev,
-                    [dateKey]: {
-                        ...currentDayData,
-                        [categoryLabel]: newHours
-                    }
-                };
+            if (projectedWork > dailyMax) {
+                alert(isHalfDayActive ? '반차 시 업무시간은 최대 4시간입니다.' : '하루 24시간을 초과할 수 없습니다.');
+                return prev;
             }
+
+            if (projectedWork < 0) return prev; // Should not happen with min 0 check but safe
+
+            const newHours = Math.max(0, currentHours + change);
+
+            // Update
+            return {
+                ...prev,
+                [dateKey]: {
+                    ...currentDayData,
+                    [categoryLabel]: newHours
+                }
+            };
         });
     };
 
@@ -232,7 +217,11 @@ const Timesheet = ({ currentUser }) => {
 
                             if (hours > 0) {
                                 if (!newDailyData[dateKey]) newDailyData[dateKey] = {};
-                                newDailyData[dateKey][record.project_name] = hours;
+                                let projectName = record.project_name;
+                                if (projectName === '오전반차' || projectName === '오후반차') {
+                                    projectName = '반차';
+                                }
+                                newDailyData[dateKey][projectName] = (newDailyData[dateKey][projectName] || 0) + hours;
                             }
                         });
                     });
@@ -286,7 +275,7 @@ const Timesheet = ({ currentUser }) => {
                 return {
                     id: index + 1,
                     project: cat.label,
-                    code: ['연차', '오전반차', '오후반차'].includes(cat.label) ? 'LEAVE' : '',
+                    code: ['연차', '반차'].includes(cat.label) ? 'LEAVE' : '',
                     hours: hours
                 };
             });
@@ -423,7 +412,7 @@ const Timesheet = ({ currentUser }) => {
             {/* Main Content Area */}
             <div className="flex-1 flex flex-col gap-6">
                 {/* Header */}
-                <div className="flex-none flex items-center justify-between">
+                <div className="flex-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
                     <div>
                         <h2 className="text-xl font-bold text-dark flex items-center">
                             <CalendarIcon className="mr-2 text-primary" size={20} />
@@ -431,11 +420,34 @@ const Timesheet = ({ currentUser }) => {
                         </h2>
                         <p className="text-gray-500 text-xs mt-1">해당 날짜의 업무 시간을 항목별로 입력해주세요.</p>
                     </div>
+
+                    {/* Leave Toggle */}
+                    <div className="flex items-center gap-3">
+                        <span className="text-sm font-medium text-gray-500">휴가 설정</span>
+                        <div className="flex bg-gray-100 rounded-lg p-1">
+                            {['없음', '반차', '연차'].map(t => {
+                                const isActive =
+                                    t === '연차' ? getHours(selectedDate, '연차') > 0 :
+                                        t === '반차' ? getHours(selectedDate, '반차') > 0 :
+                                            (getHours(selectedDate, '연차') === 0 && getHours(selectedDate, '반차') === 0);
+
+                                return (
+                                    <button
+                                        key={t}
+                                        onClick={() => handleLeaveToggle(t === '연차' ? 'full' : t === '반차' ? 'half' : 'none')}
+                                        className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${isActive ? 'bg-white text-kh-green shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
+                                    >
+                                        {t}
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
                 </div>
 
                 {/* Category Cards Grid */}
                 <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-h-0 overflow-y-auto lg:overflow-y-visible pr-1 pb-4">
-                    {categories.map((cat) => (
+                    {workCategories.map((cat) => (
                         <DailyWorkCard
                             key={cat.id}
                             category={cat.label}

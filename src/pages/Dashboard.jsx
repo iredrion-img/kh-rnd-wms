@@ -13,17 +13,17 @@ import { ko } from 'date-fns/locale';
    ═══════════════════════════════════════════ */
 const CATEGORIES = ['AI', 'BIM', 'Smart R&D', 'Digital Technology', 'Etc'];
 const CATEGORY_COLORS = {
-    'AI': '#367FF6',
-    'BIM': '#22C55E',
-    'Smart R&D': '#F97316',
-    'Digital Technology': '#A855F7',
+    'AI': '#b06ed3ad',
+    'BIM': '#2673cac9',
+    'Smart R&D': '#1896319a',
+    'Digital Technology': '#e6773cb9',
     'Etc': '#9E9E9E'
 };
 const GRADIENT_ENDS = {
-    'AI': '#93B8FC',
-    'BIM': '#6EE7A0',
-    'Smart R&D': '#FDBA74',
-    'Digital Technology': '#D8B4FE',
+    'AI': '#b06ed3',
+    'BIM': '#2673ca',
+    'Smart R&D': '#189631',
+    'Digital Technology': '#e6773c',
     'Etc': '#D1D5DB'
 };
 
@@ -49,13 +49,15 @@ const GlassTooltip = ({ active, payload, label }) => {
             boxShadow: '0 8px 32px rgba(0,0,0,0.10)', padding: '12px 16px',
         }}>
             <p style={{ fontWeight: 700, fontSize: '13px', marginBottom: '6px', color: '#25282B' }}>{label}</p>
-            {payload.filter(e => e.value > 0).map((e, i) => (
-                <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', padding: '2px 0' }}>
-                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: e.color, flexShrink: 0 }} />
-                    <span style={{ color: '#6B7280' }}>{e.name}</span>
-                    <span style={{ fontWeight: 700, marginLeft: 'auto', color: '#25282B' }}>{e.value}h</span>
-                </div>
-            ))}
+            {[...payload].filter(e => e.value > 0)
+                .sort((a, b) => CATEGORIES.indexOf(a.name) - CATEGORIES.indexOf(b.name))
+                .map((e, i) => (
+                    <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', padding: '2px 0' }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: e.color, flexShrink: 0 }} />
+                        <span style={{ color: '#6B7280' }}>{e.name}</span>
+                        <span style={{ fontWeight: 700, marginLeft: 'auto', color: '#25282B' }}>{e.value}h</span>
+                    </div>
+                ))}
         </div>
     );
 };
