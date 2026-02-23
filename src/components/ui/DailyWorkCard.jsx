@@ -1,14 +1,15 @@
 import React from 'react';
 import { Plus, Minus, Clock } from 'lucide-react';
 
-const DailyWorkCard = ({ category, hours, onIncrease, onDecrease, colorClass = "bg-primary" }) => {
+const DailyWorkCard = ({ category, hours, onIncrease, onDecrease, colorClass = "bg-primary", icon: Icon }) => {
     return (
         <div className={`bg-white rounded-2xl p-4 sm:p-6 shadow-sm border border-neutral/10 hover:shadow-md transition-all duration-300 flex flex-col items-center justify-between h-full min-h-[160px] relative group overflow-hidden`}>
             {/* Background Decoration */}
             <div className={`absolute -top-10 -right-10 w-32 h-32 rounded-full opacity-5 ${colorClass}`}></div>
 
             {/* Header */}
-            <div className="w-full text-center z-10">
+            <div className="w-full text-center z-10 flex flex-col items-center">
+                {Icon && <Icon size={24} className={`mb-2 ${colorClass.replace('bg-', 'text-').replace('500', '600')}`} />}
                 <h3 className="text-lg font-bold text-dark">{category}</h3>
                 <p className="text-xs text-gray-400 mt-1">업무 시간 기록</p>
             </div>

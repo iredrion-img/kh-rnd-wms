@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Save, Calendar as CalendarIcon, PieChart as PieChartIcon } from 'lucide-react';
+import { Save, Calendar as CalendarIcon, PieChart as PieChartIcon, Palmtree, Sun, Sunrise, Sunset, Building2 } from 'lucide-react';
 import { BarChart, Bar, ResponsiveContainer, Cell, XAxis, PieChart, Pie, Tooltip } from 'recharts';
 import MiniCalendar from '../components/ui/MiniCalendar';
 import DailyWorkCard from '../components/ui/DailyWorkCard';
@@ -30,16 +30,27 @@ const Timesheet = ({ currentUser }) => {
     // ... existing code ...
 
     const [selectedDate, setSelectedDate] = useState(new Date());
-    const [dailyData, setDailyData] = useState({}); // { 'yyyy-MM-dd': { 'AI': 0, 'BIM': 0, ... } }
+    const [dailyData, setDailyData] = useState({}); // { 'yyyy-MM-dd': { 'CategoryLabel': hours } }
 
     // Categories config
-    const categories = [
-        { id: 'ai', label: 'AI', color: 'bg-blue-500', hex: '#3b82f6' },
-        { id: 'bim', label: 'BIM', color: 'bg-green-500', hex: '#22c55e' },
-        { id: 'dt', label: 'Digital Technology', color: 'bg-purple-500', hex: '#a855f7' },
-        { id: 'smart', label: 'Smart R&D', color: 'bg-orange-500', hex: '#f97316' },
-        { id: 'etc', label: '기타 (Etc)', color: 'bg-gray-500', hex: '#6b7280' },
+    const leaveCategories = [
+        { id: 'vacation', label: '연차', icon: Palmtree, color: 'bg-emerald-500', hex: '#10b981' },
+        { id: 'half-am', label: '오전반차', icon: Sunrise, color: 'bg-amber-500', hex: '#f59e0b' },
+        { id: 'half-pm', label: '오후반차', icon: Sunset, color: 'bg-orange-500', hex: '#f97316' },
     ];
+
+    const workCategories = [
+        { id: 'ai', label: 'AI', icon: Building2, color: 'bg-blue-500', hex: '#3b82f6' },
+        { id: 'bim', label: 'BIM', icon: Building2, color: 'bg-green-500', hex: '#22c55e' },
+        { id: 'smart', label: 'Smart R&D', icon: Building2, color: 'bg-orange-500', hex: '#f97316' },
+        { id: 'dt', label: 'Digital Technology', icon: Building2, color: 'bg-purple-500', hex: '#a855f7' },
+        { id: 'etc', label: '기타 (Etc)', icon: Building2, color: 'bg-gray-500', hex: '#6b7280' },
+    ];
+
+    const categories = [...leaveCategories, ...workCategories];
+
+    // Categories config
+
 
     // Initialize daily data helper
     const getHours = (date, categoryLabel) => {
@@ -52,12 +63,94 @@ const Timesheet = ({ currentUser }) => {
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
         setDailyData(prev => {
-            const currentDayData = prev[dateKey] || {};
+            const currentDayData = { ...(prev[dateKey] || {}) };
             const currentHours = currentDayData[categoryLabel] || 0;
-            const newHours = Math.max(0, Math.min(24, currentHours + change)); // 0-24 range logic preserved
 
-            // Optimization: If decreasing (change < 0), always allow
-            if (change < 0) {
+            // Determine category type
+            const isVacation = categoryLabel === '연차';
+            const isHalfAM = categoryLabel === '오전반차';
+            const isHalfPM = categoryLabel === '오후반차';
+            const isLeave = isVacation || isHalfAM || isHalfPM;
+
+            // --- Logic for Leave Categories ---
+            if (isLeave) {
+                if (change > 0) {
+                    // Activate Leave
+                    if (isVacation) {
+                        // Set Vacation to 8, Clear ALL others
+                        if (confirm('연차(8h)를 설정하시겠습니까? 다른 모든 입력이 초기화됩니다.')) {
+                            return { ...prev, [dateKey]: { '연차': 8 } };
+                        }
+                        return prev;
+                    } else { // Half Day
+                        // Set Half to 4, Clear other Half/Vacation
+                        // Check Work Hours: if > 4, prompt to reset?
+                        // Actually, simplified: If Half day is set, we ensure Total Work <= 4.
+                        // Let's just set Half to 4, clear other leaves.
+                        // If Work > 4, we warn and clamp work to 4?
+                        // Or just clear other leaves and let the user manage work?
+                        // "반차 선택 시 업무시간은 최대 4시간입니다" -> Clamp work to 4 if needed.
+                        const workLabels = Object.keys(currentDayData).filter(k => !['연차', '오전반차', '오후반차'].includes(k));
+                        const currentWorkTotal = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
+
+                        let newDayData = { ...currentDayData };
+                        // Clear other leaves
+                        delete newDayData['연차'];
+                        delete newDayData['오전반차'];
+                        delete newDayData['오후반차'];
+
+                        // Set target half
+                        newDayData[categoryLabel] = 4;
+
+                        if (currentWorkTotal > 4) {
+                            if (confirm('반차 설정 시 업무시간은 최대 4시간입니다. 업무시간을 조정하시겠습니까?')) {
+                                // Clamp work hours: blindly remove from last? or just reset all work to 0?
+                                // Resetting to 0 is safer and cleaner.
+                                workLabels.forEach(k => delete newDayData[k]);
+                            } else {
+                                return prev;
+                            }
+                        }
+                        return { ...prev, [dateKey]: newDayData };
+                    }
+                } else {
+                    // Deactivate Leave (0)
+                    const newDayData = { ...currentDayData };
+                    delete newDayData[categoryLabel];
+                    return { ...prev, [dateKey]: newDayData };
+                }
+            }
+
+            // --- Logic for Work Categories ---
+            else {
+                // Check if Vacation is active
+                if (currentDayData['연차'] > 0) {
+                    alert('연차 중에는 업무를 기록할 수 없습니다. 연차를 해제해주세요.');
+                    return prev;
+                }
+
+                // Check Half Day limit
+                const isHalfDayActive = (currentDayData['오전반차'] > 0) || (currentDayData['오후반차'] > 0);
+                const dailyMax = isHalfDayActive ? 4 : 24;
+
+                // Calculate current TOTAL work (excluding leaves)
+                const workLabels = Object.keys(currentDayData).filter(k => !['연차', '오전반차', '오후반차'].includes(k));
+                const currentTotalWork = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
+
+                // We are changing THIS category. 
+                // projectedWork = (Total - currentCat) + newCat
+                const projectedWork = (currentTotalWork - currentHours) + (currentHours + change);
+
+                if (projectedWork > dailyMax) {
+                    alert(isHalfDayActive ? '반차 시 업무시간은 최대 4시간입니다.' : '하루 24시간을 초과할 수 없습니다.');
+                    return prev;
+                }
+
+                if (projectedWork < 0) return prev; // Should not happen with min 0 check but safe
+
+                const newHours = Math.max(0, currentHours + change);
+
+                // Update
                 return {
                     ...prev,
                     [dateKey]: {
@@ -66,64 +159,19 @@ const Timesheet = ({ currentUser }) => {
                     }
                 };
             }
-
-            // Daily Limit Check: Calculate Daily Total
-            // Sum all other categories for this day
-            let projectedDailyTotal = newHours;
-            categories.forEach(cat => {
-                if (cat.label !== categoryLabel) {
-                    projectedDailyTotal += (currentDayData[cat.label] || 0);
-                }
-            });
-
-            if (projectedDailyTotal > 24) {
-                alert('하루 24시간을 초과할 수 없습니다.');
-                return prev;
-            }
-
-            // Legal Limit Check: Calculate Weekly Total
-            const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
-            let currentWeeklyTotal = 0;
-
-            // Sum hours for all 7 days
-            for (let i = 0; i < 7; i++) {
-                const dayDate = addDays(weekStart, i);
-                const dKey = format(dayDate, 'yyyy-MM-dd');
-                const dayData = prev[dKey] || {};
-
-                // Sum all categories for this day
-                categories.forEach(cat => {
-                    // Be careful not to double count the value we are changing
-                    if (dKey === dateKey && cat.label === categoryLabel) {
-                        // Skip current value, we will add newHours later
-                    } else {
-                        currentWeeklyTotal += (dayData[cat.label] || 0);
-                    }
-                });
-            }
-
-            // Check if adding newHours exceeds 52
-            if (currentWeeklyTotal + newHours > 52) {
-                alert('법정 근로시간(주 52시간)을 초과할 수 없습니다.');
-                return prev; // Return previous state unchanged
-            }
-
-            return {
-                ...prev,
-                [dateKey]: {
-                    ...currentDayData,
-                    [categoryLabel]: newHours
-                }
-            };
         });
     };
 
     // Calculate daily total
     const getDailyTotalForDate = (date) => {
-        return categories.reduce((acc, cat) => acc + getHours(date, cat.label), 0);
+        const dateKey = format(date, 'yyyy-MM-dd');
+        const dayData = dailyData[dateKey] || {};
+        return Object.values(dayData).reduce((a, b) => a + b, 0);
     };
 
     const dailyTotal = getDailyTotalForDate(selectedDate);
+    // Work only total for reference if needed, but Total is mostly what matters for display
+    // const workOnlyTotal = ...
 
     // Prepare chart data (Weekly)
     const getWeeklyChartData = () => {
@@ -189,18 +237,8 @@ const Timesheet = ({ currentUser }) => {
                         });
                     });
 
-                    // Merge with existing dailyData or set fresh? 
-                    // Set fresh to ensure sync with DB, but careful not to wipe user input if they just typed? 
-                    // Actually, if we load on date change, we should replace.
-
-                    // However, we only have one state `dailyData` for ALL dates?
-                    // The state structure is Global. 
-                    // If we fetch ONLY the current week, we might wipe data for other weeks if we blindly replace.
-                    // So we should merge.
-
+                    // Merge with existing dailyData
                     setDailyData(prev => {
-                        // Deep merge logic or simple spread?
-                        // Simple spread of dates is safest.
                         return { ...prev, ...newDailyData };
                     });
 
@@ -237,19 +275,36 @@ const Timesheet = ({ currentUser }) => {
                     hours[day] = dailyData[dateKey]?.[cat.label] || 0;
                 });
 
+                // Only include if there is ANY data for this category in the week?
+                // Or custom filtering? server filters empty rows usually?
+                // Actually server logic: "newRecords = rows.map..." -> it takes all rows.
+                // But it filters out 0 totals?
+                // "total: Object.values(row.hours).reduce..."
+                // It doesn't filter empty rows explicitly in the map, but it might be okay.
+                // Let's send all categories including Leave types.
+
                 return {
                     id: index + 1,
                     project: cat.label,
-                    code: '',
+                    code: ['연차', '오전반차', '오후반차'].includes(cat.label) ? 'LEAVE' : '',
                     hours: hours
                 };
             });
+
+            // Filter out rows with 0 total hours across the week to save space?
+            // The backend replaces records for the week. 
+            // If we omit a row, does it mean it's deleted?
+            // "filteredRecords = existingRecords.filter(record => !(record.employee === employee && record.week_start === weekStart))"
+            // Yes, it deletes OLD records for this week and inserts NEW ones.
+            // So if we don't send a row, it's effectively deleted.
+            // So we should filter out rows with 0 hours to keep DB clean.
+            const allRows = rows.filter(row => Object.values(row.hours).some(h => h > 0));
 
             const response = await fetch('/api/timesheets', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
-                    rows,
+                    rows: allRows,
                     weekStart: format(weekStart, 'yyyy-MM-dd'),
                     employee: currentUser.name,
                     department: currentUser.department
@@ -378,14 +433,13 @@ const Timesheet = ({ currentUser }) => {
                     </div>
                 </div>
 
-                {/* Input Grid */}
-                <div
-                    className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-h-0 overflow-y-auto lg:overflow-y-visible pr-1 pb-4"
-                >
+                {/* Category Cards Grid */}
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-h-0 overflow-y-auto lg:overflow-y-visible pr-1 pb-4">
                     {categories.map((cat) => (
                         <DailyWorkCard
                             key={cat.id}
                             category={cat.label}
+                            icon={cat.icon}
                             hours={getHours(selectedDate, cat.label)}
                             onIncrease={() => updateHours(cat.label, 1)}
                             onDecrease={() => updateHours(cat.label, -1)}
@@ -446,8 +500,6 @@ const Timesheet = ({ currentUser }) => {
                             </div>
                         </div>
                     </div>
-
-
                 </div>
 
                 {/* Save Button - Sticky Footer (Mobile Only) / Static (Desktop) */}
