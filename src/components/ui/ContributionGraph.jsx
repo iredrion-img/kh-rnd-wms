@@ -6,10 +6,10 @@ import { ko } from 'date-fns/locale';
    Category Color Map
    ═══════════════════════════════════════════ */
 const CATEGORY_COLORS = {
-    'AI': { base: '#367FF6', shades: ['#D6E6FE', '#93B8FC', '#5E96F9', '#367FF6'] },
-    'BIM': { base: '#22C55E', shades: ['#CFFCD8', '#6EE7A0', '#3DD875', '#22C55E'] },
-    'Smart R&D': { base: '#F97316', shades: ['#FEE9D5', '#FDBA74', '#FB923C', '#F97316'] },
-    'Digital Technology': { base: '#A855F7', shades: ['#EDE3FE', '#D8B4FE', '#C084FC', '#A855F7'] },
+    'AI': { base: '#B06ED3', shades: ['#EDE0F5', '#CFA8E3', '#BD89DB', '#B06ED3'] },
+    'BIM': { base: '#2673CA', shades: ['#D4E4F7', '#7FAEE0', '#4D90D5', '#2673CA'] },
+    'Smart R&D': { base: '#189631', shades: ['#D0EDDA', '#6DC488', '#3DAD5C', '#189631'] },
+    'Digital Technology': { base: '#E6773C', shades: ['#FCDECF', '#F2B38A', '#EC9560', '#E6773C'] },
     '기타 (Etc)': { base: '#9E9E9E', shades: ['#E5E7EB', '#D1D5DB', '#B0B5BB', '#9E9E9E'] },
     'Etc': { base: '#9E9E9E', shades: ['#E5E7EB', '#D1D5DB', '#B0B5BB', '#9E9E9E'] },
 };
@@ -23,6 +23,34 @@ const resolveColor = (catName) => {
     if (upper.includes('R&D') || upper.includes('SMART')) return CATEGORY_COLORS['Smart R&D'];
     if (upper.includes('DIGITAL') || upper.includes('TECHNOLOGY')) return CATEGORY_COLORS['Digital Technology'];
     return CATEGORY_COLORS['Etc'];
+};
+
+/* ═══════════════════════════════════════════
+   2026 Korean Public Holidays
+   ═══════════════════════════════════════════ */
+const KOREAN_HOLIDAYS_2026 = {
+    '2026-01-01': '신정',
+    '2026-02-15': '설날 연휴',
+    '2026-02-16': '설날',
+    '2026-02-17': '설날 연휴',
+    '2026-02-18': '설날 대체공휴일',
+    '2026-03-01': '삼일절',
+    '2026-03-02': '삼일절 대체공휴일',
+    '2026-05-05': '어린이날',
+    '2026-05-24': '부처님오신날',
+    '2026-05-25': '부처님오신날 대체공휴일',
+    '2026-06-03': '지방선거일',
+    '2026-06-06': '현충일',
+    '2026-07-17': '제헌절',
+    '2026-08-15': '광복절',
+    '2026-08-17': '광복절 대체공휴일',
+    '2026-09-24': '추석 연휴',
+    '2026-09-25': '추석',
+    '2026-09-26': '추석 연휴',
+    '2026-10-03': '개천절',
+    '2026-10-05': '개천절 대체공휴일',
+    '2026-10-09': '한글날',
+    '2026-12-25': '크리스마스',
 };
 
 const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
@@ -45,17 +73,26 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
 
     /* ─── Pick color: dominant category color with intensity by hours ─── */
     const getCellStyle = (dateStr) => {
+        const isHoliday = !!KOREAN_HOLIDAYS_2026[dateStr];
         const { total, dominant } = getDayInfo(dateStr);
-        if (!total || total === 0) return { backgroundColor: '#F3F4F6' }; // gray-100
 
-        const palette = resolveColor(dominant);
-        let shadeIdx;
-        if (total <= 2) shadeIdx = 0;
-        else if (total <= 5) shadeIdx = 1;
-        else if (total <= 8) shadeIdx = 2;
-        else shadeIdx = 3;
+        // If there's work data, show work color regardless of holiday
+        if (total > 0) {
+            const palette = resolveColor(dominant);
+            let shadeIdx;
+            if (total <= 2) shadeIdx = 0;
+            else if (total <= 5) shadeIdx = 1;
+            else if (total <= 8) shadeIdx = 2;
+            else shadeIdx = 3;
+            return { backgroundColor: palette.shades[shadeIdx] };
+        }
 
-        return { backgroundColor: palette.shades[shadeIdx] };
+        // Holiday with no work: show distinct red/pink
+        if (isHoliday) {
+            return { backgroundColor: '#FEE2E2', backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 2px, #FECACA 2px, #FECACA 3px)' };
+        }
+
+        return { backgroundColor: '#F3F4F6' }; // normal empty day
     };
 
     /* ─── Build tooltip content ─── */
@@ -93,8 +130,8 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
         .filter(c => legendCats.has(c));
 
     return (
-        <div className="bg-white p-2 rounded-2xl shadow-sm border border-neutral/10 w-full">
-            <h3 className="text-sm font-bold text-dark mb-2 group flex items-center gap-2">
+        <div className="bg-white p-1.5 rounded-2xl shadow-sm border border-neutral/10 w-full">
+            <h3 className="text-sm font-bold text-dark mb-1 group flex items-center gap-2">
                 연간 업무 활동 (Contribution)
                 <span className="text-xs font-normal text-gray-400 bg-gray-100 px-2 py-0.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity">
                     {year}
@@ -132,6 +169,12 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
                                                         <div className="font-semibold text-gray-200 mb-1">
                                                             {format(date, 'M월 d일 (EEE)', { locale: ko })}
                                                         </div>
+                                                        {KOREAN_HOLIDAYS_2026[dateStr] && (
+                                                            <div className="flex items-center gap-1.5 py-0.5 mb-1 text-red-300">
+                                                                <span>🔴</span>
+                                                                <span className="font-semibold">{KOREAN_HOLIDAYS_2026[dateStr]}</span>
+                                                            </div>
+                                                        )}
                                                         {tooltipItems ? (
                                                             <>
                                                                 {tooltipItems.map(([cat, hrs]) => (
@@ -147,7 +190,7 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
                                                                 </div>
                                                             </>
                                                         ) : (
-                                                            <span className="text-gray-400">기록 없음</span>
+                                                            !KOREAN_HOLIDAYS_2026[dateStr] && <span className="text-gray-400">기록 없음</span>
                                                         )}
                                                         <div className="absolute top-full left-1/2 transform -translate-x-1/2 border-4 border-transparent border-t-gray-900/90" />
                                                     </div>
@@ -163,7 +206,7 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
             </div>
 
             {/* Legend: Category-based */}
-            <div className="flex items-center justify-end text-[10px] text-gray-400 gap-3 mt-4 flex-wrap">
+            <div className="flex items-center justify-end text-[10px] text-gray-400 gap-3 mt-1 flex-wrap">
                 <span className="mr-1">카테고리:</span>
                 {orderedLegend.map(cat => (
                     <div key={cat} className="flex items-center gap-1">
@@ -172,13 +215,18 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
                     </div>
                 ))}
                 <span className="mx-1 text-gray-200">|</span>
+                <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-[1px]" style={{ backgroundColor: '#FEE2E2', backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 1px, #FECACA 1px, #FECACA 2px)' }} />
+                    <span>공휴일</span>
+                </div>
+                <span className="mx-1 text-gray-200">|</span>
                 <span>밝기 = 시간</span>
                 <div className="flex gap-0.5 items-center">
                     <span>Less</span>
-                    <div className="w-2 h-2 rounded-[1px]" style={{ backgroundColor: '#D6E6FE' }} />
-                    <div className="w-2 h-2 rounded-[1px]" style={{ backgroundColor: '#93B8FC' }} />
-                    <div className="w-2 h-2 rounded-[1px]" style={{ backgroundColor: '#5E96F9' }} />
-                    <div className="w-2 h-2 rounded-[1px]" style={{ backgroundColor: '#367FF6' }} />
+                    <div className="w-2 h-2 rounded-[1px]" style={{ backgroundColor: '#EDE0F5' }} />
+                    <div className="w-2 h-2 rounded-[1px]" style={{ backgroundColor: '#CFA8E3' }} />
+                    <div className="w-2 h-2 rounded-[1px]" style={{ backgroundColor: '#BD89DB' }} />
+                    <div className="w-2 h-2 rounded-[1px]" style={{ backgroundColor: '#B06ED3' }} />
                     <span>More</span>
                 </div>
             </div>

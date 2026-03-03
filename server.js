@@ -10,6 +10,7 @@ import cron from 'node-cron'; // Import node-cron
 import https from 'https'; // Import https
 import os from 'os'; // Import os for IP detection
 import { writeAtomic } from './src/utils/safeStorage.js';
+import { initializeVectorStore, chatWithRag } from './ragService.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -108,6 +109,9 @@ const checkStartupBackup = () => {
 };
 
 checkStartupBackup();
+
+// --- RAG VECTOR STORE INITIALIZATION ---
+initializeVectorStore(currentDb);
 
 // --- MIDDLEWARE ---
 app.use(cors());
@@ -236,6 +240,7 @@ app.get('/api/timesheets', (req, res) => {
         }
         res.json(records);
     } catch (error) {
+        console.error('API Error in /api/timesheets:', error);
         res.status(500).json({ error: '데이터 로딩 실패' });
     }
 });
@@ -283,6 +288,24 @@ app.post('/api/timesheets', async (req, res) => {
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: '저장 실패' });
+    }
+});
+
+// --- RAG CHAT API ---
+app.post('/api/rag-chat', async (req, res) => {
+    try {
+        const { messages, query } = req.body;
+        if (!query) {
+            return res.status(400).json({ error: '질문(query)이 필요합니다.' });
+        }
+
+        // messageHistory structure from frontend: [{ sender: 'user', text: '...' }, { sender: 'bot', text: '...' }]
+        // currentQuery is the latest question
+        const response = await chatWithRag(messages || [], query);
+        res.json(response);
+    } catch (e) {
+        console.error('[API] /api/rag-chat Error:', e);
+        res.status(500).json({ error: 'RAG 기반 챗봇 대답 중 오류가 발생했습니다.' });
     }
 });
 

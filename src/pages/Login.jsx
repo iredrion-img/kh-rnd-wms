@@ -68,32 +68,27 @@ const Login = ({ employees = [], onLoginAttempt, onSignup }) => {
 
                 {/* Brand Content */}
                 <div className="relative z-10 animate-fade-in slide-in-from-left-8 duration-700">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="w-10 h-10 bg-kh-green rounded-lg flex items-center justify-center shadow-lg shadow-kh-green/30">
-                            <LayoutDashboard size={20} className="text-white" />
-                        </div>
-                        <span className="text-xl font-bold tracking-wider opacity-90">KH-R&D CENTER</span>
+                    <div className="mb-8">
+                        <img src="/KH_RnD_W.png" alt="KH-R&D Platform" className="h-10 md:h-12 w-auto object-contain opacity-90" />
                     </div>
                 </div>
 
                 <div className="relative z-10 max-w-2xl animate-fade-in slide-in-from-bottom-8 duration-700 delay-100">
-                    <h1 className="text-6xl font-bold leading-tight mb-6">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-kh-lime to-kh-green">Smart work</span> <br />
-                        <span className="opacity-90">starts here.</span>
+                    <h1 className="text-4xl lg:text-5xl font-bold leading-tight mb-6 break-keep">
+                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-kh-lime to-kh-green">업무 기록과 주간 회의를</span> <br />
+                        <span className="opacity-90">하나의 시스템으로.</span>
                     </h1>
-                    <p className="text-lg text-gray-400 leading-relaxed max-w-md">
-                        통합 업무 관리 시스템(WMS)으로 프로젝트, 일정, 리소스를 효율적으로 관리하세요.
-                        데이터 기반의 의사결정을 지원합니다.
+                    <p className="text-lg text-gray-400 leading-relaxed max-w-lg break-keep">
+                        부서 내 개인별 업무 기록과 주간공정회의를 통합 관리합니다.<br />
+                        업무 현황을 체계적으로 정리하고 원활하게 공유하세요.
                     </p>
 
-                    <div className="flex gap-4 mt-10">
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
-                            <Cpu size={16} className="text-kh-lime" />
-                            <span className="text-sm font-medium">BIM Automation</span>
+                    <div className="flex gap-3 mt-10">
+                        <div className="px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm text-sm font-medium text-gray-300">
+                            업무 기록 관리
                         </div>
-                        <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm">
-                            <Database size={16} className="text-blue-400" />
-                            <span className="text-sm font-medium">Data Driven</span>
+                        <div className="px-5 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-sm text-sm font-medium text-gray-300">
+                            주간공정회의
                         </div>
                     </div>
                 </div>

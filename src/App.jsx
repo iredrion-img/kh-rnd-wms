@@ -1,12 +1,15 @@
 import React, { useState } from 'react';
+import ChatModal from './components/chat/ChatModal';
 import Layout from './components/layout/Layout';
 import Dashboard from './pages/Dashboard';
 import Timesheet from './pages/Timesheet';
 import Login from './pages/Login';
 import WeeklyMeeting from './pages/WeeklyMeeting';
+import Chatbot from './components/chat/Chatbot';
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
+  const [isChatModalOpen, setChatModalOpen] = useState(false);
 
   // Check URL API endpoint
   // Check URL API endpoint
@@ -147,6 +150,10 @@ function App() {
         return <WeeklyMeeting />;
       case 'timesheet':
         return <Timesheet currentUser={currentUser} />;
+      case 'chatbot':
+        // Open modal instead of full page view
+        setChatModalOpen(true);
+        return null;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-gray-400">
@@ -182,6 +189,11 @@ function App() {
       onDeleteEmployee={handleDeleteEmployee}
     >
       {renderContent()}
+      <ChatModal
+        isOpen={isChatModalOpen}
+        onClose={() => setChatModalOpen(false)}
+        currentUser={currentUser}
+      />
     </Layout>
   );
 }

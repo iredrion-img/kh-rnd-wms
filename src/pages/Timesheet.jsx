@@ -315,7 +315,7 @@ const Timesheet = ({ currentUser }) => {
     const weeklyTotal = weeklyChartData.reduce((acc, day) => acc + day.total, 0);
 
     return (
-        <div className="flex flex-col lg:flex-row-reverse lg:h-[calc(100vh-theme(spacing.24))] gap-6">
+        <div className="flex flex-col lg:flex-row-reverse lg:h-full gap-4 p-4">
             {/* Left Sidebar: Calendar & Stats - Bottom on Mobile, Left on Desktop */}
             <div className="w-full lg:w-80 flex flex-col space-y-6 flex-none">
                 <MiniCalendar
@@ -410,20 +410,20 @@ const Timesheet = ({ currentUser }) => {
             </div>
 
             {/* Main Content Area */}
-            <div className="flex-1 flex flex-col gap-6">
+            <div className="flex-1 flex flex-col gap-3 min-h-0">
                 {/* Header */}
-                <div className="flex-none flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+                <div className="flex-none flex items-center justify-between">
                     <div>
-                        <h2 className="text-xl font-bold text-dark flex items-center">
+                        <h2 className="text-lg font-bold text-white flex items-center">
                             <CalendarIcon className="mr-2 text-primary" size={20} />
                             업무 기록 입력
                         </h2>
-                        <p className="text-gray-500 text-xs mt-1">해당 날짜의 업무 시간을 항목별로 입력해주세요.</p>
+                        <p className="text-gray-400 text-sm mt-0.5">해당 날짜의 업무 시간을 항목별로 입력해주세요.</p>
                     </div>
 
                     {/* Leave Toggle */}
                     <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-500">휴가 설정</span>
+                        <span className="text-sm font-medium text-gray-400">휴가 설정</span>
                         <div className="flex bg-gray-100 rounded-lg p-1">
                             {['없음', '반차', '연차'].map(t => {
                                 const isActive =
@@ -446,7 +446,7 @@ const Timesheet = ({ currentUser }) => {
                 </div>
 
                 {/* Category Cards Grid */}
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 min-h-0 overflow-y-auto lg:overflow-y-visible pr-1 pb-4">
+                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 min-h-0 overflow-y-auto lg:overflow-y-visible pr-1 pb-2">
                     {workCategories.map((cat) => (
                         <DailyWorkCard
                             key={cat.id}
@@ -468,7 +468,7 @@ const Timesheet = ({ currentUser }) => {
                         </div>
 
                         {/* Donut Chart */}
-                        <div className="w-full h-full mt-4 relative">
+                        <div className="w-full flex-1 mt-4 relative min-h-[100px]">
                             <ResponsiveContainer width="100%" height="100%">
                                 <PieChart>
                                     <Pie
@@ -514,11 +514,11 @@ const Timesheet = ({ currentUser }) => {
                     </div>
                 </div>
 
-                {/* Save Button - Sticky Footer (Mobile Only) / Static (Desktop) */}
-                <div className="z-10 flex-none pt-2 sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:static lg:bg-transparent lg:backdrop-filter-none lg:pt-6">
+                {/* Save Button */}
+                <div className="z-10 flex-none sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:static lg:bg-transparent lg:backdrop-filter-none">
                     <button
                         onClick={handleSave}
-                        className="w-full py-4 rounded-xl font-bold text-lg transition-all shadow-lg flex items-center justify-center space-x-2 bg-neutral text-white hover:bg-neutral/80 shadow-neutral/30 active:scale-[0.98]"
+                        className="w-full py-3 rounded-xl font-bold text-base transition-all shadow-lg flex items-center justify-center space-x-2 bg-neutral text-white hover:bg-neutral/80 shadow-neutral/30 active:scale-[0.98]"
                     >
                         <Save size={20} />
                         <span>저장하기</span>

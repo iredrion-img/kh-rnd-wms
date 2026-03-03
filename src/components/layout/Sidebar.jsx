@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Clock, Users, FileBarChart, CheckSquare, LogOut, UserPlus, ChevronRight, User, Settings, Edit2, Trash2, X, ChevronLeft, LogIn, MoreHorizontal } from 'lucide-react';
+import { LayoutDashboard, Clock, Users, FileBarChart, CheckSquare, LogOut, UserPlus, ChevronRight, User, Settings, Edit2, Trash2, X, ChevronLeft, LogIn, MoreHorizontal, MessageSquare } from 'lucide-react';
 
 const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLoginAttempt, onLogout, onAddEmployee, onUpdateEmployee, onDeleteEmployee }) => {
     // Modal States
@@ -21,9 +21,9 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
     ];
 
     const menuItems = [
-        { id: 'dashboard', label: 'Dashboard', subLabel: '대시보드', icon: LayoutDashboard },
-        { id: 'weekly-meeting', label: 'Weekly Meeting', subLabel: '주간공정회의', icon: Users },
-        { id: 'timesheet', label: 'Timesheet', subLabel: '업무 기록', icon: Clock },
+        { id: 'dashboard', label: '대시보드', subLabel: 'Dashboard', icon: LayoutDashboard },
+        { id: 'weekly-meeting', label: '주간공정회의', subLabel: 'Weekly Meeting', icon: Users },
+        { id: 'timesheet', label: '업무 기록', subLabel: 'Timesheet', icon: Clock },
     ];
 
     // Handler to open edit mode for a user
@@ -44,21 +44,20 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
 
     return (
         <>
-            <div className="w-64 h-full bg-[#1A1D21] text-white flex flex-col fixed left-0 top-0 border-r border-white/5 z-50 shadow-2xl">
+            <div className="w-[clamp(250px,20vw,380px)] flex-none h-full bg-[#1A1D21] text-white flex flex-col border-r border-white/5 z-40 relative">
                 {/* ─── Logo Section ─── */}
-                <div className="h-20 flex items-center px-6 border-b border-white/5 bg-gradient-to-r from-white/5 to-transparent">
+                <div className="h-[clamp(5rem,8vh,8rem)] flex items-center px-[clamp(1rem,2vw,2rem)] border-b border-white/5 bg-gradient-to-r from-white/5 to-transparent shrink-0">
                     <div className="flex flex-col">
-                        <h1 className="text-lg font-bold tracking-wider text-white flex items-center gap-2">
-                            <span className="w-2 h-6 bg-kh-lime rounded-full shadow-[0_0_10px_rgba(140,198,63,0.5)]"></span>
-                            KH-R&D WMS
+                        <h1 className="flex items-center">
+                            <img src="/KH_RnD_W.png" alt="KH-R&D Platform" className="h-[clamp(1.8rem,2.5vw,2.5rem)] w-auto object-contain" />
                         </h1>
-                        <p className="text-[10px] text-gray-500 ml-4 tracking-widest uppercase mt-0.5">Workforce Management</p>
+                        <p className="text-[clamp(0.7rem,1vw,1.125rem)] text-gray-400 tracking-widest uppercase mt-2">Workforce Management</p>
                     </div>
                 </div>
 
-                {/* ─── Navigation ─── */}
-                <nav className="flex-1 py-8 px-4 space-y-2">
-                    <p className="px-4 text-xs font-bold text-gray-600 uppercase tracking-widest mb-4">Menu</p>
+                {/* ─── Navigation (내부 패딩/폰트사이즈 유동화 적용) ─── */}
+                <nav className="flex-1 overflow-y-auto py-[clamp(1rem,3vh,2.5rem)] px-[clamp(0.75rem,1.5vw,1.5rem)] space-y-2 md:space-y-4 custom-scrollbar">
+                    <p className="px-4 text-[clamp(0.8rem,1.2vw,1.25rem)] font-bold text-gray-500 uppercase tracking-widest mb-4">Menu</p>
                     {menuItems.map((item) => {
                         const Icon = item.icon;
                         const isActive = activeTab === item.id;
@@ -66,44 +65,69 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
                             <button
                                 key={item.id}
                                 onClick={() => onTabChange(item.id)}
-                                className={`w-full flex items-center group relative px-4 py-3.5 rounded-xl transition-all duration-300 overflow-hidden
+                                className={`w-full flex items-center group relative px-[clamp(1rem,1.5vw,1.5rem)] py-[clamp(0.75rem,1.5vh,1.25rem)] rounded-2xl transition-all duration-300 overflow-hidden
                                     ${isActive
-                                        ? 'bg-gradient-to-r from-kh-green/20 to-transparent text-white shadow-lg shadow-kh-green/5 ring-1 ring-white/5'
+                                        ? 'bg-gradient-to-r from-kh-green/20 to-transparent text-white shadow-md shadow-kh-green/5'
                                         : 'text-gray-400 hover:bg-white/5 hover:text-white'
                                     }`}
                             >
                                 {isActive && (
-                                    <div className="absolute left-0 top-0 bottom-0 w-1 bg-kh-lime shadow-[0_0_15px_#8CC63F]" />
+                                    <div className="absolute left-0 top-0 bottom-0 w-2 bg-kh-lime shadow-[0_0_20px_#8CC63F]" />
                                 )}
-                                <Icon size={20} className={`mr-3 transition-colors ${isActive ? 'text-kh-lime' : 'text-gray-500 group-hover:text-white'}`} />
-                                <div className="text-left">
-                                    <span className={`block text-sm font-semibold ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
+                                <Icon size={28} className={`mr-[clamp(0.75rem,1.2vw,1.25rem)] shrink-0 transition-colors ${isActive ? 'text-kh-lime' : 'text-gray-500 group-hover:text-white'}`} />
+                                <div className="text-left min-w-0">
+                                    <span className={`block truncate text-[clamp(1rem,1.5vw,1.5rem)] font-bold ${isActive ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
                                         {item.label}
                                     </span>
-                                    <span className="block text-[10px] text-gray-600 font-medium group-hover:text-gray-500">
+                                    <span className="block truncate text-[clamp(0.75rem,1vw,1.125rem)] text-gray-500 font-medium group-hover:text-gray-400 mt-0.5">
                                         {item.subLabel}
                                     </span>
                                 </div>
                             </button>
                         );
                     })}
+
+                    {/* ─── AI Chatbot (별도 분리) ─── */}
+                    <div className="pt-4 mt-6 border-t border-white/10">
+                        <button
+                            onClick={() => onTabChange('chatbot')}
+                            className={`w-full flex items-center group relative px-[clamp(1rem,1.5vw,1.5rem)] py-[clamp(0.75rem,1.5vh,1.25rem)] rounded-2xl transition-all duration-300 overflow-hidden
+                                ${activeTab === 'chatbot'
+                                    ? 'bg-gradient-to-r from-blue-500/20 to-transparent text-white shadow-md shadow-blue-500/5'
+                                    : 'text-gray-400 hover:bg-white/5 hover:text-white'
+                                }`}
+                        >
+                            {activeTab === 'chatbot' && (
+                                <div className="absolute left-0 top-0 bottom-0 w-2 bg-blue-500 shadow-[0_0_20px_#3B82F6]" />
+                            )}
+                            <MessageSquare size={28} className={`mr-[clamp(0.75rem,1.2vw,1.25rem)] shrink-0 transition-colors ${activeTab === 'chatbot' ? 'text-blue-400' : 'text-gray-500 group-hover:text-white'}`} />
+                            <div className="text-left min-w-0">
+                                <span className={`block truncate text-[clamp(1rem,1.5vw,1.5rem)] font-bold ${activeTab === 'chatbot' ? 'text-white' : 'text-gray-400 group-hover:text-white'}`}>
+                                    하나(HANA)
+                                </span>
+                                <span className="block truncate text-[clamp(0.75rem,1vw,1.125rem)] text-gray-500 font-medium group-hover:text-gray-400 mt-0.5">
+                                    R&D Center의 AI 어시스트
+                                </span>
+                            </div>
+                        </button>
+                    </div>
                 </nav>
 
-                {/* ─── User Profile ─── */}
-                <div className="p-4 bg-gradient-to-t from-black/40 to-transparent border-t border-white/5">
+                {/* ─── User Profile (하단 고정) ─── */}
+                <div className="shrink-0 p-[clamp(1rem,1.5vw,1.5rem)] bg-gradient-to-t from-black/60 to-transparent border-t border-white/5 relative">
                     <div className="relative group">
                         <button
                             onClick={() => setIsProfileMenuOpen(!isProfileMenuOpen)}
-                            className="w-full flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-left"
+                            className="w-full flex items-center gap-[clamp(0.5rem,1vw,1rem)] p-[clamp(0.5rem,1vw,1rem)] rounded-2xl bg-white/5 hover:bg-white/10 border border-white/5 transition-all text-left"
                         >
-                            <div className="w-9 h-9 rounded-lg bg-gradient-to-br from-kh-green to-blue-600 flex items-center justify-center text-sm font-bold text-white shadow-lg shadow-black/50">
+                            <div className="w-[clamp(2.5rem,4vw,4rem)] h-[clamp(2.5rem,4vw,4rem)] rounded-xl bg-gradient-to-br from-kh-green to-blue-600 flex items-center justify-center text-[clamp(1rem,1.8vw,1.875rem)] font-extrabold text-white shadow-lg shadow-black/50 shrink-0">
                                 {currentUser?.name ? currentUser.name[0] : '?'}
                             </div>
                             <div className="flex-1 min-w-0">
-                                <p className="text-sm font-bold text-white truncate">{currentUser?.name}</p>
-                                <p className="text-xs text-gray-400 truncate">{currentUser?.department}</p>
+                                <p className="text-[clamp(1rem,1.5vw,1.5rem)] font-extrabold text-white truncate">{currentUser?.name}</p>
+                                <p className="text-[clamp(0.75rem,1vw,1.125rem)] text-gray-400 truncate mt-0.5">{currentUser?.department}</p>
                             </div>
-                            <MoreHorizontal size={16} className="text-gray-500" />
+                            <MoreHorizontal size={20} className="text-gray-400 shrink-0" />
                         </button>
 
                         {/* Dropdown Menu (Simple implementation) */}
