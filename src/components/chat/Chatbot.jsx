@@ -5,8 +5,8 @@ import {
     LineChart, Line, PieChart, Pie, Cell
 } from 'recharts';
 
-// Backend port is typically 3001 as defined in server.js
-const API_URL = 'http://localhost:3001/api/rag-chat';
+// Backend port is typically proxy-passed by Vite (see vite.config.js)
+const API_URL = '/api/rag-chat';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 

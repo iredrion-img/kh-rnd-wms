@@ -142,6 +142,17 @@ function App() {
     }
   };
 
+  // Intercept tab changes: chatbot opens modal, others switch page
+  const handleTabChange = (tab) => {
+    if (tab === 'chatbot') {
+      setChatModalOpen(true);
+      // Don't change activeTab — keep showing current page behind modal
+    } else {
+      setChatModalOpen(false);
+      setActiveTab(tab);
+    }
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
@@ -150,10 +161,6 @@ function App() {
         return <WeeklyMeeting />;
       case 'timesheet':
         return <Timesheet currentUser={currentUser} />;
-      case 'chatbot':
-        // Open modal instead of full page view
-        setChatModalOpen(true);
-        return null;
       default:
         return (
           <div className="flex flex-col items-center justify-center h-[60vh] text-gray-400">
@@ -178,7 +185,7 @@ function App() {
   return (
     <Layout
       activeTab={activeTab}
-      onTabChange={setActiveTab}
+      onTabChange={handleTabChange}
       currentUser={currentUser}
       employees={employees}
       onLogin={handleLogin}

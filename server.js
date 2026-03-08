@@ -11,6 +11,8 @@ import https from 'https'; // Import https
 import os from 'os'; // Import os for IP detection
 import { writeAtomic } from './src/utils/safeStorage.js';
 import { initializeVectorStore, chatWithRag } from './ragService.js';
+import { handleQuestion } from './server/ai/aiOrchestrator.js';
+import { ingestCSV } from './server/dataPipeline/csvToVectorPipeline.js';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -111,7 +113,18 @@ const checkStartupBackup = () => {
 checkStartupBackup();
 
 // --- RAG VECTOR STORE INITIALIZATION ---
-initializeVectorStore(currentDb);
+initializeVectorStore(currentDb); // Legacy in-memory VectorStore (fallback)
+
+// --- QDRANT RAG INITIALIZATION ---
+(async () => {
+    try {
+        console.log('[Qdrant] Starting Qdrant ingestion pipeline...');
+        const result = await ingestCSV(currentDb, false);
+        console.log(`[Qdrant] Ingestion complete: ${result.documentCount} docs, ${result.vectorCount} vectors`);
+    } catch (e) {
+        console.warn('[Qdrant] Ingestion failed (will use legacy fallback):', e.message);
+    }
+})();
 
 // --- MIDDLEWARE ---
 app.use(cors());
@@ -291,7 +304,7 @@ app.post('/api/timesheets', async (req, res) => {
     }
 });
 
-// --- RAG CHAT API ---
+// --- RAG CHAT API (AI Orchestrator) ---
 app.post('/api/rag-chat', async (req, res) => {
     try {
         const { messages, query } = req.body;
@@ -299,9 +312,15 @@ app.post('/api/rag-chat', async (req, res) => {
             return res.status(400).json({ error: '질문(query)이 필요합니다.' });
         }
 
-        // messageHistory structure from frontend: [{ sender: 'user', text: '...' }, { sender: 'bot', text: '...' }]
-        // currentQuery is the latest question
-        const response = await chatWithRag(messages || [], query);
+        // AI Orchestrator를 통해 질문 처리 (Dispatcher → Agent 선택 → 응답)
+        // 실패 시 기존 ragService로 fallback
+        let response;
+        try {
+            response = await handleQuestion(messages || [], query);
+        } catch (orchErr) {
+            console.warn('[API] Orchestrator 실패, ragService fallback:', orchErr.message);
+            response = await chatWithRag(messages || [], query);
+        }
         res.json(response);
     } catch (e) {
         console.error('[API] /api/rag-chat Error:', e);

@@ -38,6 +38,10 @@ class SimpleMemoryVectorStore {
         scoredDocs.sort((a, b) => b.score - a.score);
         return scoredDocs.slice(0, k).map(item => item.doc);
     }
+    // 메타데이터 기반 직접 필터링
+    filterByMetadata(filterFn) {
+        return this.store.filter(item => filterFn(item.doc.metadata)).map(item => item.doc);
+    }
 }
 
 let vectorStore = null;
@@ -82,10 +86,101 @@ export const initializeVectorStore = async (csvFilePath) => {
             });
         });
 
+        // ── 주간 직원별 요약 + 초과근무 Document 생성 ──
+        // Dashboard와 동일한 로직: employee+week_start 그룹핑 후 주 40시간 초과분 = 초과근무
+        const weeklyMap = {};
+        records.forEach(record => {
+            const key = `${record.employee}-${record.week_start}`;
+            if (!weeklyMap[key]) {
+                weeklyMap[key] = {
+                    employee: record.employee,
+                    department: record.department,
+                    week_start: record.week_start,
+                    totalHours: 0,
+                    projects: [],
+                    dailyHours: { mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0 }
+                };
+            }
+            weeklyMap[key].totalHours += parseFloat(record.total) || 0;
+            weeklyMap[key].projects.push(record.project_name);
+            ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].forEach(day => {
+                weeklyMap[key].dailyHours[day] += parseFloat(record[day]) || 0;
+            });
+        });
+
+        const summaryDocs = Object.values(weeklyMap).map(summary => {
+            const overtime = summary.totalHours > 40 ? Math.round((summary.totalHours - 40) * 10) / 10 : 0;
+            const hasOvertime = overtime > 0;
+            const uniqueProjects = [...new Set(summary.projects)].join(', ');
+            const dailyStr = Object.entries(summary.dailyHours)
+                .map(([d, h]) => {
+                    const dayMap = { mon: '월', tue: '화', wed: '수', thu: '목', fri: '금', sat: '토', sun: '일' };
+                    return `${dayMap[d]}(${h}h)`;
+                }).join(', ');
+
+            const text = `
+[주간 직원 요약]
+[부서]: ${summary.department}
+[직원]: ${summary.employee}
+[수행 기간]: ${summary.week_start} 주차
+[주간 총 업무시간]: ${Math.round(summary.totalHours * 10) / 10} 시간
+[기준 근무시간]: 40 시간
+[초과근무 여부]: ${hasOvertime ? '있음' : '없음'}
+[초과근무 시간]: ${overtime} 시간
+[일별 합산 업무시간]: ${dailyStr}
+[수행 프로젝트]: ${uniqueProjects}
+`.trim();
+
+            return new Document({
+                pageContent: text,
+                metadata: {
+                    type: 'weekly_summary',
+                    department: summary.department,
+                    employee: summary.employee,
+                    total: Math.round(summary.totalHours * 10) / 10,
+                    overtime: overtime,
+                    hasOvertime: hasOvertime,
+                    week: summary.week_start
+                }
+            });
+        });
+
+        // ── 전체 초과근무 통계 요약 Document ──
+        const overtimeEntries = Object.values(weeklyMap).filter(s => s.totalHours > 40);
+        const totalOvertimeHours = overtimeEntries.reduce((sum, s) => sum + (s.totalHours - 40), 0);
+        const overtimeEmployees = [...new Set(overtimeEntries.map(s => s.employee))];
+
+        if (overtimeEntries.length > 0) {
+            const overtimeDetail = overtimeEntries
+                .sort((a, b) => (b.totalHours - 40) - (a.totalHours - 40))
+                .map(s => `  - ${s.employee} (${s.department}): ${s.week_start} 주차, 총 ${Math.round(s.totalHours)}시간, 초과근무 ${Math.round((s.totalHours - 40) * 10) / 10}시간`)
+                .join('\n');
+
+            const globalSummaryText = `
+[전체 초과근무 통계]
+[초과근무 발생 건수]: ${overtimeEntries.length}건
+[초과근무 총 시간]: ${Math.round(totalOvertimeHours * 10) / 10} 시간
+[초과근무 대상 직원]: ${overtimeEmployees.join(', ')} (총 ${overtimeEmployees.length}명)
+[상세 내역]:
+${overtimeDetail}
+`.trim();
+
+            summaryDocs.push(new Document({
+                pageContent: globalSummaryText,
+                metadata: {
+                    type: 'overtime_global_summary',
+                    totalOvertime: Math.round(totalOvertimeHours * 10) / 10,
+                    count: overtimeEntries.length
+                }
+            }));
+        }
+
+        const allDocs = [...docs, ...summaryDocs];
+
         // 메모리에 VectorStore 구축
         vectorStore = new SimpleMemoryVectorStore(embeddings);
-        await vectorStore.addDocuments(docs);
-        console.log(`[RAG] 벡터 저장소 구축 완료. (총 ${docs.length}개 조각)`);
+        await vectorStore.addDocuments(allDocs);
+        console.log(`[RAG] 벡터 저장소 구축 완료. (총 ${allDocs.length}개 조각, 원본 ${docs.length} + 요약 ${summaryDocs.length})`);
     } catch (e) {
         console.error('[RAG] 임베딩 초기화 실패:', e);
     }
@@ -103,10 +198,29 @@ export const chatWithRag = async (messageHistory, currentQuery) => {
         }
 
         // 2. Retrieval (유사한 데이터 문맥 검색)
-        // 최대 25개의 가장 관련성 높은 업무기록 추출
-        const relevantDocs = await vectorStore.search(currentQuery, 25);
+        // 초과근무 관련 질문인지 파악
+        const isOvertimeQuery = currentQuery.includes('초과') || currentQuery.includes('야근') ||
+            currentQuery.includes('overtime') || currentQuery.includes('잔업') ||
+            currentQuery.includes('40시간');
 
-        const contextText = relevantDocs.map(d => d.pageContent).join('\n---\n');
+        let relevantDocs = await vectorStore.search(currentQuery, 25);
+        let overtimeContext = '';
+
+        if (isOvertimeQuery) {
+            // 초과근무 관련 문서를 메타데이터로 직접 가져옴 (벡터 유사도에 의존하지 않음)
+            const overtimeSummaries = vectorStore.filterByMetadata(meta =>
+                (meta.type === 'weekly_summary' && meta.hasOvertime === true) ||
+                meta.type === 'overtime_global_summary'
+            );
+            if (overtimeSummaries.length > 0) {
+                overtimeContext = '\n\n[!! 초과근무 관련 핵심 데이터 시작 !!]\n' +
+                    overtimeSummaries.map(d => d.pageContent).join('\n---\n') +
+                    '\n[!! 초과근무 관련 핵심 데이터 종료 !!]\n';
+                console.log(`[RAG] 초과근무 직접 조회: ${overtimeSummaries.length}건의 관련 문서 발견`);
+            }
+        }
+
+        const contextText = overtimeContext + '\n' + relevantDocs.map(d => d.pageContent).join('\n---\n');
         const rawData = relevantDocs.map(d => d.metadata);
 
         // 3. 차트 요청 파악 및 데이터 조합 (Heuristic 기반 빠른 차트 생성)

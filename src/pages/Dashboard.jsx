@@ -125,6 +125,163 @@ const CustomLegend = () => (
 );
 
 /* ═══════════════════════════════════════════
+   Yearly Heatmap Grid Component
+   ═══════════════════════════════════════════ */
+const HeatmapChart = ({ data }) => {
+    const [tooltip, setTooltip] = useState(null);
+    const containerRef = React.useRef(null);
+    const [dims, setDims] = useState({ w: 0, h: 0 });
+
+    useEffect(() => {
+        if (!containerRef.current) return;
+        const obs = new ResizeObserver(entries => {
+            const { width, height } = entries[0].contentRect;
+            setDims({ w: width, h: height });
+        });
+        obs.observe(containerRef.current);
+        return () => obs.disconnect();
+    }, []);
+
+    // Calculate max per category for normalization
+    const maxPerCat = useMemo(() => {
+        const m = {};
+        CATEGORIES.forEach(cat => {
+            m[cat] = Math.max(1, ...data.map(d => d[cat] || 0));
+        });
+        return m;
+    }, [data]);
+
+    const { w, h } = dims;
+    const labelW = Math.max(40, w * 0.07);
+    const headerH = Math.max(28, h * 0.08);
+    const gap = 3;
+    const cols = CATEGORIES.length;
+    const rows = data.length;
+    const cellW = rows > 0 && cols > 0 ? (w - labelW - gap * (cols - 1)) / cols : 0;
+    const cellH = rows > 0 ? (h - headerH - gap * (rows - 1) - 24) / rows : 0;
+
+    const hexToRgb = (hex) => {
+        const r = parseInt(hex.slice(1, 3), 16);
+        const g = parseInt(hex.slice(3, 5), 16);
+        const b = parseInt(hex.slice(5, 7), 16);
+        return { r, g, b };
+    };
+
+    const getCellColor = (cat, value) => {
+        const ratio = maxPerCat[cat] > 0 ? value / maxPerCat[cat] : 0;
+        const baseHex = GRADIENT_ENDS[cat] || '#9E9E9E';
+        const { r, g, b } = hexToRgb(baseHex);
+        const alpha = 0.08 + ratio * 0.82; // min 0.08, max 0.90
+        return `rgba(${r},${g},${b},${alpha})`;
+    };
+
+    return (
+        <div ref={containerRef} style={{ width: '100%', height: '100%', position: 'relative', userSelect: 'none' }}>
+            {w > 0 && h > 0 && (
+                <svg width={w} height={h}>
+                    {/* Column Headers (Category names) */}
+                    {CATEGORIES.map((cat, ci) => (
+                        <text key={cat}
+                            x={labelW + ci * (cellW + gap) + cellW / 2}
+                            y={headerH - 8}
+                            textAnchor="middle"
+                            fontSize={Math.min(13, cellW * 0.22)}
+                            fontWeight="700"
+                            fill="#6B7280">
+                            {cat}
+                        </text>
+                    ))}
+                    {/* Rows (months) */}
+                    {data.map((d, ri) => (
+                        <g key={d.key}>
+                            {/* Row label */}
+                            <text
+                                x={labelW - 8}
+                                y={headerH + ri * (cellH + gap) + cellH / 2 + 4}
+                                textAnchor="end"
+                                fontSize={Math.min(12, cellH * 0.45)}
+                                fontWeight="600"
+                                fill="#9CA3AF">
+                                {d.displayDate}
+                            </text>
+                            {/* Cells */}
+                            {CATEGORIES.map((cat, ci) => {
+                                const val = d[cat] || 0;
+                                const x = labelW + ci * (cellW + gap);
+                                const y = headerH + ri * (cellH + gap);
+                                return (
+                                    <g key={cat}
+                                        onMouseEnter={(e) => {
+                                            const rect = containerRef.current.getBoundingClientRect();
+                                            setTooltip({
+                                                cat, month: d.displayDate, value: Math.round(val * 10) / 10,
+                                                x: e.clientX - rect.left, y: e.clientY - rect.top
+                                            });
+                                        }}
+                                        onMouseMove={(e) => {
+                                            const rect = containerRef.current.getBoundingClientRect();
+                                            setTooltip(prev => prev ? {
+                                                ...prev,
+                                                x: e.clientX - rect.left, y: e.clientY - rect.top
+                                            } : null);
+                                        }}
+                                        onMouseLeave={() => setTooltip(null)}
+                                        style={{ cursor: 'pointer' }}>
+                                        <rect
+                                            x={x} y={y}
+                                            width={cellW} height={cellH}
+                                            rx={Math.min(6, cellW * 0.08)}
+                                            fill={getCellColor(cat, val)}
+                                            stroke={tooltip?.cat === cat && tooltip?.month === d.displayDate ? '#374151' : 'rgba(255,255,255,0.6)'}
+                                            strokeWidth={tooltip?.cat === cat && tooltip?.month === d.displayDate ? 2 : 1}
+                                        />
+                                        {/* Show hours text if cell is large enough and value > 0 */}
+                                        {cellW > 50 && cellH > 18 && val > 0 && (
+                                            <text
+                                                x={x + cellW / 2}
+                                                y={y + cellH / 2 + 4}
+                                                textAnchor="middle"
+                                                fontSize={Math.min(11, cellH * 0.38)}
+                                                fontWeight="700"
+                                                fill={val / maxPerCat[cat] > 0.5 ? '#fff' : '#6B7280'}
+                                                style={{ textShadow: val / maxPerCat[cat] > 0.5 ? '0 1px 2px rgba(0,0,0,0.3)' : 'none' }}
+                                                pointerEvents="none">
+                                                {Math.round(val)}h
+                                            </text>
+                                        )}
+                                    </g>
+                                );
+                            })}
+                        </g>
+                    ))}
+                </svg>
+            )}
+            {/* Tooltip */}
+            {tooltip && (
+                <div style={{
+                    position: 'absolute',
+                    left: tooltip.x + 12, top: tooltip.y - 40,
+                    background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(12px)',
+                    border: '1px solid rgba(0,0,0,0.08)', borderRadius: '10px',
+                    boxShadow: '0 6px 20px rgba(0,0,0,0.12)', padding: '8px 14px',
+                    pointerEvents: 'none', zIndex: 50, whiteSpace: 'nowrap'
+                }}>
+                    <div style={{ fontSize: '12px', fontWeight: 700, color: '#25282B', marginBottom: '2px' }}>
+                        {tooltip.month} · {tooltip.cat}
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <span style={{ width: 8, height: 8, borderRadius: '50%', background: CATEGORY_COLORS[tooltip.cat] }} />
+                        <span style={{ fontSize: '13px', fontWeight: 800, color: GRADIENT_ENDS[tooltip.cat] }}>
+                            {tooltip.value}h
+                        </span>
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+};
+
+/* ═══════════════════════════════════════════
    Dashboard Component
    ═══════════════════════════════════════════ */
 const Dashboard = () => {
@@ -176,7 +333,12 @@ const Dashboard = () => {
         const filterByRange = (data, date, range) => data.filter(item => {
             const d = parseISO(item.week_start);
             if (range === 'weekly') return isSameWeek(d, date, { weekStartsOn: 1 });
-            if (range === 'monthly') return isSameMonth(d, date);
+            if (range === 'monthly') {
+                // Include weeks that straddle month boundaries
+                // (e.g. week_start=Dec 29 should be included for January if any day is in Jan)
+                const weekEnd = addDays(d, 6);
+                return isSameMonth(d, date) || isSameMonth(weekEnd, date);
+            }
             return isSameYear(d, date);
         });
 
@@ -483,7 +645,7 @@ const Dashboard = () => {
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-[clamp(0.75rem,1.5vw,2rem)] shadow-sm flex flex-col min-h-0">
                     <div className="flex-none flex justify-between items-center mb-[clamp(0.25rem,0.5vh,0.75rem)]">
                         <div>
-                            <h3 className="text-[clamp(1rem,1.5vw,2rem)] font-extrabold tracking-tight text-kh-text-main">주간 업무 현황</h3>
+                            <h3 className="text-[clamp(1rem,1.5vw,2rem)] font-extrabold tracking-tight text-kh-text-main">{timeRange === 'weekly' ? '주간 업무 현황' : timeRange === 'monthly' ? '월간 업무 현황' : '연간 업무 현황'}</h3>
                             <p className="text-[clamp(0.6rem,0.8vw,1rem)] text-gray-500 mt-0.5 font-medium">시간 흐름에 따른 업무 비중의 변화를 확인하세요.</p>
                         </div>
                         {timeRange === 'monthly' && (
@@ -494,53 +656,102 @@ const Dashboard = () => {
                         )}
                     </div>
                     <div className="flex-1 min-h-0">
-                        <ResponsiveContainer width="99%" height="99%">
-                            {timeRange === 'weekly' ? (
-                                <BarChart data={processedData.areaChartData.filter(d => { const dy = getDay(new Date(d.date || d.key)); return dy >= 1 && dy <= 5; })} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                                    <defs>
-                                        {CATEGORIES.map((cat, i) => (
-                                            <linearGradient key={cat} id={`barG-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor={CATEGORY_COLORS[cat]} />
-                                                <stop offset="100%" stopColor={GRADIENT_ENDS[cat]} />
-                                            </linearGradient>
-                                        ))}
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" strokeOpacity={0.5} />
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" tickMargin={6} axisLine={false} tickLine={false} />
-                                    <YAxis stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" axisLine={false} tickLine={false} />
-                                    <Tooltip content={<GlassTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
-                                    <Legend content={<CustomLegend />} />
-                                    {[...CATEGORIES].reverse().map((cat, ri) => {
-                                        const origIdx = CATEGORIES.indexOf(cat);
+                        {timeRange === 'yearly' ? (
+                            /* ── YEARLY: Heatmap Grid ── */
+                            <HeatmapChart data={processedData.areaChartData} />
+                        ) : (
+                            <ResponsiveContainer width="99%" height="99%">
+                                {timeRange === 'weekly' ? (
+                                    <BarChart data={processedData.areaChartData.filter(d => { const dy = getDay(new Date(d.date || d.key)); return dy >= 1 && dy <= 5; })} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
+                                        <defs>
+                                            {CATEGORIES.map((cat, i) => (
+                                                <linearGradient key={cat} id={`barG-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="0%" stopColor={CATEGORY_COLORS[cat]} />
+                                                    <stop offset="100%" stopColor={GRADIENT_ENDS[cat]} />
+                                                </linearGradient>
+                                            ))}
+                                        </defs>
+                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" strokeOpacity={0.5} />
+                                        <XAxis dataKey="displayDate" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" tickMargin={6} axisLine={false} tickLine={false} />
+                                        <YAxis stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" axisLine={false} tickLine={false} />
+                                        <Tooltip content={<GlassTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
+                                        <Legend content={<CustomLegend />} />
+                                        {[...CATEGORIES].reverse().map((cat, ri) => {
+                                            const origIdx = CATEGORIES.indexOf(cat);
+                                            return (
+                                                <Bar key={cat} dataKey={cat} stackId="a" fill={`url(#barG-${origIdx})`}
+                                                    radius={ri === CATEGORIES.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]} barSize={44} />
+                                            );
+                                        })}
+                                    </BarChart>
+                                ) : (
+                                    /* ── MONTHLY: Horizontal Stacked Bar (주차별 업무시간) ── */
+                                    (() => {
+                                        // Build chart data based on viewMode
+                                        const chartData = viewMode === 'percent'
+                                            ? processedData.areaChartData.map(d => {
+                                                const total = CATEGORIES.reduce((s, c) => s + (d[c] || 0), 0);
+                                                if (total === 0) {
+                                                    const row = { key: d.key, displayDate: d.displayDate };
+                                                    CATEGORIES.forEach(c => { row[c] = 0; });
+                                                    return row;
+                                                }
+                                                // Use integer rounding with remainder distribution for exact 100%
+                                                const raw = CATEGORIES.map(c => ({ cat: c, pct: (d[c] || 0) / total * 100 }));
+                                                const floored = raw.map(r => ({ ...r, val: Math.floor(r.pct), rem: r.pct - Math.floor(r.pct) }));
+                                                let diff = 100 - floored.reduce((s, f) => s + f.val, 0);
+                                                floored.sort((a, b) => b.rem - a.rem);
+                                                for (let j = 0; j < diff; j++) floored[j].val += 1;
+                                                const row = { key: d.key, displayDate: d.displayDate };
+                                                floored.forEach(f => { row[f.cat] = f.val; });
+                                                return row;
+                                            })
+                                            : processedData.areaChartData;
                                         return (
-                                            <Bar key={cat} dataKey={cat} stackId="a" fill={`url(#barG-${origIdx})`}
-                                                radius={ri === CATEGORIES.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]} barSize={44} />
+                                            <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 5, bottom: 0 }}>
+                                                <defs>
+                                                    {CATEGORIES.map((cat, i) => (
+                                                        <linearGradient key={cat} id={`mbarG-${i}`} x1="0" y1="0" x2="1" y2="0">
+                                                            <stop offset="0%" stopColor={CATEGORY_COLORS[cat]} />
+                                                            <stop offset="100%" stopColor={GRADIENT_ENDS[cat]} />
+                                                        </linearGradient>
+                                                    ))}
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" strokeOpacity={0.5} />
+                                                <YAxis dataKey="displayDate" type="category" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 14px)" axisLine={false} tickLine={false} width={50} />
+                                                <XAxis type="number" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 14px)" axisLine={false} tickLine={false}
+                                                    domain={viewMode === 'percent' ? [0, 100] : ['auto', 'auto']}
+                                                    tickFormatter={viewMode === 'percent' ? v => `${v}%` : undefined} />
+                                                <Tooltip content={<GlassTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                                                    formatter={viewMode === 'percent' ? (value) => `${value}%` : undefined} />
+                                                <Legend content={<CustomLegend />} />
+                                                {CATEGORIES.map((cat, i) => (
+                                                    <Bar key={cat} dataKey={cat} stackId="a" fill={`url(#mbarG-${i})`}
+                                                        radius={i === CATEGORIES.length - 1 ? [0, 8, 8, 0] : [0, 0, 0, 0]} barSize={28}
+                                                        label={({ x, y, width, height, value }) => {
+                                                            if (!value || value === 0 || width < 40) return null;
+                                                            let label;
+                                                            if (viewMode === 'percent') {
+                                                                const rounded = Math.round(value * 10) / 10;
+                                                                label = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)}%`;
+                                                            } else {
+                                                                label = `${Math.round(value)}h`;
+                                                            }
+                                                            return (
+                                                                <text x={x + width / 2} y={y + height / 2 + 1} textAnchor="middle" dominantBaseline="middle"
+                                                                    fontSize={Math.min(11, height * 0.42)} fontWeight="700" fill="#fff"
+                                                                    style={{ textShadow: '0 1px 3px rgba(0,0,0,0.35)', pointerEvents: 'none' }}>
+                                                                    {label}
+                                                                </text>
+                                                            );
+                                                        }} />
+                                                ))}
+                                            </BarChart>
                                         );
-                                    })}
-                                </BarChart>
-                            ) : (
-                                <AreaChart data={processedData.areaChartData} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                                    <defs>
-                                        {CATEGORIES.map((cat, i) => (
-                                            <linearGradient key={cat} id={`areaG-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                                <stop offset="0%" stopColor={CATEGORY_COLORS[cat]} stopOpacity={0.45} />
-                                                <stop offset="95%" stopColor={CATEGORY_COLORS[cat]} stopOpacity={0.02} />
-                                            </linearGradient>
-                                        ))}
-                                    </defs>
-                                    <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" strokeOpacity={0.5} />
-                                    <XAxis dataKey="displayDate" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" tickMargin={6} axisLine={false} tickLine={false} />
-                                    <YAxis stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" axisLine={false} tickLine={false} />
-                                    <Tooltip content={<GlassTooltip />} />
-                                    <Legend content={<CustomLegend />} />
-                                    {CATEGORIES.map((cat, i) => (
-                                        <Area key={cat} type="monotone" dataKey={cat} stackId="1"
-                                            stroke={CATEGORY_COLORS[cat]} strokeWidth={2.5}
-                                            fill={`url(#areaG-${i})`} />
-                                    ))}
-                                </AreaChart>
-                            )}
-                        </ResponsiveContainer>
+                                    })()
+                                )}
+                            </ResponsiveContainer>
+                        )}
                     </div>
                 </div>
 

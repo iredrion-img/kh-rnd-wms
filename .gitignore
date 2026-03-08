@@ -1,5 +1,19 @@
+# ===========================
+# Dependencies
+# ===========================
+node_modules/
+
+# ===========================
+# Build Output
+# ===========================
+dist/
+dist-ssr/
+*.local
+
+# ===========================
 # Logs
-logs
+# ===========================
+logs/
 *.log
 npm-debug.log*
 yarn-debug.log*
@@ -7,28 +21,63 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# ===========================
+# Data Files (Protect live data)
+# ===========================
+*.csv
+backups/
 
-# Editor directories and files
+# ===========================
+# Local LLM / AI Runtime
+# ===========================
+# Ollama installer (~1.2GB)
+OllamaSetup.exe
+
+# Qdrant vector DB (binary + storage)
+qdrant/
+
+# ===========================
+# Installer / Setup Binaries
+# ===========================
+*.exe
+*.zip
+*.msi
+
+# ===========================
+# SSL Certificates (Security)
+# ===========================
+*.pem
+cert.*
+key.*
+
+# ===========================
+# Windows Shortcuts & URL files
+# ===========================
+*.lnk
+*.url
+
+# ===========================
+# Temp / Debug Files
+# ===========================
+tmp_*
+debug_*
+Success!
+
+# ===========================
+# Editor & OS
+# ===========================
 .vscode/*
 !.vscode/extensions.json
-.idea
+.idea/
 .DS_Store
+Thumbs.db
 *.suo
 *.ntvs*
 *.njsproj
 *.sln
 *.sw?
 
-
-# Ngrok
+# ===========================
+# Ngrok Auth Token
+# ===========================
 38SbeEilRpa2RjlhAPVD3FvFG93_6t7m8Sw3Yjh6sPKmN539v
-
-# Database (Protect live data)
-database.csv
-users.csv
-backups/
-*.csv

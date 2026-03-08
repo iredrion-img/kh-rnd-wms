@@ -13,6 +13,7 @@
     "@langchain/community": "^1.1.21",
     "@langchain/core": "^1.1.29",
     "@langchain/ollama": "^1.2.5",
+    "@qdrant/js-client-rest": "^1.17.0",
     "body-parser": "^2.2.2",
     "clsx": "^2.1.1",
     "cors": "^2.8.5",
