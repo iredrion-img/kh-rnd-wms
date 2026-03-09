@@ -57,11 +57,12 @@ key.*
 *.url
 
 # ===========================
-# Temp / Debug Files
+# Temp / Debug / Deploy Logs
 # ===========================
 tmp_*
 debug_*
 Success!
+deploy.log
 
 # ===========================
 # Editor & OS

@@ -9,6 +9,8 @@ import { fileURLToPath, pathToFileURL } from 'url';
 import cron from 'node-cron'; // Import node-cron
 import https from 'https'; // Import https
 import os from 'os'; // Import os for IP detection
+import crypto from 'crypto'; // Import crypto for webhook signature verification
+import { execFile } from 'child_process'; // Import for deploy script execution
 import { writeAtomic } from './src/utils/safeStorage.js';
 import { initializeVectorStore, chatWithRag } from './ragService.js';
 import { handleQuestion } from './server/ai/aiOrchestrator.js';
@@ -128,7 +130,12 @@ initializeVectorStore(currentDb); // Legacy in-memory VectorStore (fallback)
 
 // --- MIDDLEWARE ---
 app.use(cors());
-app.use(bodyParser.json());
+app.use(bodyParser.json({
+    verify: (req, _res, buf) => {
+        // Store raw body for webhook signature verification
+        req.rawBody = buf;
+    }
+}));
 
 // --- HELPERS ---
 const readCsvResilient = (filePath) => {
@@ -326,6 +333,57 @@ app.post('/api/rag-chat', async (req, res) => {
         console.error('[API] /api/rag-chat Error:', e);
         res.status(500).json({ error: 'RAG 기반 챗봇 대답 중 오류가 발생했습니다.' });
     }
+});
+
+// --- GITHUB WEBHOOK AUTO-DEPLOY ---
+const DEPLOY_SECRET = 'kunhwa-wms-deploy-2026';
+let isDeploying = false;
+
+app.post('/api/webhook/deploy', (req, res) => {
+    // Verify GitHub signature
+    const signature = req.headers['x-hub-signature-256'];
+    if (!signature) {
+        console.log('[Webhook] Rejected: No signature');
+        return res.status(403).json({ error: 'Missing signature' });
+    }
+
+    const hmac = crypto.createHmac('sha256', DEPLOY_SECRET);
+    const digest = 'sha256=' + hmac.update(req.rawBody).digest('hex');
+
+    if (!crypto.timingSafeEqual(Buffer.from(signature), Buffer.from(digest))) {
+        console.log('[Webhook] Rejected: Invalid signature');
+        return res.status(403).json({ error: 'Invalid signature' });
+    }
+
+    // Check event type
+    const event = req.headers['x-github-event'];
+    if (event !== 'push') {
+        return res.json({ message: `Ignored event: ${event}` });
+    }
+
+    // Prevent concurrent deploys
+    if (isDeploying) {
+        console.log('[Webhook] Deploy already in progress, skipping');
+        return res.json({ message: 'Deploy already in progress' });
+    }
+
+    isDeploying = true;
+    console.log('[Webhook] Deploy triggered! Starting auto_deploy.bat...');
+
+    const deployScript = path.join(__dirname, 'scripts', 'auto_deploy.bat');
+    const child = execFile('cmd.exe', ['/c', deployScript], {
+        cwd: __dirname,
+        detached: true,
+        stdio: 'ignore',
+        windowsHide: false
+    });
+
+    child.unref();
+
+    // Reset lock after 5 minutes (safety timeout)
+    setTimeout(() => { isDeploying = false; }, 5 * 60 * 1000);
+
+    res.json({ success: true, message: 'Deploy started' });
 });
 
 // --- STATIC & START ---
