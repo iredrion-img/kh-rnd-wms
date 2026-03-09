@@ -4,8 +4,8 @@
 ::   Triggered by GitHub Webhook
 :: ====================================================
 
-:: Set working directory
-cd /d c:\KH_RnD
+:: Set working directory to project root (parent of scripts/)
+cd /d "%~dp0.."
 
 :: Log file
 set LOG=scripts\deploy.log
