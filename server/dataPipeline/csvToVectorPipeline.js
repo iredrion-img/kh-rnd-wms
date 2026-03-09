@@ -6,18 +6,64 @@
  *
  * Uses sequential (one-by-one) embedding to avoid Ollama model state issues
  * with bge-m3 batch calls.
+ *
+ * Includes hash-based caching to skip re-embedding when CSV data hasn't changed.
  */
 
 import { processCSV } from './csvProcessor.js';
 import { embedText, getEmbeddingDimension } from '../rag/embeddingService.js';
 import { ensureCollection, upsertPoints, deleteCollection, getCollectionInfo } from '../rag/qdrantService.js';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 
 const UPSERT_BATCH_SIZE = 64;
+const HASH_FILE = '.qdrant_hash';
 
 /**
  * Small delay to let Ollama stabilize between embedding calls
  */
 function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+/**
+ * Calculate MD5 hash of a file
+ */
+function getFileHash(filePath) {
+    const content = fs.readFileSync(filePath);
+    return crypto.createHash('md5').update(content).digest('hex');
+}
+
+/**
+ * Get cached hash from .qdrant_hash file (stored next to CSV)
+ */
+function getCachedHash(csvDir) {
+    const hashPath = path.join(csvDir, HASH_FILE);
+    try {
+        return fs.readFileSync(hashPath, 'utf-8').trim();
+    } catch {
+        return null;
+    }
+}
+
+/**
+ * Save hash to .qdrant_hash file
+ */
+function saveCachedHash(csvDir, hash) {
+    const hashPath = path.join(csvDir, HASH_FILE);
+    fs.writeFileSync(hashPath, hash, 'utf-8');
+}
+
+/**
+ * Check if Qdrant collection has existing vectors
+ */
+async function hasExistingVectors() {
+    try {
+        const info = await getCollectionInfo();
+        return (info?.points_count || 0) > 0;
+    } catch {
+        return false;
+    }
+}
 
 /**
  * Run the full CSV → Qdrant ingestion pipeline
@@ -26,6 +72,34 @@ function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
  * @param {boolean} rebuild - if true, delete and recreate collection
  */
 export async function ingestCSV(csvFilePath, rebuild = false) {
+    const csvDir = path.dirname(path.resolve(csvFilePath));
+
+    // --- CACHE CHECK: Skip if CSV unchanged and Qdrant has data ---
+    if (!rebuild) {
+        const currentHash = getFileHash(csvFilePath);
+        const cachedHash = getCachedHash(csvDir);
+        const vectorsExist = await hasExistingVectors();
+
+        if (currentHash === cachedHash && vectorsExist) {
+            console.log('\n[Qdrant] ✅ CSV unchanged & vectors exist — skipping ingestion (cached)');
+            const info = await getCollectionInfo();
+            console.log(`[Qdrant] Using cached vectors: ${info?.points_count || 'N/A'} points\n`);
+            return {
+                documentCount: 0,
+                embeddedCount: 0,
+                failedCount: 0,
+                vectorCount: info?.points_count || 0,
+                dimension: info?.config?.params?.vectors?.size || 768,
+                elapsedSeconds: 0,
+                cached: true
+            };
+        }
+
+        if (cachedHash && currentHash !== cachedHash) {
+            console.log('[Qdrant] CSV changed — re-ingesting...');
+        }
+    }
+
     const startTime = Date.now();
     console.log('\n' + '═'.repeat(60));
     console.log('[Ingestion] Starting CSV → Qdrant ingestion pipeline...');
@@ -79,6 +153,11 @@ export async function ingestCSV(csvFilePath, rebuild = false) {
     console.log(`\n[Ingestion] Step 4/4 — Upserting ${points.length} vectors to Qdrant...`);
     await upsertPoints(points, UPSERT_BATCH_SIZE);
 
+    // Save hash after successful ingestion
+    const csvHash = getFileHash(csvFilePath);
+    saveCachedHash(csvDir, csvHash);
+    console.log(`[Ingestion] Hash saved for future cache checks.`);
+
     // Summary
     let pointsCount = 'N/A';
     try { const ci = await getCollectionInfo(); pointsCount = ci?.points_count ?? points.length; } catch (e) { }
@@ -102,3 +181,4 @@ export async function ingestCSV(csvFilePath, rebuild = false) {
         elapsedSeconds: parseFloat(elapsed)
     };
 }
+

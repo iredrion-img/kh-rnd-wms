@@ -2,6 +2,7 @@
 # Dependencies
 # ===========================
 node_modules/
+.qdrant_hash
 
 # ===========================
 # Build Output
