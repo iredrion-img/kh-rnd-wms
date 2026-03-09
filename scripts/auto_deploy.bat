@@ -50,7 +50,7 @@ for /f "tokens=2" %%i in ('wmic process where "commandline like '%%server.js%%'"
 timeout /t 2 /nobreak >nul
 
 echo [Restart] Starting new server... >> %LOG%
-start "Kunhwa WMS Server" cmd /k "cd /d c:\KH_RnD && node server.js"
+start "Kunhwa WMS Server" cmd /k "cd /d "%~dp0.." && node server.js"
 
 echo [Success] Deploy complete at %date% %time% >> %LOG%
 echo ================================================== >> %LOG%
