@@ -95,7 +95,7 @@ const renderActiveDonut = (props) => {
 };
 
 const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, percent }) => {
-    if (percent < 0.05) return null; // Hide if less than 5% slice to avoid overlapping
+    if (percent < 0.1) return null; // Hide if less than 10% slice to avoid visual clutter
     const RADIAN = Math.PI / 180;
     // 도넛 조각의 정중앙에 라벨 배치
     const radius = innerRadius + (outerRadius - innerRadius) * 0.5;
@@ -103,7 +103,7 @@ const renderCustomizedLabel = ({ cx, cy, midAngle, innerRadius, outerRadius, per
     const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
     return (
-        <text x={x} y={y} fill="#FFFFFF" textAnchor="middle" dominantBaseline="central" fontSize="16" fontWeight="800" style={{ textShadow: '0px 2px 4px rgba(0,0,0,0.8)' }} pointerEvents="none">
+        <text x={x} y={y} fill="#FFFFFF" textAnchor="middle" dominantBaseline="central" fontSize="11" fontWeight="600" opacity={0.65} style={{ pointerEvents: 'none' }}>
             {`${(percent * 100).toFixed(0)}%`}
         </text>
     );
@@ -285,6 +285,9 @@ const HeatmapChart = ({ data }) => {
    Dashboard Component
    ═══════════════════════════════════════════ */
 const Dashboard = () => {
+    // 현황판(Kiosk) 모드 플래그: true일 경우 모든 hover 및 tooltip 반응 비활성화
+    const isDisplayBoardMode = true; 
+
     const [timeRange, setTimeRange] = useState('weekly');
     const [currentDate, setCurrentDate] = useState(new Date());
     const [rawTimesheets, setRawTimesheets] = useState([]);
@@ -295,9 +298,12 @@ const Dashboard = () => {
     const [filterDept, setFilterDept] = useState('전체');
     const [activeDonutIdx, setActiveDonutIdx] = useState(-1);
 
+    const activeViewMode = viewMode;
+
     useEffect(() => {
         (async () => {
             try {
+                setLoading(true);
                 const res = await fetch('/api/timesheets');
                 if (res.ok) setRawTimesheets(await res.json());
             } catch (e) { console.error("Fetch timesheets failed:", e); }
@@ -350,9 +356,18 @@ const Dashboard = () => {
 
         // ── Projects by Category ──
         const projectMap = {};
-        CATEGORIES.forEach(c => projectMap[c] = 0);
+        const prevProjectMap = {};
+        CATEGORIES.forEach(c => { projectMap[c] = 0; prevProjectMap[c] = 0; });
         filteredData.forEach(item => { projectMap[getCategory(item.project_name)] += parseFloat(item.total || 0); });
-        const project = CATEGORIES.map(name => ({ name, billable: Math.round(projectMap[name] * 10) / 10 }));
+        prevData.forEach(item => { prevProjectMap[getCategory(item.project_name)] += parseFloat(item.total || 0); });
+        
+        const project = CATEGORIES.map(name => {
+            const current = Math.round(projectMap[name] * 10) / 10;
+            const prev = Math.round(prevProjectMap[name] * 10) / 10;
+            const diffHours = Math.round((current - prev) * 10) / 10;
+            const diffPercent = prev > 0 ? Math.round(((current - prev) / prev) * 100) : 0;
+            return { name, billable: current, prev, diffHours, diffPercent };
+        });
 
         // ── Staff & Department ──
         const staffMap = {}, departmentMap = {};
@@ -511,6 +526,8 @@ const Dashboard = () => {
     if (loading) return <div className="p-10 text-center text-gray-500">Loading...</div>;
 
     const donutData = processedData.project.filter(d => d.billable > 0);
+    const topIncreases = [...processedData.project].filter(d => d.diffHours > 0).sort((a,b) => b.diffHours - a.diffHours).slice(0, 2);
+    const topDecreases = [...processedData.project].filter(d => d.diffHours < 0).sort((a,b) => a.diffHours - b.diffHours).slice(0, 2);
 
     return (
         <div className="flex flex-col h-full w-full overflow-hidden bg-kh-bg-main p-[clamp(1rem,2vw,2.5rem)] gap-[clamp(0.5rem,1.5vh,1.5rem)]">
@@ -644,51 +661,138 @@ const Dashboard = () => {
                 {/* ─── Bar Chart (왼쪽 2/3) ─── */}
                 <div className="lg:col-span-2 bg-white rounded-2xl border border-gray-100 p-[clamp(0.75rem,1.5vw,2rem)] shadow-sm flex flex-col min-h-0">
                     <div className="flex-none flex justify-between items-center mb-[clamp(0.25rem,0.5vh,0.75rem)]">
-                        <div>
-                            <h3 className="text-[clamp(1rem,1.5vw,2rem)] font-extrabold tracking-tight text-kh-text-main">{timeRange === 'weekly' ? '주간 업무 현황' : timeRange === 'monthly' ? '월간 업무 현황' : '연간 업무 현황'}</h3>
-                            <p className="text-[clamp(0.6rem,0.8vw,1rem)] text-gray-500 mt-0.5 font-medium">시간 흐름에 따른 업무 비중의 변화를 확인하세요.</p>
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-start justify-between">
+                                <div>
+                                    <h3 className="text-[clamp(1rem,1.5vw,2rem)] font-extrabold tracking-tight text-kh-text-main">{timeRange === 'weekly' ? '주간 업무 현황' : timeRange === 'monthly' ? '월간 업무 현황' : '연간 업무 현황'}</h3>
+                                    <p className="text-[clamp(0.6rem,0.8vw,1rem)] text-gray-400 mt-0.5 font-medium">시간 흐름에 따른 업무 비중의 변화를 확인하세요.</p>
+                                </div>
+                                {timeRange === 'yearly' && (
+                                    <span className="text-[clamp(0.55rem,0.7vw,0.8rem)] text-gray-400 bg-gray-50 px-2.5 py-1 rounded-lg border border-gray-100 flex-shrink-0 mt-1 italic">
+                                        현재 집계 기준: 데이터가 존재하는 월만 표시됩니다
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        {timeRange === 'monthly' && (
-                            <div className="flex bg-gray-50 rounded-xl p-1 text-[clamp(0.6rem,0.8vw,1rem)] font-bold">
-                                <button onClick={() => setViewMode('hours')} className={`px-3 py-1 rounded-lg ${viewMode === 'hours' ? 'bg-white shadow' : 'text-gray-400'}`}>Hrs</button>
-                                <button onClick={() => setViewMode('percent')} className={`px-3 py-1 rounded-lg ${viewMode === 'percent' ? 'bg-white shadow' : 'text-gray-400'}`}>%</button>
+                        {(timeRange === 'monthly' || timeRange === 'yearly') && (
+                            <div className="flex bg-gray-50 rounded-xl p-1 text-[clamp(0.6rem,0.8vw,1rem)] font-bold pointer-events-auto">
+                                <button onClick={() => setViewMode('hours')} className={`px-3 py-1 rounded-lg ${activeViewMode === 'hours' ? 'bg-white shadow' : 'text-gray-400'}`}>Hrs</button>
+                                <button onClick={() => setViewMode('percent')} className={`px-3 py-1 rounded-lg ${activeViewMode === 'percent' ? 'bg-white shadow' : 'text-gray-400'}`}>%</button>
                             </div>
                         )}
                     </div>
-                    <div className="flex-1 min-h-0">
+                    <div className="flex-1 min-h-0" style={{ pointerEvents: isDisplayBoardMode ? 'none' : 'auto' }}>
                         {timeRange === 'yearly' ? (
-                            /* ── YEARLY: Heatmap Grid ── */
-                            <HeatmapChart data={processedData.areaChartData} />
+                            /* ── YEARLY: Stacked Bar Chart ── */
+                            (() => {
+                                const yearlyData = activeViewMode === 'percent'
+                                    ? processedData.areaChartData.map(d => {
+                                        const total = CATEGORIES.reduce((s, c) => s + (d[c] || 0), 0);
+                                        if (total === 0) {
+                                            const row = { key: d.key, displayDate: d.displayDate };
+                                            CATEGORIES.forEach(c => { row[c] = 0; });
+                                            return row;
+                                        }
+                                        const raw = CATEGORIES.map(c => ({ cat: c, pct: (d[c] || 0) / total * 100 }));
+                                        const floored = raw.map(r => ({ ...r, val: Math.floor(r.pct), rem: r.pct - Math.floor(r.pct) }));
+                                        let diff = 100 - floored.reduce((s, f) => s + f.val, 0);
+                                        floored.sort((a, b) => b.rem - a.rem);
+                                        for (let j = 0; j < diff; j++) floored[j].val += 1;
+                                        const row = { key: d.key, displayDate: d.displayDate, _total: total };
+                                        floored.forEach(f => { row[f.cat] = f.val; });
+                                        return row;
+                                    })
+                                    : processedData.areaChartData.map(d => ({ ...d, _total: CATEGORIES.reduce((s, c) => s + (d[c] || 0), 0) }));
+                                return (
+                                    <ResponsiveContainer width="99%" height="99%">
+                                        <BarChart data={yearlyData} layout="vertical" margin={{ top: 5, right: 50, left: 5, bottom: 0 }}>
+                                            <defs>
+                                                {CATEGORIES.map((cat, i) => (
+                                                    <linearGradient key={`ybar-${cat}`} id={`ybarG-${i}`} x1="0" y1="0" x2="1" y2="0">
+                                                        <stop offset="0%" stopColor={CATEGORY_COLORS[cat]} />
+                                                        <stop offset="100%" stopColor={GRADIENT_ENDS[cat]} />
+                                                    </linearGradient>
+                                                ))}
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" strokeOpacity={0.5} />
+                                            <YAxis dataKey="displayDate" type="category" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 14px)" axisLine={false} tickLine={false} width={40} />
+                                            <XAxis type="number" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 14px)" axisLine={false} tickLine={false}
+                                                domain={activeViewMode === 'percent' ? [0, 100] : ['auto', 'auto']}
+                                                tickFormatter={activeViewMode === 'percent' ? v => `${v}%` : undefined} />
+                                            <Tooltip content={<GlassTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }}
+                                                formatter={activeViewMode === 'percent' ? (value) => `${value}%` : undefined} />
+                                            <Legend content={<CustomLegend />} />
+                                            {CATEGORIES.map((cat, i) => {
+                                                return (
+                                                    <Bar key={cat} dataKey={cat} stackId="a" fill={`url(#ybarG-${i})`}
+                                                        radius={i === CATEGORIES.length - 1 ? [0, 6, 6, 0] : [0, 0, 0, 0]} barSize={22}
+                                                        background={i === 0 ? { fill: 'rgba(243, 244, 246, 0.4)', radius: [0, 6, 6, 0] } : false}
+                                                        label={i === CATEGORIES.length - 1 ? (props) => {
+                                                            const { x, y, width, height, index } = props;
+                                                            const row = yearlyData[index];
+                                                            if (!row || !row._total) return null;
+                                                            const labelStr = activeViewMode === 'percent' ? '100%' : `${Math.round(row._total).toLocaleString()}h`;
+                                                            return (
+                                                                <text x={x + width + 8} y={y + height / 2 + 1} textAnchor="start" dominantBaseline="middle" fill="#6B7280" fontSize="clamp(10px, 0.9vw, 13px)" fontWeight="bold">
+                                                                    {labelStr}
+                                                                </text>
+                                                            );
+                                                        } : false}
+                                                    />
+                                                );
+                                            })}
+                                        </BarChart>
+                                    </ResponsiveContainer>
+                                );
+                            })()
                         ) : (
                             <ResponsiveContainer width="99%" height="99%">
                                 {timeRange === 'weekly' ? (
-                                    <BarChart data={processedData.areaChartData.filter(d => { const dy = getDay(new Date(d.date || d.key)); return dy >= 1 && dy <= 5; })} margin={{ top: 5, right: 5, left: -15, bottom: 0 }}>
-                                        <defs>
-                                            {CATEGORIES.map((cat, i) => (
-                                                <linearGradient key={cat} id={`barG-${i}`} x1="0" y1="0" x2="0" y2="1">
-                                                    <stop offset="0%" stopColor={CATEGORY_COLORS[cat]} />
-                                                    <stop offset="100%" stopColor={GRADIENT_ENDS[cat]} />
-                                                </linearGradient>
-                                            ))}
-                                        </defs>
-                                        <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" strokeOpacity={0.5} />
-                                        <XAxis dataKey="displayDate" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" tickMargin={6} axisLine={false} tickLine={false} />
-                                        <YAxis stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" axisLine={false} tickLine={false} />
-                                        <Tooltip content={<GlassTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
-                                        <Legend content={<CustomLegend />} />
-                                        {[...CATEGORIES].reverse().map((cat, ri) => {
-                                            const origIdx = CATEGORIES.indexOf(cat);
-                                            return (
-                                                <Bar key={cat} dataKey={cat} stackId="a" fill={`url(#barG-${origIdx})`}
-                                                    radius={ri === CATEGORIES.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]} barSize={44} />
-                                            );
-                                        })}
-                                    </BarChart>
+                                    (() => {
+                                        const weeklyData = processedData.areaChartData
+                                            .filter(d => { const dy = getDay(new Date(d.date || d.key)); return dy >= 1 && dy <= 5; })
+                                            .map(d => ({ ...d, _total: CATEGORIES.reduce((s, c) => s + (d[c] || 0), 0) }));
+                                        return (
+                                            <BarChart data={weeklyData} margin={{ top: 25, right: 5, left: -15, bottom: 0 }}>
+                                                <defs>
+                                                    {CATEGORIES.map((cat, i) => (
+                                                        <linearGradient key={cat} id={`barG-${i}`} x1="0" y1="0" x2="0" y2="1">
+                                                            <stop offset="0%" stopColor={CATEGORY_COLORS[cat]} />
+                                                            <stop offset="100%" stopColor={GRADIENT_ENDS[cat]} />
+                                                        </linearGradient>
+                                                    ))}
+                                                </defs>
+                                                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E5E7EB" strokeOpacity={0.5} />
+                                                <XAxis dataKey="displayDate" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" tickMargin={6} axisLine={false} tickLine={false} />
+                                                <YAxis stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 16px)" axisLine={false} tickLine={false} />
+                                                <Tooltip content={<GlassTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }} />
+                                                <Legend content={<CustomLegend />} />
+                                                {[...CATEGORIES].reverse().map((cat, ri) => {
+                                                    const origIdx = CATEGORIES.indexOf(cat);
+                                                    return (
+                                                        <Bar key={cat} dataKey={cat} stackId="a" fill={`url(#barG-${origIdx})`}
+                                                            radius={ri === CATEGORIES.length - 1 ? [8, 8, 0, 0] : [0, 0, 0, 0]} barSize={44}
+                                                            label={ri === CATEGORIES.length - 1 ? (props) => {
+                                                                const { x, y, width, index } = props;
+                                                                const row = weeklyData[index];
+                                                                if (!row || !row._total) return null;
+                                                                return (
+                                                                    <text x={x + width / 2} y={y - 8} textAnchor="middle" fill="#6B7280" fontSize="clamp(10px, 0.9vw, 13px)" fontWeight="bold">
+                                                                        {row._total.toLocaleString()}h
+                                                                    </text>
+                                                                );
+                                                            } : false}
+                                                        />
+                                                    );
+                                                })}
+                                            </BarChart>
+                                        );
+                                    })()
                                 ) : (
                                     /* ── MONTHLY: Horizontal Stacked Bar (주차별 업무시간) ── */
                                     (() => {
-                                        // Build chart data based on viewMode
-                                        const chartData = viewMode === 'percent'
+                                        // Build chart data based on activeViewMode
+                                        const chartData = activeViewMode === 'percent'
                                             ? processedData.areaChartData.map(d => {
                                                 const total = CATEGORIES.reduce((s, c) => s + (d[c] || 0), 0);
                                                 if (total === 0) {
@@ -702,11 +806,11 @@ const Dashboard = () => {
                                                 let diff = 100 - floored.reduce((s, f) => s + f.val, 0);
                                                 floored.sort((a, b) => b.rem - a.rem);
                                                 for (let j = 0; j < diff; j++) floored[j].val += 1;
-                                                const row = { key: d.key, displayDate: d.displayDate };
+                                                const row = { key: d.key, displayDate: d.displayDate, _total: total };
                                                 floored.forEach(f => { row[f.cat] = f.val; });
                                                 return row;
                                             })
-                                            : processedData.areaChartData;
+                                            : processedData.areaChartData.map(d => ({ ...d, _total: CATEGORIES.reduce((s, c) => s + (d[c] || 0), 0) }));
                                         return (
                                             <BarChart data={chartData} layout="vertical" margin={{ top: 5, right: 20, left: 5, bottom: 0 }}>
                                                 <defs>
@@ -720,31 +824,27 @@ const Dashboard = () => {
                                                 <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#E5E7EB" strokeOpacity={0.5} />
                                                 <YAxis dataKey="displayDate" type="category" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 14px)" axisLine={false} tickLine={false} width={50} />
                                                 <XAxis type="number" stroke="#9CA3AF" fontSize="clamp(10px, 0.9vw, 14px)" axisLine={false} tickLine={false}
-                                                    domain={viewMode === 'percent' ? [0, 100] : ['auto', 'auto']}
-                                                    tickFormatter={viewMode === 'percent' ? v => `${v}%` : undefined} />
+                                                    domain={activeViewMode === 'percent' ? [0, 100] : ['auto', 'auto']}
+                                                    tickFormatter={activeViewMode === 'percent' ? v => `${v}%` : undefined} />
                                                 <Tooltip content={<GlassTooltip />} cursor={{ fill: 'rgba(0,0,0,0.03)' }}
-                                                    formatter={viewMode === 'percent' ? (value) => `${value}%` : undefined} />
+                                                    formatter={activeViewMode === 'percent' ? (value) => `${value}%` : undefined} />
                                                 <Legend content={<CustomLegend />} />
                                                 {CATEGORIES.map((cat, i) => (
                                                     <Bar key={cat} dataKey={cat} stackId="a" fill={`url(#mbarG-${i})`}
-                                                        radius={i === CATEGORIES.length - 1 ? [0, 8, 8, 0] : [0, 0, 0, 0]} barSize={28}
-                                                        label={({ x, y, width, height, value }) => {
-                                                            if (!value || value === 0 || width < 40) return null;
-                                                            let label;
-                                                            if (viewMode === 'percent') {
-                                                                const rounded = Math.round(value * 10) / 10;
-                                                                label = `${rounded % 1 === 0 ? rounded.toFixed(0) : rounded.toFixed(1)}%`;
-                                                            } else {
-                                                                label = `${Math.round(value)}h`;
-                                                            }
+                                                        radius={i === CATEGORIES.length - 1 ? [0, 6, 6, 0] : [0, 0, 0, 0]} barSize={22}
+                                                        background={i === 0 ? { fill: 'rgba(243, 244, 246, 0.4)', radius: [0, 6, 6, 0] } : false}
+                                                        label={i === CATEGORIES.length - 1 ? (props) => {
+                                                            const { x, y, width, height, index } = props;
+                                                            const row = chartData[index];
+                                                            if (!row || !row._total) return null;
+                                                            const labelStr = activeViewMode === 'percent' ? '100%' : `${Math.round(row._total).toLocaleString()}h`;
                                                             return (
-                                                                <text x={x + width / 2} y={y + height / 2 + 1} textAnchor="middle" dominantBaseline="middle"
-                                                                    fontSize={Math.min(11, height * 0.42)} fontWeight="700" fill="#fff"
-                                                                    style={{ textShadow: '0 1px 3px rgba(0,0,0,0.35)', pointerEvents: 'none' }}>
-                                                                    {label}
+                                                                <text x={x + width + 8} y={y + height / 2 + 1} textAnchor="start" dominantBaseline="middle" fill="#6B7280" fontSize="clamp(10px, 0.9vw, 13px)" fontWeight="bold">
+                                                                    {labelStr}
                                                                 </text>
                                                             );
-                                                        }} />
+                                                        } : false} 
+                                                    />
                                                 ))}
                                             </BarChart>
                                         );
@@ -753,15 +853,102 @@ const Dashboard = () => {
                             </ResponsiveContainer>
                         )}
                     </div>
+
+                    {/* ── Kiosk Static Data Table ── */}
+                    {isDisplayBoardMode && (
+                        <div className="flex-none mt-[clamp(0.5rem,1vh,1rem)] pt-[clamp(0.5rem,1vh,1rem)] border-t border-gray-100 w-full">
+                            <table className="w-full text-[clamp(10px,0.8vw,13px)] text-left whitespace-nowrap table-fixed">
+                                <thead className="sticky top-0 bg-white z-10">
+                                    <tr className="text-gray-400 border-b border-gray-100">
+                                        <th className="font-extrabold py-2 px-2 text-kh-text-main w-[15%]">{timeRange === 'weekly' ? '일자' : timeRange === 'monthly' ? '주차' : '월'}</th>
+                                        <th className="font-extrabold py-2 px-2 text-right text-kh-text-main border-r border-gray-100 pr-4 w-[10%]">총시간</th>
+                                        {CATEGORIES.map(cat => (
+                                            <th key={cat} className="font-bold py-2 px-2 text-right w-[15%] align-bottom">
+                                                <div className="flex items-end justify-end gap-1.5 h-full">
+                                                    <span className="w-2 h-2 rounded-full flex-shrink-0 mb-1" style={{ background: CATEGORY_COLORS[cat] }} />
+                                                    <div className="text-center leading-tight">
+                                                        {cat === 'Smart R&D' ? (
+                                                            <>Smart<br/>R&D</>
+                                                        ) : cat === 'Digital Technology' ? (
+                                                            <>Digital<br/>Technology</>
+                                                        ) : (
+                                                            <div className="flex items-center h-full pb-0.5">{cat}</div>
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </th>
+                                        ))}
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {(() => {
+                                        let tableData = processedData.areaChartData;
+                                        if (timeRange === 'weekly') {
+                                            tableData = tableData.filter(d => { const dy = getDay(new Date(d.date || d.key)); return dy >= 1 && dy <= 5; });
+                                        }
+                                        return tableData.map((row, i) => {
+                                            const total = CATEGORIES.reduce((s, c) => s + (row[c] || 0), 0);
+                                            if (total === 0 && (timeRange === 'yearly' || timeRange === 'monthly')) return null;
+                                            return (
+                                                <tr key={i} className="border-b border-gray-50 hover:bg-gray-50 transition-colors">
+                                                    <td className="py-2 px-2 font-bold text-gray-500">{row.displayDate}</td>
+                                                    <td className="py-2 px-2 text-right font-black text-kh-text-main border-r border-gray-100 pr-4">{Math.round(total).toLocaleString()}h</td>
+                                                    {CATEGORIES.map(cat => {
+                                                        const val = row[cat] || 0;
+                                                        const pct = total > 0 ? Math.round((val / total) * 100) : 0;
+                                                        return (
+                                                            <td key={cat} className="py-2 px-2 text-right text-gray-500 font-semibold">
+                                                                {val > 0 ? (
+                                                                    <div className="flex items-center justify-end space-x-1.5">
+                                                                        <span>{Math.round(val).toLocaleString()}h</span>
+                                                                        <span className="text-[10px] text-gray-400 font-normal w-[24px] text-right">({pct}%)</span>
+                                                                    </div>
+                                                                ) : '-'}
+                                                            </td>
+                                                        );
+                                                    })}
+                                                </tr>
+                                            );
+                                        });
+                                    })()}
+                                </tbody>
+                            </table>
+                        </div>
+                    )}
                 </div>
 
                 {/* ─── Donut Chart (오른쪽 1/3) ─── */}
                 <div className="lg:col-span-1 bg-white rounded-2xl border border-gray-100 p-[clamp(0.75rem,1.5vw,2rem)] shadow-sm flex flex-col min-h-0">
-                    <h3 className="flex-none text-[clamp(1rem,1.5vw,2rem)] font-extrabold tracking-tight text-kh-text-main mb-[clamp(0.25rem,0.5vh,0.75rem)]">업무별 시간 비중</h3>
-                    <div className="flex-1 min-h-0 relative">
-                        {donutData.length > 0 ? (
-                            <>
-                                <ResponsiveContainer width="99%" height="99%">
+                    <div className="flex-none flex justify-between items-end mb-[clamp(0.5rem,1vh,1.5rem)] pb-[clamp(0.25rem,0.5vh,0.75rem)] border-b border-gray-50">
+                        <h3 className="text-[clamp(1rem,1.2vw,1.5rem)] font-extrabold tracking-tight text-kh-text-main pb-1">업무별 시간 비중</h3>
+                        <div className="text-right flex items-baseline gap-1.5 pb-0.5">
+                            <span className="text-[clamp(0.65rem,0.8vw,0.9rem)] text-gray-400 font-bold">총 업무시간</span>
+                            <div>
+                                <span className="text-[clamp(1.2rem,1.75vw,2.25rem)] font-black text-kh-text-main tracking-tight leading-none">{Math.round(processedData.totalHours).toLocaleString()}</span>
+                                <span className="text-[clamp(0.8rem,1vw,1.25rem)] text-gray-300 font-bold ml-0.5">h</span>
+                            </div>
+                        </div>
+                    </div>
+                    <div className="flex-1 min-h-0 flex items-center justify-between" style={{ pointerEvents: isDisplayBoardMode ? 'none' : 'auto' }}>
+                        {/* 1. Left Side: Top Increases */}
+                        <div className="w-[25%] flex flex-col justify-center items-end text-right gap-3 pr-2">
+                            {topIncreases.map(item => (
+                                <div key={item.name} className="flex flex-col">
+                                    <div className="text-[clamp(10px,0.7vw,12px)] text-gray-500 font-bold mb-0.5">{item.name}</div>
+                                    <div className="text-[clamp(12px,0.9vw,14px)] font-black text-emerald-500 whitespace-nowrap">
+                                        ▲ +{item.diffHours.toLocaleString()}h
+                                    </div>
+                                    <div className="text-[clamp(9px,0.6vw,11px)] font-medium text-emerald-400">
+                                        (+{item.diffPercent}%)
+                                    </div>
+                                </div>
+                            ))}
+                        </div>
+
+                        {/* 2. Middle: Donut Chart */}
+                        <div className="w-[50%] h-full relative">
+                            {donutData.length > 0 ? (
+                                <ResponsiveContainer width="100%" height="100%">
                                     <PieChart>
                                         <defs>
                                             {donutData.map((entry, i) => (
@@ -771,9 +958,9 @@ const Dashboard = () => {
                                                 </linearGradient>
                                             ))}
                                         </defs>
-                                        <Pie data={donutData} cx="50%" cy="45%" innerRadius="35%" outerRadius="75%" isAnimationActive={false}
-                                            dataKey="billable" stroke="none" paddingAngle={3}
-                                            label={renderCustomizedLabel} labelLine={false}
+                                        <Pie data={donutData} cx="50%" cy="50%" innerRadius="40%" outerRadius="80%" isAnimationActive={false}
+                                            dataKey="billable" stroke="none" paddingAngle={2}
+                                            label={false} labelLine={false}
                                             activeIndex={activeDonutIdx} activeShape={renderActiveDonut}
                                             onMouseEnter={(_, i) => setActiveDonutIdx(i)} onMouseLeave={() => setActiveDonutIdx(-1)}>
                                             {donutData.map((_, i) => <Cell key={i} fill={`url(#dnt-${i})`} />)}
@@ -781,24 +968,93 @@ const Dashboard = () => {
                                         <Tooltip content={<GlassTooltip />} isAnimationActive={false} />
                                     </PieChart>
                                 </ResponsiveContainer>
-                                {/* Center Label */}
-                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none" style={{ top: '-10%' }}>
-                                    <span className="text-[clamp(2rem,min(3.5vw,6vh),4.5rem)] font-black text-kh-text-main tracking-tight leading-none">{Math.round(processedData.totalHours)}<span className="text-[clamp(0.9rem,min(1.2vw,2vh),1.75rem)] text-gray-300 ml-0.5">h</span></span>
-                                    <span className="text-[clamp(0.6rem,0.8vw,1.1rem)] font-bold text-gray-400 mt-1">총 업무시간</span>
+                            ) : (
+                                <div className="flex items-center justify-center h-full text-gray-300 text-[clamp(0.7rem,0.8vw,1rem)]">데이터 없음</div>
+                            )}
+                        </div>
+
+                        {/* 3. Right Side: Top Decreases */}
+                        <div className="w-[25%] flex flex-col justify-center items-start text-left gap-3 pl-2">
+                            {topDecreases.map(item => (
+                                <div key={item.name} className="flex flex-col">
+                                    <div className="text-[clamp(10px,0.7vw,12px)] text-gray-500 font-bold mb-0.5">{item.name}</div>
+                                    <div className="text-[clamp(12px,0.9vw,14px)] font-black text-red-500 whitespace-nowrap">
+                                        ▼ {item.diffHours.toLocaleString()}h
+                                    </div>
+                                    <div className="text-[clamp(9px,0.6vw,11px)] font-medium text-red-400">
+                                        ({item.diffPercent}%)
+                                    </div>
                                 </div>
-                            </>
-                        ) : (
-                            <div className="flex items-center justify-center h-full text-gray-300 text-[clamp(0.7rem,0.8vw,1rem)]">데이터 없음</div>
-                        )}
+                            ))}
+                        </div>
                     </div>
                     {/* Legend */}
-                    <div className="flex-none flex flex-wrap gap-x-[clamp(0.5rem,1vw,1.5rem)] gap-y-1 mt-[clamp(0.25rem,0.5vh,0.5rem)] justify-center">
+                    <div className="flex-none flex flex-wrap gap-x-[clamp(0.5rem,1vw,1.5rem)] gap-y-1 mt-[clamp(1rem,2vh,2rem)] mb-[clamp(0.5rem,1vh,1rem)] justify-center">
                         {CATEGORIES.map(cat => (
                             <div key={cat} className="flex items-center gap-1.5">
                                 <span className="w-[clamp(0.5rem,0.7vw,1rem)] h-[clamp(0.5rem,0.7vw,1rem)] rounded-full shrink-0" style={{ background: CATEGORY_COLORS[cat] }} />
-                                <span className="text-[clamp(0.55rem,0.75vw,1rem)] text-gray-500 font-medium">{cat}</span>
+                                <span className="text-[clamp(12px,0.8vw,14px)] text-gray-500 font-medium">{cat}</span>
                             </div>
                         ))}
+                    </div>
+
+                    {/* Rank Summary Table-like */}
+                    <div className="flex-none flex flex-col gap-[clamp(0.25rem,0.5vh,0.4rem)] pt-[clamp(0.6rem,1vh,1rem)] border-t border-gray-100 overflow-y-auto min-h-0">
+                        <div className="flex justify-between items-end mb-[clamp(0.2rem,0.4vh,0.5rem)] px-1 relative">
+                            <span className="text-[clamp(0.75rem,0.9vw,1rem)] font-extrabold text-gray-500 tracking-tight">업무 항목별 순위</span>
+                            <span className="text-[clamp(10px,0.7vw,11px)] font-bold text-gray-400 absolute right-1 pb-[1px]">전월 대비(Δ)</span>
+                        </div>
+                        {[...processedData.project]
+                            .filter(item => item.billable > 0 || item.diffHours !== 0)
+                            .sort((a, b) => b.billable - a.billable)
+                            .map((item, idx) => {
+                                const isInc = item.diffHours > 0;
+                                return (
+                                <div key={item.name} className="flex items-center px-1 py-[clamp(0.15rem,0.3vh,0.25rem)] rounded hover:bg-gray-50/50 transition-colors">
+                                    {/* 1. 순위 (9%) */}
+                                    <div className="w-[9%] text-center font-bold text-gray-400 text-[clamp(12px,0.8vw,13px)]">{idx + 1}위</div>
+                                    
+                                    {/* 2. 항목명과 색상점 (29%) */}
+                                    <div className="w-[29%] flex items-center gap-1.5 pl-1 pr-1">
+                                        <span className="w-[clamp(0.35rem,0.5vw,0.5rem)] h-[clamp(0.35rem,0.5vw,0.5rem)] rounded-full shrink-0" style={{ background: CATEGORY_COLORS[item.name] }} />
+                                        <span className="font-semibold text-gray-600 text-[clamp(12px,0.8vw,13px)] truncate">{item.name}</span>
+                                    </div>
+
+                                    {/* 3. 시간 (18%) */}
+                                    <div className="w-[18%] text-right pr-[clamp(0.25rem,0.4vw,0.5rem)]">
+                                        <span className="font-semibold text-kh-text-main text-[clamp(13px,0.9vw,14px)] leading-none">{item.billable.toLocaleString()}</span>
+                                        <span className="text-[clamp(10px,0.6vw,11px)] text-gray-400 font-semibold ml-0.5">h</span>
+                                    </div>
+
+                                    {/* 4. 비중/미니바 (22%) */}
+                                    <div className="w-[22%] flex items-center gap-1 pr-1">
+                                        <span className="w-[clamp(1.2rem,1.5vw,1.8rem)] font-bold text-kh-text-main text-[clamp(11px,0.7vw,12px)] text-right flex-shrink-0">
+                                            {processedData.totalHours > 0 ? ((item.billable / processedData.totalHours) * 100).toFixed(0) : 0}%
+                                        </span>
+                                        <div className="h-1.5 flex-1 bg-gray-100 rounded-sm overflow-hidden flex-shrink-1">
+                                            <div 
+                                                className="h-full rounded-sm transition-all duration-500"
+                                                style={{ 
+                                                    width: `${processedData.totalHours > 0 ? (item.billable / processedData.totalHours) * 100 : 0}%`,
+                                                    background: CATEGORY_COLORS[item.name]
+                                                }}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    {/* 5. 전월 대비 (22%) */}
+                                    <div className="w-[22%] text-right pr-1">
+                                        {item.diffHours !== 0 ? (
+                                            <span className={`font-bold text-[clamp(11px,0.75vw,13px)] whitespace-nowrap tracking-tighter ${isInc ? 'text-emerald-500' : 'text-red-500'}`}>
+                                                {isInc ? '▲ +' : '▼ '}{item.diffHours.toLocaleString()}h
+                                            </span>
+                                        ) : (
+                                            <span className="font-bold text-[clamp(11px,0.75vw,13px)] text-gray-300">-</span>
+                                        )}
+                                    </div>
+                                </div>
+                            );
+                        })}
                     </div>
                 </div>
             </section>

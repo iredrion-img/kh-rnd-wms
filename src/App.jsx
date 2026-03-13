@@ -5,14 +5,13 @@ import Dashboard from './pages/Dashboard';
 import Timesheet from './pages/Timesheet';
 import Login from './pages/Login';
 import WeeklyMeeting from './pages/WeeklyMeeting';
-import Chatbot from './components/chat/Chatbot';
+
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isChatModalOpen, setChatModalOpen] = useState(false);
 
-  // Check URL API endpoint
-  // Check URL API endpoint
+  // API endpoint
   const API_URL = '/api/users';
 
   // Global State for User Management
