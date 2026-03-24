@@ -114,6 +114,14 @@ checkStartupBackup();
 // --- RAG VECTOR STORE INITIALIZATION ---
 initializeVectorStore(currentDb); // Legacy in-memory VectorStore (fallback)
 
+// --- GLOBAL EXCEPTION HANDLERS ---
+process.on('uncaughtException', (err) => {
+    console.error('\n[Global] Uncaught Exception preventing crash:', err.message || err);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.error('\n[Global] Unhandled Promise Rejection preventing crash:', reason?.message || reason);
+});
+
 // --- QDRANT RAG INITIALIZATION ---
 (async () => {
     try {
@@ -121,9 +129,11 @@ initializeVectorStore(currentDb); // Legacy in-memory VectorStore (fallback)
         const result = await ingestCSV(currentDb, false);
         console.log(`[Qdrant] Ingestion complete: ${result.documentCount} docs, ${result.vectorCount} vectors`);
     } catch (e) {
-        console.warn('[Qdrant] Ingestion failed (will use legacy fallback):', e.message);
+        console.warn('[Qdrant] Ingestion failed (will use legacy fallback):', e.message || e);
     }
-})();
+})().catch(err => {
+    console.error('[Qdrant] Critical async failure caught at IIFE level:', err.message || err);
+});
 
 // --- MIDDLEWARE ---
 app.use(cors());
@@ -331,6 +341,7 @@ app.post('/api/rag-chat', async (req, res) => {
         res.status(500).json({ error: 'RAG 기반 챗봇 대답 중 오류가 발생했습니다.' });
     }
 });
+
 
 // --- GITHUB WEBHOOK AUTO-DEPLOY ---
 const DEPLOY_SECRET = 'kunhwa-wms-deploy-2026';

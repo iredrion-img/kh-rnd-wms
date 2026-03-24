@@ -241,7 +241,7 @@ const HeatmapChart = ({ data }) => {
    ═══════════════════════════════════════════ */
 const Dashboard = () => {
     // 현황판(Kiosk) 모드 플래그: true일 경우 모든 hover 및 tooltip 반응 비활성화
-    const isDisplayBoardMode = true; 
+    const isDisplayBoardMode = false; 
 
     const [timeRange, setTimeRange] = useState('weekly');
     const [currentDate, setCurrentDate] = useState(new Date());
@@ -485,7 +485,7 @@ const Dashboard = () => {
     const topDecreases = [...processedData.project].filter(d => d.diffHours < 0).sort((a,b) => a.diffHours - b.diffHours).slice(0, 2);
 
     return (
-        <div className="flex flex-col h-full w-full overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 p-[clamp(1rem,2vw,2.5rem)] gap-[clamp(0.5rem,1.5vh,1.5rem)]">
+        <div className="flex flex-col h-full w-full overflow-hidden bg-kh-bg-main p-[clamp(1rem,2vw,2.5rem)] gap-[clamp(0.5rem,1.5vh,1.5rem)]">
 
             {/* ═══ 1. Header (flex-none: 고정 높이) ═══ */}
             <header className="flex-none flex justify-between items-center">
@@ -520,7 +520,7 @@ const Dashboard = () => {
             <section className="flex-none grid grid-cols-3 gap-[clamp(0.5rem,1vw,1.5rem)]">
 
                 {/* ─── KPI Card 1: Total Hours + Sparkline ─── */}
-                <div className="bg-white/80 backdrop-blur-2xl rounded-3xl border border-white shadow-[0_12px_40px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_60px_rgba(0,0,0,0.08)] hover:-translate-y-1 relative overflow-hidden flex items-center p-[clamp(0.75rem,1.5vw,1.5rem)] gap-[clamp(0.5rem,1vw,1.25rem)]">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden flex items-center p-[clamp(0.75rem,1.5vw,1.5rem)] gap-[clamp(0.5rem,1vw,1.25rem)]">
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-r-full bg-kh-green" />
                     <div className="flex-1 min-w-0 flex flex-col justify-center pl-3">
                         <p className="text-[clamp(0.6rem,0.7vw,0.9rem)] font-extrabold text-gray-400 tracking-widest uppercase mb-0.5 whitespace-nowrap">총 근무 시간</p>
@@ -551,7 +551,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* ─── KPI Card 2: Strategic Ratio + Gauge ─── */}
-                <div className="bg-white/80 backdrop-blur-2xl rounded-3xl border border-white shadow-[0_12px_40px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_60px_rgba(0,0,0,0.08)] hover:-translate-y-1 relative overflow-hidden flex items-center p-[clamp(0.75rem,1.5vw,1.5rem)]">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden flex items-center p-[clamp(0.75rem,1.5vw,1.5rem)]">
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-r-full bg-kh-lime" />
                     <div className="flex-1 min-w-0 flex flex-col justify-center pl-3">
                         <p className="text-[clamp(0.6rem,0.7vw,0.9rem)] font-extrabold text-gray-400 tracking-widest uppercase mb-0.5 whitespace-nowrap">전략 업무 비중</p>
@@ -579,7 +579,7 @@ const Dashboard = () => {
                 </div>
 
                 {/* ─── KPI Card 3: Overtime + Sparkline ─── */}
-                <div className="bg-white/80 backdrop-blur-2xl rounded-3xl border border-white shadow-[0_12px_40px_rgba(0,0,0,0.04)] transition-all duration-300 hover:shadow-[0_20px_60px_rgba(0,0,0,0.08)] hover:-translate-y-1 relative overflow-hidden flex items-center p-[clamp(0.75rem,1.5vw,1.5rem)] gap-[clamp(0.5rem,1vw,1.25rem)]">
+                <div className="bg-white rounded-2xl border border-gray-100 shadow-sm hover:shadow-lg transition-all duration-300 hover:-translate-y-0.5 relative overflow-hidden flex items-center p-[clamp(0.75rem,1.5vw,1.5rem)] gap-[clamp(0.5rem,1vw,1.25rem)]">
                     <div className="absolute left-0 top-0 bottom-0 w-1.5 rounded-r-full bg-orange-400" />
                     <div className="flex-1 min-w-0 flex flex-col justify-center pl-3">
                         <p className="text-[clamp(0.6rem,0.7vw,0.9rem)] font-extrabold text-gray-400 tracking-widest uppercase mb-0.5 whitespace-nowrap">초과 근무</p>
@@ -611,7 +611,7 @@ const Dashboard = () => {
             </section>
 
             {/* ═══ 3. Charts Section (flex-1 min-h-0: 남은 공간 모두 차지 — 핵심!) ═══ */}
-            <section className="flex-1 min-h-0 grid grid-cols-1 lg:grid-cols-3 gap-[clamp(0.5rem,1vw,1.5rem)]">
+            <section className="flex-1 grid grid-cols-1 lg:grid-cols-3 gap-[clamp(0.5rem,1vw,1.5rem)]">
 
                 {/* ─── 하단 Chart Boards (컴포넌트 분리됨) ─── */}
                 {timeRange === 'weekly' && (
@@ -642,7 +642,7 @@ const Dashboard = () => {
                 )}
 
                 {/* ─── Donut Chart (오른쪽 1/3) ─── */}
-                <div className="lg:col-span-1 bg-white/80 backdrop-blur-2xl rounded-3xl border border-white p-[clamp(0.75rem,1.5vw,2rem)] shadow-[0_12px_40px_rgba(0,0,0,0.04)] flex flex-col min-h-0">
+                <div className="lg:col-span-1 bg-white rounded-2xl border border-gray-100 p-[clamp(0.75rem,1.5vw,2rem)] shadow-sm flex flex-col min-h-0">
                     <div className="flex-none flex justify-between items-end mb-[clamp(0.5rem,1vh,1.5rem)] pb-[clamp(0.25rem,0.5vh,0.75rem)] border-b border-gray-50">
                         <h3 className="text-[clamp(1rem,1.2vw,1.5rem)] font-extrabold tracking-tight text-kh-text-main pb-1">업무별 시간 비중</h3>
                         <div className="text-right flex items-baseline gap-1.5 pb-0.5">
