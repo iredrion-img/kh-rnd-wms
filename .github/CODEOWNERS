@@ -1,0 +1,61 @@
+# CODEOWNERS
+# KH-WMS Repository Ownership Rules
+#
+# Format: <path pattern>  <owner1> [owner2...]
+# GitHub ID placeholders:
+#   @LEAD_GITHUB_ID     → Replace with your actual GitHub username
+#   @TEAM_MEMBER_GITHUB_ID → Replace with the new team member's GitHub username
+#
+# Rules are evaluated top-to-bottom. The LAST matching rule wins.
+# All PRs touching these files will automatically request review from the owner.
+
+# ─── Default: Lead reviews everything unless overridden below ───────────────
+*                               @LEAD_GITHUB_ID
+
+# ─── Shared Core (Lead only — strict review) ────────────────────────────────
+server.js                       @LEAD_GITHUB_ID
+ragService.js                   @LEAD_GITHUB_ID
+package.json                    @LEAD_GITHUB_ID
+package-lock.json               @LEAD_GITHUB_ID
+vite.config.js                  @LEAD_GITHUB_ID
+tailwind.config.js              @LEAD_GITHUB_ID
+postcss.config.js               @LEAD_GITHUB_ID
+eslint.config.js                @LEAD_GITHUB_ID
+index.html                      @LEAD_GITHUB_ID
+
+# ─── Data Files (Lead only — changes need explicit discussion) ───────────────
+database_2026.csv               @LEAD_GITHUB_ID
+database_2025.csv               @LEAD_GITHUB_ID
+users.csv                       @LEAD_GITHUB_ID
+
+# ─── Server / AI Pipeline (Lead primary, Team Member notified) ──────────────
+server/                         @LEAD_GITHUB_ID
+server/ai/                      @LEAD_GITHUB_ID @TEAM_MEMBER_GITHUB_ID
+server/dataPipeline/            @LEAD_GITHUB_ID
+server/rag/                     @LEAD_GITHUB_ID
+
+# ─── Frontend — Shared Layout & Core Pages (Lead only) ──────────────────────
+src/App.jsx                     @LEAD_GITHUB_ID
+src/main.jsx                    @LEAD_GITHUB_ID
+src/index.css                   @LEAD_GITHUB_ID
+src/utils/                      @LEAD_GITHUB_ID
+src/services/                   @LEAD_GITHUB_ID
+src/components/layout/          @LEAD_GITHUB_ID
+src/components/ui/              @LEAD_GITHUB_ID
+src/components/dashboard/       @LEAD_GITHUB_ID
+src/pages/Dashboard.jsx         @LEAD_GITHUB_ID
+src/pages/Timesheet.jsx         @LEAD_GITHUB_ID
+src/pages/Login.jsx             @LEAD_GITHUB_ID
+
+# ─── Team Member Feature Areas (Team Member primary, Lead review) ────────────
+src/pages/WeeklyMeeting.jsx     @TEAM_MEMBER_GITHUB_ID @LEAD_GITHUB_ID
+src/components/chat/            @TEAM_MEMBER_GITHUB_ID @LEAD_GITHUB_ID
+
+# ─── GitHub Config (Lead only) ──────────────────────────────────────────────
+.github/                        @LEAD_GITHUB_ID
+
+# ─── Scripts (Lead preferred) ───────────────────────────────────────────────
+scripts/                        @LEAD_GITHUB_ID
+
+# ─── Docs (Either, Lead final) ──────────────────────────────────────────────
+*.md                            @LEAD_GITHUB_ID
