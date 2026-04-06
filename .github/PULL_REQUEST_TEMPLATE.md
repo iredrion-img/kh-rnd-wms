@@ -1,53 +1,51 @@
-## ?�� PR 목적 / Purpose
+﻿## PR 목적 / Purpose
 
-> ??PR??무엇???�는지 ??줄로 ?�약?�세??
-> _Summarize what this PR does in one line._
-
----
-
-## ?�� 변�??�항 ?�약 / Summary of Changes
-
-- 
-- 
-- 
+> 이 PR이 무엇을 하는지 한 줄로 요약하세요.
+> Summarize what this PR does in one line.
 
 ---
 
-## ?�� ?�스???�행 ?�역 / Tests Performed
+## 변경 사항 요약 / Summary of Changes
 
-- [ ] 로컬 ?�경?�서 `node server.js` ?�버 ?�상 ?�행 ?�인
-- [ ] 브라?��??�서 ?�당 기능 ?�작 ?�인 (`http://localhost:3001`)
-- [ ] `npm run build` 빌드 ?�류 ?�음 ?�인
-- [ ] 기존 기능(Dashboard, Timesheet, Login)???�향 ?�음 ?�인
-
-> 추�? ?�스???�역???�으�?기재?�세??
+-
+-
+-
 
 ---
 
-## ?�� 변경된 ?�일 / Files Changed
+## 테스트 수행 내역 / Tests Performed
 
-| ?�일 경로 | 변�??�형 | ?�명 |
+- [ ] 로컬에서 node server.js 서버 정상 실행 확인
+- [ ] 브라우저에서 해당 기능 동작 확인 (http://localhost:3001)
+- [ ] npm run build 빌드 오류 없음 확인
+- [ ] 기존 기능(Dashboard, Timesheet, Login)에 영향 없음 확인
+
+---
+
+## 변경된 파일 / Files Changed
+
+| 파일 경로 | 변경 유형 | 설명 |
 |-----------|----------|------|
-| `src/pages/...` | 추�? / ?�정 / ??�� | |
-| `server/ai/...` | 추�? / ?�정 / ??�� | |
+| src/pages/... | 추가/수정/삭제 | |
+| server/ai/... | 추가/수정/삭제 | |
 
 ---
 
-## ?? 리뷰 ?�인??/ Review Focus
+## 리뷰 포인트 / Review Focus
 
-> 리뷰?��? ?�히 주의 깊게 봐야 ??부분을 ?�려주세??
+>
 
-- 
+-
 
 ---
 
-## ?�� 관???�슈 / Related Issue
+## 관련 이슈 / Related Issue
 
 Closes #
 
 ---
 
-## ?�� ?�크린샷 / Screenshots (UI 변�????�수)
+## 스크린샷 / Screenshots (UI 변경 시 필수)
 
 | Before | After |
 |--------|-------|
@@ -55,11 +53,13 @@ Closes #
 
 ---
 
-## ?�� 머�? ??체크리스??/ Pre-Merge Checklist
+## 머지 전 체크리스트 / Pre-Merge Checklist
 
-- [ ] 브랜치명??컨벤?�을 ?�름 (`feature/*`, `fix/*`, `docs/*`)
-- [ ] 커밋 메시지가 컨벤?�을 ?�름 (`feat:`, `fix:`, `docs:` ??
-- [ ] PR ?��?브랜치�? `develop`??(?��? `main`???�님)
-- [ ] 최신 `develop`????브랜치에 반영??(`git pull origin develop`)
-- [ ] 불필?�한 ?�일 미포??(`.bak`, ?�시 로그, ?�스?�용 csv ??
-- [ ] `database_2026.csv`, `users.csv` 변�???Lead?�게 별도 ?�내??- [ ] `server.js` ?�는 `ragService.js` 변�???Lead?�게 별도 ?�내??- [ ] Self-merge ?��? ?�음 ??Lead??Approve ??Lead가 머�?
+- [ ] 브랜치명이 컨벤션을 따름 (feature/*, fix/*, docs/*)
+- [ ] 커밋 메시지가 컨벤션을 따름 (feat:, fix:, docs: 등)
+- [ ] PR 타겟 브랜치가 develop임 (절대 main 아님)
+- [ ] 최신 develop을 이 브랜치에 반영함
+- [ ] 불필요한 파일 미포함 (.bak, 임시 로그 등)
+- [ ] database_2026.csv, users.csv 변경 시 iredrion-img에게 안내
+- [ ] server.js 또는 ragService.js 변경 시 iredrion-img에게 안내
+- [ ] Self-merge 하지 않음 -- iredrion-img의 Approve 후 merge

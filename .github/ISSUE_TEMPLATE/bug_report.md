@@ -1,79 +1,76 @@
----
-name: ?�� Bug Report
-about: 결함 �??�정 ?�항 보고�??�한 ?�슈 ?�플�?title: "[fix] "
+﻿---
+name: Bug Report
+about: 결함 및 수정 사항 보고를 위한 이슈 템플릿
+title: "[fix] "
 labels: ["bug"]
 assignees: ""
 ---
 
-## ?�� 버그 ?�약 / Bug Summary
+## 버그 요약 / Bug Summary
 
-> 문제�???줄로 ?�약?�세??
-
----
-
-## ?�� ?�재 ?�작 / Current Behavior
-
-> ?�재 ?�떤 문제가 발생?�고 ?�는지 구체?�으�?기술?�세??
+> 문제를 한 줄로 요약하세요.
 
 ---
 
-## ??기�? ?�작 / Expected Behavior
-
-> ?�상 ?�작 ???�떻�??�어???�는지 기술?�세??
+## 현재 동작 / Current Behavior
 
 ---
 
-## ?�� ?�현 방법 / Reproduction Steps
-
-1. 
-2. 
-3. 
-4. ???�류 발생
+## 기대 동작 / Expected Behavior
 
 ---
 
-## ?���??�향 ?�경 / Affected Environment
+## 재현 방법 / Reproduction Steps
 
-- **?�속 URL**: `http://localhost:3001` / Ngrok ?��? URL
-- **브라?��?**: Chrome / Edge / 기�?
-- **?�용??계정**: (?�름 ?�는 ?�속 ?�도�? 비�?번호 ?��? 기재 금�?)
-- **?�이???�일**: `database_2026.csv` 관???��?
-
----
-
-## ?�� ?�심 ?�역 / Suspected Area
-
-- [ ] `src/pages/Login.jsx` ??로그???�션
-- [ ] `src/pages/Dashboard.jsx` ???�?�보??- [ ] `src/pages/Timesheet.jsx` ???�?�시??- [ ] `src/pages/WeeklyMeeting.jsx` ??주간 ?�의
-- [ ] `src/components/chat/` ???�나 챗봇
-- [ ] `server.js` ???�버/API
-- [ ] `ragService.js` ??RAG/AI
-- [ ] `server/ai/aiOrchestrator.js` ??AI ?��??�트?�이??- [ ] `database_2026.csv` / `users.csv` ???�이??- [ ] 기�?: 
+1.
+2.
+3.
+4. -> 오류 발생
 
 ---
 
-## ?�� ?�크린샷 / Screenshots or Logs
+## 영향 환경 / Affected Environment
 
-> 가?�하�??�러 ?�면 캡처 ?�는 ?��???로그�?첨�??�세??
+- 접속 URL: http://localhost:3001 / Ngrok 외부 URL
+- 브라우저: Chrome / Edge / 기타
+- 사용자 계정: (이름 또는 소속 정도만)
+- 데이터 파일: database_2026.csv 관련 여부
+
+---
+
+## 의심 영역 / Suspected Area
+
+- [ ] src/pages/Login.jsx
+- [ ] src/pages/Dashboard.jsx
+- [ ] src/pages/Timesheet.jsx
+- [ ] src/pages/WeeklyMeeting.jsx
+- [ ] src/components/chat/
+- [ ] server.js
+- [ ] ragService.js
+- [ ] server/ai/aiOrchestrator.js
+- [ ] database_2026.csv / users.csv
+- [ ] 기타:
+
+---
+
+## 스크린샷 / Screenshots or Logs
 
 ```
-(로그 붙여?�기)
+(로그 붙여넣기)
 ```
 
 ---
 
-## ?�� ?�각??/ Severity
+## 심각도 / Severity
 
-- [ ] ?�� Critical ???�스???�체 ?�작 불�?
-- [ ] ?�� High ??주요 기능 ?�작 불�?
-- [ ] ?�� Medium ???��? 기능 ?�상, ?�회 가??- [ ] ?�� Low ??미�???문제 ?�는 ?�소???�류
+- [ ] Critical -- 시스템 전체 동작 불가
+- [ ] High -- 주요 기능 동작 불가
+- [ ] Medium -- 일부 기능 이상, 우회 가능
+- [ ] Low -- 미관적 문제 또는 사소한 오류
 
 ---
 
-## ?�� 브랜치명 ?�시
-
-```
+브랜치명 예시:
 fix/login-session
 fix/csv-data-parsing
 fix/chatbot-response-error
-```
