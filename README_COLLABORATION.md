@@ -1,13 +1,13 @@
 # KH-WMS GitHub Collaboration Guide
 
-> 이 문서는 KH R&D WMS 프로젝트의 2인 협업 워크플로우를 정의합니다.  
+> ??문서??KH R&D WMS ?�로?�트??2???�업 ?�크?�로?��? ?�의?�니??  
 > This document defines the 2-person collaboration workflow for the KH R&D WMS project.
 
 ---
 
 ## 1. Purpose
 
-이 가이드는 리드 개발자와 신규 팀원이 혼선 없이 기능을 분담하고, Pull Request 기반으로 안전하게 병합하기 위한 실용적인 규칙 모음입니다.
+??가?�드??리드 개발?��? ?�규 ?�?�이 ?�선 ?�이 기능??분담?�고, Pull Request 기반?�로 ?�전?�게 병합?�기 ?�한 ?�용?�인 규칙 모음?�니??
 
 ---
 
@@ -15,40 +15,40 @@
 
 | Role | GitHub ID | Responsibilities |
 |------|-----------|-----------------|
-| **Lead Developer** | `@LEAD_GITHUB_ID` | Repository owner · Architecture & shared core review · Final merge authority · Release / stable branch control · Code review & workflow governance |
-| **Team Member** | `@TEAM_MEMBER_GITHUB_ID` | Weekly meeting feature development · Chatbot "Hana" feature development · PR-based collaboration · Issue-based task execution · Follows branch, commit, and review rules |
+| **Lead Developer** | `iredrion-img` | Repository owner · Architecture & shared core review · Final merge authority · Release / stable branch control · Code review & workflow governance |
+| **Team Member** | `hooooni46-cell` | Weekly meeting feature development · Chatbot "Hana" feature development · PR-based collaboration · Issue-based task execution · Follows branch, commit, and review rules |
 
 ---
 
 ## 3. Branch Strategy
 
 ```
-main          ← 보호된 배포용 브랜치 (protected, no direct push)
-  └─ develop  ← 통합 브랜치 (integration)
-       ├─ feature/weekly-meeting      ← 주간 회의 기능
-       ├─ feature/hana-chatbot        ← 하나 챗봇 기능
-       ├─ feature/weekly-meeting-ui   ← 주간 회의 UI 세부 작업
-       ├─ feature/hana-api            ← 하나 API 연동
-       ├─ fix/login-session           ← 버그 수정
-       └─ docs/collaboration-guide    ← 문서 작업
+main          ??보호??배포??브랜�?(protected, no direct push)
+  ?��? develop  ???�합 브랜�?(integration)
+       ?��? feature/weekly-meeting      ??주간 ?�의 기능
+       ?��? feature/hana-chatbot        ???�나 챗봇 기능
+       ?��? feature/weekly-meeting-ui   ??주간 ?�의 UI ?��? ?�업
+       ?��? feature/hana-api            ???�나 API ?�동
+       ?��? fix/login-session           ??버그 ?�정
+       ?��? docs/collaboration-guide    ??문서 ?�업
 ```
 
 | Branch | Purpose | Who pushes |
 |--------|---------|-----------|
-| `main` | 배포 기준 브랜치 | Lead only (via PR from develop) |
-| `develop` | 모든 기능의 통합 브랜치 | Lead & Team Member (via PR) |
-| `feature/*` | 신규 기능 개발 | Team Member (PR → develop) |
-| `fix/*` | 버그 수정 | Team Member or Lead (PR → develop) |
-| `docs/*` | 문서 업데이트 | Either (PR → develop) |
+| `main` | 배포 기�? 브랜�?| Lead only (via PR from develop) |
+| `develop` | 모든 기능???�합 브랜�?| Lead & Team Member (via PR) |
+| `feature/*` | ?�규 기능 개발 | Team Member (PR ??develop) |
+| `fix/*` | 버그 ?�정 | Team Member or Lead (PR ??develop) |
+| `docs/*` | 문서 ?�데?�트 | Either (PR ??develop) |
 
 ---
 
 ## 4. Branch Naming Rules
 
 ```
-feature/<feature-name>      # 신규 기능
-fix/<issue-description>     # 버그 수정
-docs/<doc-topic>            # 문서 작업
+feature/<feature-name>      # ?�규 기능
+fix/<issue-description>     # 버그 ?�정
+docs/<doc-topic>            # 문서 ?�업
 ```
 
 **Good examples:**
@@ -68,7 +68,7 @@ docs/api-specification
 my-branch
 test123
 update
-hotfix    ← too vague, use fix/<description>
+hotfix    ??too vague, use fix/<description>
 ```
 
 ---
@@ -79,12 +79,12 @@ Format: `<type>: <short description in English or Korean>`
 
 | Type | When to use |
 |------|------------|
-| `feat` | 새 기능 추가 |
-| `fix` | 버그 수정 |
-| `docs` | 문서 변경 |
-| `refactor` | 기능 변경 없는 코드 개선 |
-| `chore` | 빌드 설정, 패키지 업데이트 등 |
-| `style` | UI/CSS 변경 (로직 변경 없음) |
+| `feat` | ??기능 추�? |
+| `fix` | 버그 ?�정 |
+| `docs` | 문서 변�?|
+| `refactor` | 기능 변�??�는 코드 개선 |
+| `chore` | 빌드 ?�정, ?�키지 ?�데?�트 ??|
+| `style` | UI/CSS 변�?(로직 변�??�음) |
 
 **Examples:**
 ```
@@ -104,16 +104,15 @@ style: adjust chatbot modal responsive layout
 ## 6. Pull Request Rules
 
 ### When to open a PR
-- 기능 브랜치(feature/*, fix/*, docs/*)에서 작업 완료 후 `develop`으로 병합할 때
-- 절대 `main`으로 직접 PR 금지 (Lead → main 제외)
+- 기능 브랜�?feature/*, fix/*, docs/*)?�서 ?�업 ?�료 ??`develop`?�로 병합????- ?��? `main`?�로 직접 PR 금�? (Lead ??main ?�외)
 
-### PR Checklist (팀원 확인 사항)
-- [ ] 브랜치명이 컨벤션을 따르는가?
-- [ ] 커밋 메시지가 컨벤션을 따르는가?
-- [ ] 로컬에서 `npm run build` 또는 `node server.js`로 동작 확인했는가?
-- [ ] 관련 이슈 번호를 PR 설명에 포함했는가?
-- [ ] 최신 `develop`을 merge 또는 rebase 했는가? (`git pull origin develop`)
-- [ ] 불필요한 파일 (`.bak`, 임시 로그, 테스트용 csv 등)은 커밋에서 제외했는가?
+### PR Checklist (?�???�인 ?�항)
+- [ ] 브랜치명??컨벤?�을 ?�르?��??
+- [ ] 커밋 메시지가 컨벤?�을 ?�르?��??
+- [ ] 로컬?�서 `npm run build` ?�는 `node server.js`�??�작 ?�인?�는가?
+- [ ] 관???�슈 번호�?PR ?�명???�함?�는가?
+- [ ] 최신 `develop`??merge ?�는 rebase ?�는가? (`git pull origin develop`)
+- [ ] 불필?�한 ?�일 (`.bak`, ?�시 로그, ?�스?�용 csv ???� 커밋?�서 ?�외?�는가?
 
 ### PR Title Format
 ```
@@ -128,43 +127,43 @@ style: adjust chatbot modal responsive layout
 
 | Rule | Detail |
 |------|--------|
-| 리뷰어 | 모든 PR은 Lead Developer(`@LEAD_GITHUB_ID`)가 리뷰 |
-| 응답 시간 | 리뷰 요청 후 최대 2 영업일 이내 |
-| 머지 권한 | Lead Developer만 `Merge` 버튼 클릭 가능 |
-| Shared core 변경 | `server.js`, `ragService.js`, `server/ai/`, `src/services/` 변경은 더 엄격하게 검토 |
-| 기능 전용 파일 변경 | `src/pages/WeeklyMeeting.jsx`, `src/components/chat/` 등은 일반 리뷰 |
+| 리뷰??| 모든 PR?� Lead Developer(`iredrion-img`)가 리뷰 |
+| ?�답 ?�간 | 리뷰 ?�청 ??최�? 2 ?�업???�내 |
+| 머�? 권한 | Lead Developer�?`Merge` 버튼 ?�릭 가??|
+| Shared core 변�?| `server.js`, `ragService.js`, `server/ai/`, `src/services/` 변경�? ???�격?�게 검??|
+| 기능 ?�용 ?�일 변�?| `src/pages/WeeklyMeeting.jsx`, `src/components/chat/` ?��? ?�반 리뷰 |
 
 **Comments:**
-- `MUST` — 머지 전 반드시 수정
-- `SHOULD` — 권장 수정, 협의 후 결정
-- `NIT` — 사소한 스타일, 선택 사항
+- `MUST` ??머�? ??반드???�정
+- `SHOULD` ??권장 ?�정, ?�의 ??결정
+- `NIT` ???�소???��??? ?�택 ?�항
 
 ---
 
 ## 8. Merge Rules
 
-- **Squash and Merge** 권장: feature 브랜치의 WIP 커밋을 하나로 정리
-- **Merge Commit** 허용: 주요 기능 완성 시 히스토리 보존 목적
-- **Rebase Merge** 금지: 충돌 위험 높음
-- `develop` → `main` 병합은 Lead Developer가 단독 수행
+- **Squash and Merge** 권장: feature 브랜치의 WIP 커밋???�나�??�리
+- **Merge Commit** ?�용: 주요 기능 ?�성 ???�스?�리 보존 목적
+- **Rebase Merge** 금�?: 충돌 ?�험 ?�음
+- `develop` ??`main` 병합?� Lead Developer가 ?�독 ?�행
 
 ---
 
 ## 9. Weekly Operating Routine
 
-| 시점 | 활동 |
+| ?�점 | ?�동 |
 |------|------|
-| **매주 월요일** | 이번 주 작업 이슈 생성 및 브랜치 시작 |
-| **작업 중** | 커밋 단위로 자주 push, 작업 완료 시 PR 생성 |
-| **PR 생성 후** | Lead에게 Slack/카톡 등으로 리뷰 요청 알림 |
-| **리뷰 완료** | Lead가 Approve 및 Merge |
-| **매주 금요일** | 진행 상황 정리 및 다음 주 작업 사전 논의 |
+| **매주 ?�요??* | ?�번 �??�업 ?�슈 ?�성 �?브랜�??�작 |
+| **?�업 �?* | 커밋 ?�위�??�주 push, ?�업 ?�료 ??PR ?�성 |
+| **PR ?�성 ??* | Lead?�게 Slack/카톡 ?�으�?리뷰 ?�청 ?�림 |
+| **리뷰 ?�료** | Lead가 Approve �?Merge |
+| **매주 금요??* | 진행 ?�황 ?�리 �??�음 �??�업 ?�전 ?�의 |
 
 ---
 
-## 10. Area Ownership (CODEOWNERS 기준)
+## 10. Area Ownership (CODEOWNERS 기�?)
 
-| 경로 | 담당 |
+| 경로 | ?�당 |
 |------|------|
 | `src/pages/WeeklyMeeting.jsx` | Team Member (primary) |
 | `src/components/chat/` | Team Member (primary) |
@@ -183,37 +182,37 @@ style: adjust chatbot modal responsive layout
 
 ## 11. Prohibited Actions
 
-| ❌ 금지 사항 |
+| ??금�? ?�항 |
 |------------|
 | `main` 브랜치에 직접 push |
-| `develop` 브랜치에 리뷰 없이 직접 merge |
-| `database_2026.csv` 또는 `users.csv`를 PR 없이 업데이트 |
-| `server.js`, `ragService.js` 단독 수정 후 push |
-| `.bak` 파일, 디버그 로그, 임시 파일 커밋 |
-| 브랜치명/커밋 메시지 컨벤션 미준수 |
-| 리뷰 없이 자기 PR self-merge |
+| `develop` 브랜치에 리뷰 ?�이 직접 merge |
+| `database_2026.csv` ?�는 `users.csv`�?PR ?�이 ?�데?�트 |
+| `server.js`, `ragService.js` ?�독 ?�정 ??push |
+| `.bak` ?�일, ?�버�?로그, ?�시 ?�일 커밋 |
+| 브랜치명/커밋 메시지 컨벤??미�???|
+| 리뷰 ?�이 ?�기 PR self-merge |
 
 ---
 
 ## 12. Practical Examples
 
-### 팀원이 주간 회의 기능을 개발하는 경우:
+### ?�?�이 주간 ?�의 기능??개발?�는 경우:
 ```bash
 git checkout develop
 git pull origin develop
 git checkout -b feature/weekly-meeting
 
-# 작업 시작...
+# ?�업 ?�작...
 git add src/pages/WeeklyMeeting.jsx
 git commit -m "feat: add weekly meeting registration page"
 git push origin feature/weekly-meeting
 
-# GitHub에서 PR 생성: feature/weekly-meeting → develop
-# PR 제목: [feat] Add weekly meeting registration page
-# 리드에게 리뷰 요청
+# GitHub?�서 PR ?�성: feature/weekly-meeting ??develop
+# PR ?�목: [feat] Add weekly meeting registration page
+# 리드?�게 리뷰 ?�청
 ```
 
-### 팀원이 Hana 챗봇 API를 연동하는 경우:
+### ?�?�이 Hana 챗봇 API�??�동?�는 경우:
 ```bash
 git checkout develop
 git pull origin develop
@@ -223,9 +222,9 @@ git add server/ai/aiOrchestrator.js src/components/chat/
 git commit -m "feat: connect hana chatbot response api"
 git push origin feature/hana-api
 
-# GitHub에서 PR 생성: feature/hana-api → develop
+# GitHub?�서 PR ?�성: feature/hana-api ??develop
 ```
 
 ---
 
-*Last updated: 2026-04-06 | Maintainer: @LEAD_GITHUB_ID*
+*Last updated: 2026-04-06 | Maintainer: iredrion-img*

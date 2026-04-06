@@ -1,66 +1,65 @@
 # GitHub Remote Settings Checklist
-# KH-WMS í˜‘ì—… í™˜ê²½ ì›ê²© ì„¤ì • ì²´í¬ë¦¬ìŠ¤íŠ¸
-# 
-# Usage: ì´ íŒŒì¼ì€ ì°¸ê³ ìš©ì…ë‹ˆë‹¤. ê° í•­ëª©ì„ GitHub ì›¹ UIì—ì„œ ì§ì ‘ ì„¤ì •í•˜ì„¸ìš”.
+# KH-WMS ?‘ì—… ?˜ê²½ ?ê²© ?¤ì • ì²´í¬ë¦¬ìŠ¤??# 
+# Usage: ???Œì¼?€ ì°¸ê³ ?©ì…?ˆë‹¤. ê°???ª©??GitHub ??UI?ì„œ ì§ì ‘ ?¤ì •?˜ì„¸??
 # Reference: README_COLLABORATION.md
 
-## â”€â”€ STEP 1: Invite Collaborator â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+## ?€?€ STEP 1: Invite Collaborator ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 - [ ] GitHub > Settings > Collaborators and teams
-       â†’ "Add people" â†’ @TEAM_MEMBER_GITHUB_ID ì´ˆëŒ€
-       â†’ Role: "Write" ê¶Œí•œ ë¶€ì—¬ (Admin ë¶ˆí•„ìš”)
-       â†’ íŒ€ì›ì´ ì´ë©”ì¼ ì´ˆëŒ€ ìˆ˜ë½
+       ??"Add people" ??hooooni46-cell ì´ˆë?
+       ??Role: "Write" ê¶Œí•œ ë¶€??(Admin ë¶ˆí•„??
+       ???€?ì´ ?´ë©”??ì´ˆë? ?˜ë½
 
-## â”€â”€ STEP 2: Create develop Branch â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-- [ ] ë¡œì»¬ì—ì„œ develop ë¸Œëœì¹˜ ìƒì„± ë° push (ì•„ë˜ ëª…ë ¹ì–´):
+## ?€?€ STEP 2: Create develop Branch ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+- [ ] ë¡œì»¬?ì„œ develop ë¸Œëœì¹??ì„± ë°?push (?„ë˜ ëª…ë ¹??:
        git checkout -b develop
        git push origin develop
-- [ ] GitHub > Code íƒ­ì—ì„œ develop ë¸Œëœì¹˜ í™•ì¸
+- [ ] GitHub > Code ??—??develop ë¸Œëœì¹??•ì¸
 
-## â”€â”€ STEP 3: Set Default Branch to develop â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+## ?€?€ STEP 3: Set Default Branch to develop ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 - [ ] GitHub > Settings > General > Default branch
-       â†’ developìœ¼ë¡œ ë³€ê²½ (PR ê¸°ë³¸ íƒ€ê²Ÿì´ developì´ ë¨)
+       ??develop?¼ë¡œ ë³€ê²?(PR ê¸°ë³¸ ?€ê²Ÿì´ develop????
 
-## â”€â”€ STEP 4: Branch Protection â€” main â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+## ?€?€ STEP 4: Branch Protection ??main ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 - [ ] GitHub > Settings > Branches > "Add branch protection rule"
        Branch name pattern: main
-       â˜‘ Require a pull request before merging
+       ??Require a pull request before merging
          - Require approvals: 1
-         - â˜‘ Dismiss stale pull request approvals when new commits are pushed
-       â˜‘ Require status checks to pass before merging (optional)
-       â˜‘ Do not allow bypassing the above settings
-       â˜‘ Restrict who can push to matching branches â†’ @LEAD_GITHUB_ID only
-       â†’ Save changes
+         - ??Dismiss stale pull request approvals when new commits are pushed
+       ??Require status checks to pass before merging (optional)
+       ??Do not allow bypassing the above settings
+       ??Restrict who can push to matching branches ??iredrion-img only
+       ??Save changes
 
-## â”€â”€ STEP 5: Branch Protection â€” develop (Optional but Recommended) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+## ?€?€ STEP 5: Branch Protection ??develop (Optional but Recommended) ?€?€?€?€?€?€?€?€?€?€
 - [ ] GitHub > Settings > Branches > "Add branch protection rule"
        Branch name pattern: develop
-       â˜‘ Require a pull request before merging
+       ??Require a pull request before merging
          - Require approvals: 1
-       â˜ (Do NOT check "Restrict who can push" â€” Lead needs to push directly if needed)
-       â†’ Save changes
+       ??(Do NOT check "Restrict who can push" ??Lead needs to push directly if needed)
+       ??Save changes
 
-## â”€â”€ STEP 6: Enable CODEOWNERS Reviews â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-- [ ] .github/CODEOWNERS íŒŒì¼ì—ì„œ @LEAD_GITHUB_ID, @TEAM_MEMBER_GITHUB_IDë¥¼ ì‹¤ì œ IDë¡œ êµì²´
-- [ ] Branch protection ruleì—ì„œ:
-       â˜‘ Require review from Code Owners í™œì„±í™” (main + develop ë‘˜ ë‹¤)
+## ?€?€ STEP 6: Enable CODEOWNERS Reviews ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+- [ ] .github/CODEOWNERS ?Œì¼?ì„œ iredrion-img, hooooni46-cellë¥??¤ì œ IDë¡?êµì²´
+- [ ] Branch protection rule?ì„œ:
+       ??Require review from Code Owners ?œì„±??(main + develop ????
 
-## â”€â”€ STEP 7: Merge Strategy â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+## ?€?€ STEP 7: Merge Strategy ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 - [ ] GitHub > Settings > General > Pull Requests
-       â˜‘ Allow squash merging (ê¶Œì¥ â€” ê¸°ë³¸ ì„¤ì •)
-       â˜‘ Allow merge commits (ì£¼ìš” ê¸°ëŠ¥ ì™„ì„± ì‹œ íˆìŠ¤í† ë¦¬ ë³´ì¡´)
-       â˜ Allow rebase merging (ë¹„í™œì„±í™” ê¶Œì¥)
+       ??Allow squash merging (ê¶Œì¥ ??ê¸°ë³¸ ?¤ì •)
+       ??Allow merge commits (ì£¼ìš” ê¸°ëŠ¥ ?„ì„± ???ˆìŠ¤? ë¦¬ ë³´ì¡´)
+       ??Allow rebase merging (ë¹„í™œ?±í™” ê¶Œì¥)
 
-## â”€â”€ STEP 8: Placeholder ì‹¤ì œ IDë¡œ êµì²´ â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-- [ ] README_COLLABORATION.md â€” @LEAD_GITHUB_ID, @TEAM_MEMBER_GITHUB_ID êµì²´
-- [ ] .github/CODEOWNERS â€” ë™ì¼ êµì²´
-- [ ] .github/ISSUE_TEMPLATE/feature_request.md â€” ë™ì¼ êµì²´
-- [ ] docs/github-onboarding.md â€” @LEAD_GITHUB_ID êµì²´
+## ?€?€ STEP 8: Placeholder ?¤ì œ IDë¡?êµì²´ ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+- [ ] README_COLLABORATION.md ??iredrion-img, hooooni46-cell êµì²´
+- [ ] .github/CODEOWNERS ???™ì¼ êµì²´
+- [ ] .github/ISSUE_TEMPLATE/feature_request.md ???™ì¼ êµì²´
+- [ ] docs/github-onboarding.md ??iredrion-img êµì²´
 
-## â”€â”€ STEP 9: Push Collaboration Files â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
+## ?€?€ STEP 9: Push Collaboration Files ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
 - [ ] git add README_COLLABORATION.md .github/ docs/github-onboarding.md
 - [ ] git commit -m "docs: add github collaboration framework"
-- [ ] git push origin main (ë˜ëŠ” develop)
+- [ ] git push origin main (?ëŠ” develop)
 
-## â”€â”€ STEP 10: Share Onboarding Link with Team Member â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-- [ ] ì´ˆëŒ€ ìˆ˜ë½ í™•ì¸ í›„ íŒ€ì›ì—ê²Œ ì•„ë˜ URL ê³µìœ :
+## ?€?€ STEP 10: Share Onboarding Link with Team Member ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+- [ ] ì´ˆë? ?˜ë½ ?•ì¸ ???€?ì—ê²??„ë˜ URL ê³µìœ :
        https://github.com/iredrion-img/kh-rnd-wms/blob/develop/docs/github-onboarding.md

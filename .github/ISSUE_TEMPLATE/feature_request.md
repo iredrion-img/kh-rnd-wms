@@ -1,32 +1,31 @@
 ---
-name: ✨ Feature Request
-about: 주간 회의 관리, 하나 챗봇 등 신규 기능 개발을 위한 이슈 템플릿
-title: "[feat] "
+name: ??Feature Request
+about: 주간 ?�의 관�? ?�나 챗봇 ???�규 기능 개발???�한 ?�슈 ?�플�?title: "[feat] "
 labels: ["feature", "in-progress"]
 assignees: ""
 ---
 
-## 🎯 목적 / Objective
+## ?�� 목적 / Objective
 
-> 이 기능을 왜 개발하는지 명확히 기술하세요.
-
----
-
-## 📐 범위 / Scope
-
-> 이 이슈에서 다루는 작업 범위를 기술하세요. 무엇을 포함하고 무엇을 제외하는지 명시하세요.
-
-**포함 (In-scope):**
-- 
-
-**제외 (Out-of-scope):**
-- 
+> ??기능????개발?�는지 명확??기술?�세??
 
 ---
 
-## ✅ 기대 동작 / Expected Behavior
+## ?�� 범위 / Scope
 
-> 완성되었을 때 어떻게 동작해야 하는지 구체적으로 기술하세요.
+> ???�슈?�서 ?�루???�업 범위�?기술?�세?? 무엇???�함?�고 무엇???�외?�는지 명시?�세??
+
+**?�함 (In-scope):**
+- 
+
+**?�외 (Out-of-scope):**
+- 
+
+---
+
+## ??기�? ?�작 / Expected Behavior
+
+> ?�성?�었?????�떻�??�작?�야 ?�는지 구체?�으�?기술?�세??
 
 1. 
 2. 
@@ -34,53 +33,52 @@ assignees: ""
 
 ---
 
-## 🔧 구현 노트 / Implementation Notes
+## ?�� 구현 ?�트 / Implementation Notes
 
-> 구현 방향, 사용할 기술 스택, 참고할 파일 등을 기재하세요.
+> 구현 방향, ?�용??기술 ?�택, 참고???�일 ?�을 기재?�세??
 
-- **관련 파일**: `src/pages/WeeklyMeeting.jsx`, `src/components/chat/`, etc.
-- **API/서버**: `server/ai/aiOrchestrator.js`, `server.js` endpoint 등
-- **참고 사항**: 
+- **관???�일**: `src/pages/WeeklyMeeting.jsx`, `src/components/chat/`, etc.
+- **API/?�버**: `server/ai/aiOrchestrator.js`, `server.js` endpoint ??- **참고 ?�항**: 
 
 ---
 
-## 📁 영향 범위 / Affected Area
+## ?�� ?�향 범위 / Affected Area
 
 - [ ] `src/pages/WeeklyMeeting.jsx`
 - [ ] `src/components/chat/` (Hana chatbot)
 - [ ] `server/ai/aiOrchestrator.js`
-- [ ] `server.js` (API endpoint 추가)
+- [ ] `server.js` (API endpoint 추�?)
 - [ ] `ragService.js`
-- [ ] `database_2026.csv` (데이터 스키마 변경 시)
-- [ ] 기타: 
+- [ ] `database_2026.csv` (?�이???�키�?변�???
+- [ ] 기�?: 
 
 ---
 
-## 🏁 완료 기준 / Acceptance Criteria
+## ?�� ?�료 기�? / Acceptance Criteria
 
 - [ ] 
 - [ ] 
-- [ ] 로컬(`http://localhost:3001`)에서 동작 확인
-- [ ] 기존 기능(Dashboard, Timesheet, Login)에 영향 없음
+- [ ] 로컬(`http://localhost:3001`)?�서 ?�작 ?�인
+- [ ] 기존 기능(Dashboard, Timesheet, Login)???�향 ?�음
 
 ---
 
-## 👤 담당 / Assignee
+## ?�� ?�당 / Assignee
 
-- **담당자**: @TEAM_MEMBER_GITHUB_ID
-- **리뷰어**: @LEAD_GITHUB_ID
-
----
-
-## 🔥 우선순위 / Priority
-
-- [ ] 🔴 High — 이번 주 완료 필요
-- [ ] 🟡 Medium — 이번 스프린트 내 완료
-- [ ] 🟢 Low — 일정 여유 있음
+- **?�당??*: hooooni46-cell
+- **리뷰??*: iredrion-img
 
 ---
 
-## 🌿 브랜치명 예시
+## ?�� ?�선?�위 / Priority
+
+- [ ] ?�� High ???�번 �??�료 ?�요
+- [ ] ?�� Medium ???�번 ?�프린트 ???�료
+- [ ] ?�� Low ???�정 ?�유 ?�음
+
+---
+
+## ?�� 브랜치명 ?�시
 
 ```
 feature/weekly-meeting
