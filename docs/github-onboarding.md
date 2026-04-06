@@ -1,172 +1,204 @@
-# KH-WMS GitHub ?¨ë³´??ê°€?´ë“œ (? ê·œ ?€??
+ï»¿# KH-WMS GitHub Onboarding Guide (New Team Member)
 
-> ?˜ì˜?©ë‹ˆ?? ??ë¬¸ì„œ???ˆë¡œ???€?ì´ KH-WMS ?„ë¡œ?íŠ¸??ì²˜ìŒ ì°¸ì—¬????ê°€??ë¨¼ì? ?½ì–´???˜ëŠ” ê°€?´ë“œ?…ë‹ˆ??
-
----
-
-## 1. ?¬ì „ ì¤€ë¹?
-?¤ìŒ ?„êµ¬ë¥?ë¨¼ì? ?¤ì¹˜?˜ì„¸??
-
-- **Node.js** (v18 ?´ìƒ LTS ê¶Œì¥): https://nodejs.org/
-- **Git**: https://git-scm.com/
-- **ì½”ë“œ ?ë””??*: VS Code ê¶Œì¥ (https://code.visualstudio.com/)
+> Welcome! Read this document first before starting development on KH-WMS.
+> **Development Environment: Antigravity IDE** (same as lead developer)
 
 ---
 
-## 2. ?€?¥ì†Œ ?´ë¡ 
+## PART A - Antigravity IDE Setup and Repository Connection
 
-```bash
-git clone https://github.com/iredrion-img/kh-rnd-wms.git
-cd kh-rnd-wms
-```
+### A-1. Prerequisites
 
----
+Install the following programs in order:
 
-## 3. ?˜ì¡´???¤ì¹˜ ë°?ê°œë°œ ?œë²„ ?¤í–‰
+- **Node.js** (v18 LTS or higher): https://nodejs.org/
+- **Git** (latest): https://git-scm.com/
+- **Antigravity IDE** (latest): Request installer from iredrion-img
 
-```bash
-npm install
-npm run dev         # ê°œë°œ ?œë²„ (Vite, http://localhost:5173)
-# ?ëŠ”
-node server.js      # ë°±ì—”???œë²„ (http://localhost:3001)
-```
-
-> ë³´í†µ?€ ???°ë??ì„ ?™ì‹œ???´ì–´ `npm run dev`?€ `node server.js`ë¥?ê°ê° ?¤í–‰?©ë‹ˆ??
+> When installing Git, leave all default options as-is.
 
 ---
 
-## 4. ê°œë°œ ?œì‘ ????develop ë¸Œëœì¹?ìµœì‹ ??
-??ƒ ?‘ì—… ?œì‘ ?„ì— `develop`??ìµœì‹  ?íƒœë¡??™ê¸°?”í•©?ˆë‹¤:
+### A-2. Clone the Repository
 
-```bash
-git checkout develop
-git pull origin develop
-```
+Before opening Antigravity IDE, download the code first.
 
----
+Open Windows PowerShell or CMD and run:
 
-## 5. ê¸°ëŠ¥ ë¸Œëœì¹?ë§Œë“¤ê¸?
-```bash
-# develop ê¸°ì??¼ë¡œ ??ë¸Œëœì¹??ì„±
-git checkout -b feature/weekly-meeting
-# ?ëŠ”
-git checkout -b feature/hana-chatbot
-```
+    git clone https://github.com/iredrion-img/kh-rnd-wms.git
+    cd kh-rnd-wms
+    npm install
 
-ë¸Œëœì¹??´ë¦„ ê·œì¹™:
-- `feature/<ê¸°ëŠ¥ëª?` ??? ê·œ ê¸°ëŠ¥
-- `fix/<ë¬¸ì œëª?` ??ë²„ê·¸ ?˜ì •
-- `docs/<ë¬¸ì„œëª?` ??ë¬¸ì„œ ?‘ì—…
+Clone location example: C:\Users\[your-name]\kh-rnd-wms
 
 ---
 
-## 6. ì½”ë“œ ?‘ì„± ë°?ì»¤ë°‹
+### A-3. Open Repository in Antigravity IDE
 
-```bash
-# ë³€ê²??Œì¼ ?•ì¸
-git status
-
-# ?„ìš”???Œì¼ë§??¤í…Œ?´ì§•
-git add src/pages/WeeklyMeeting.jsx
-git add src/components/chat/
-
-# ì»¤ë°‹ (ì»¨ë²¤??ì¤€??)
-git commit -m "feat: add weekly meeting registration form"
-```
-
-ì»¤ë°‹ ë©”ì‹œì§€ ê·œì¹™:
-- `feat: ` ????ê¸°ëŠ¥
-- `fix: ` ??ë²„ê·¸ ?˜ì •
-- `docs: ` ??ë¬¸ì„œ
-- `refactor: ` ??ë¦¬íŒ©?°ë§
-- `chore: ` ???¤ì •, ?¨í‚¤ì§€ ??
----
-
-## 7. ë¸Œëœì¹?Push
-
-```bash
-git push origin feature/weekly-meeting
-```
+1. Launch Antigravity IDE
+2. Select "Open Folder"
+3. Select the kh-rnd-wms folder you cloned above
+4. Confirm the project structure is visible in the left file explorer
 
 ---
 
-## 8. Pull Request ?´ê¸°
+### A-4. Configure Git Identity in Antigravity IDE
 
-1. GitHub ?€?¥ì†Œ ?˜ì´ì§€(https://github.com/iredrion-img/kh-rnd-wms)???‘ì†
-2. ?ë‹¨???¨ëŠ” **"Compare & pull request"** ë²„íŠ¼ ?´ë¦­
-3. **Base branch**: `develop` ?•ì¸ (`main`?´ë©´ ë°˜ë“œ??`develop`?¼ë¡œ ë³€ê²?
-4. PR ?œí”Œë¦¿ì— ë§ê²Œ ?´ìš© ?‘ì„±
-5. **Reviewers** ??ª©??`iredrion-img` ì¶”ê?
-6. **Submit pull request** ?´ë¦­
-7. ë¦¬ë“œ ê°œë°œ?ì—ê²?ì¹´ì¹´?¤í†¡/?¬ë™ ?±ìœ¼ë¡?ë¦¬ë·° ?”ì²­ ?Œë¦¼
+Open the terminal panel in Antigravity IDE (shortcut: Ctrl+~ or terminal panel):
 
----
+    git config user.name "hooooni46-cell"
+    git config user.email "your_email@example.com"
+    git branch
 
-## 9. ë¦¬ë·° ?´í›„ ?˜ì •
-
-ë¦¬ë·° ì½”ë©˜?¸ê? ?¬ë¦¬ë©?
-
-```bash
-# ?„ì¬ feature ë¸Œëœì¹˜ì—???˜ì •
-git add <?˜ì •???Œì¼>
-git commit -m "fix: address review comments"
-git push origin feature/weekly-meeting
-```
-
-PR???ë™ ë°˜ì˜?©ë‹ˆ?? ì¶”ê?ë¡??Œë¦´ ?„ìš” ?†ìŠµ?ˆë‹¤.
+You should see the develop or main branch listed.
 
 ---
 
-## 10. develop ìµœì‹ ??(ì¶©ëŒ ?ˆë°©)
+### A-5. GitHub Authentication (First Time Only)
 
-?‘ì—… ì¤?develop???…ë°?´íŠ¸??ê²½ìš°:
+A GitHub login window will appear on your first push.
 
-```bash
-git checkout develop
-git pull origin develop
-git checkout feature/weekly-meeting
-git merge develop
-# ì¶©ëŒ ?´ê²° ??git push origin feature/weekly-meeting
-```
-
----
-
-## 11. ???ˆë? ?˜ì? ë§ì•„????ê²?
-| ê¸ˆì? ?¬í•­ | ?´ìœ  |
-|-----------|------|
-| `git push origin main` | main?€ ì§ì ‘ push ë¶ˆê? (ë³´í˜¸?? |
-| `git push origin develop` (ì§ì ‘) | develop??PR???µí•´?œë§Œ ë³‘í•© |
-| ë¦¬ë·° ?†ì´ PR self-merge | Leadë§?merge ê¶Œí•œ ê°€ì§?|
-| `database_2026.csv` ì§ì ‘ ?¸ì§‘ ??push | ?°ì´???ìƒ ?„í—˜, Lead?€ ë°˜ë“œ???‘ì˜ |
-| `server.js`, `ragService.js` ?¨ë… ?˜ì • | ?µì‹¬ ?œë²„ ë¡œì§, Lead ê²€???„ìˆ˜ |
-| `.bak`, ?„ì‹œ ?Œì¼ ì»¤ë°‹ | ?€?¥ì†Œ ?¤ì—¼ |
+Option A - Password: Enter your GitHub account password
+Option B - Personal Access Token (recommended):
+  1. GitHub -> Profile (top right) -> Settings
+  2. Developer settings -> Personal access tokens -> Tokens (classic)
+  3. Generate new token
+     - Note: kh-rnd-wms
+     - Expiration: 90 days
+     - Scopes: check "repo" (all)
+  4. Copy token immediately (cannot view again)
+  5. Use this token as your password when pushing
 
 ---
 
-## 12. ?ì£¼ ?˜ëŠ” ?¤ìˆ˜ (Common Mistakes)
+## PART B - Starting Development in Antigravity IDE
 
-### ??base branchë¥?main?¼ë¡œ ?¤ì •??ê²½ìš°
-PR ?ì„± ?”ë©´?ì„œ baseë¥?**`develop`** ?¼ë¡œ ë°”ê¾¸ë©??©ë‹ˆ??
+### B-1. Using the AI Assistant
 
-### ??develop??ìµœì‹ ???„ë‹Œ ?íƒœ?ì„œ ?‘ì—… ?œì‘
-```bash
-git checkout develop && git pull origin develop
-```
-????ƒ ë¨¼ì? ?¤í–‰?˜ì„¸??
+Antigravity IDE has a built-in AI coding assistant.
+You can ask it to write code, debug, or explain anything.
 
-### ???ˆë¬´ ë§ì? ë³€ê²½ì„ ??ì»¤ë°‹???£ì? ê²½ìš°
-ì»¤ë°‹?€ ?‘ê³  ?¼ë¦¬?ì¸ ?¨ìœ„ë¡??˜ëˆ„?¸ìš”. ë¦¬ë·°ê°€ ?¨ì”¬ ?¬ì›Œì§‘ë‹ˆ??
-
-### ??ì»¤ë°‹ ë©”ì‹œì§€ê°€ "update", "fix", "asdf" ??ë°˜ë“œ??`feat: `, `fix: ` ?±ì˜ prefixë¥?ë¶™ì´ê³?êµ¬ì²´?ì¸ ?´ìš©??ê¸°ì¬?˜ì„¸??
+Example prompts you can use:
+  - "Add a meeting registration form to WeeklyMeeting.jsx"
+  - "Connect this component to the /api/meeting endpoint in server.js"
+  - "Why is this function returning undefined?"
 
 ---
 
-## 13. ì°¸ê³  ?ë£Œ
+### B-2. Before Every Work Session: Sync develop Branch
 
-- **?‘ì—… ê°€?´ë“œ ?„ì²´**: [README_COLLABORATION.md](../README_COLLABORATION.md)
-- **GitHub ?€?¥ì†Œ**: https://github.com/iredrion-img/kh-rnd-wms
-- **Git ê¸°ì´ˆ**: https://git-scm.com/book/ko/v2
+In the Antigravity terminal:
+
+    git checkout develop
+    git pull origin develop
 
 ---
 
-*ê¶ê¸ˆ???ì? ë¦¬ë“œ ê°œë°œ??`iredrion-img`)?ê²Œ ?¸ì œ? ì? ë¬¼ì–´ë³´ì„¸??*
+### B-3. Create a Feature Branch
+
+    # For weekly meeting feature
+    git checkout -b feature/weekly-meeting
+
+    # For Hana chatbot feature
+    git checkout -b feature/hana-chatbot
+
+---
+
+### B-4. Run Development Servers
+
+Open TWO terminal panels in Antigravity and run one in each:
+
+Terminal 1 (Frontend):
+    npm run dev
+    # -> View at http://localhost:5173
+
+Terminal 2 (Backend):
+    node server.js
+    # -> View at http://localhost:3001
+
+---
+
+### B-5. Work, Then Commit
+
+Main files you will work on:
+  - Weekly Meeting:  src/pages/WeeklyMeeting.jsx
+  - Hana Chatbot:    src/components/chat/Chatbot.jsx
+  - Hana Chatbot:    src/components/chat/ChatModal.jsx
+  - AI Integration:  server/ai/aiOrchestrator.js
+
+After making changes:
+
+    git status
+    git add src/pages/WeeklyMeeting.jsx
+    git commit -m "feat: add weekly meeting registration form"
+
+Commit message rules:
+  feat:      new feature
+  fix:       bug fix
+  docs:      documentation
+  refactor:  code improvement without behavior change
+  chore:     config, package updates
+
+---
+
+### B-6. Push Your Branch
+
+    git push origin feature/weekly-meeting
+
+---
+
+### B-7. Create a Pull Request on GitHub
+
+1. Go to https://github.com/iredrion-img/kh-rnd-wms
+2. Click the yellow banner "Compare & pull request"
+3. Verify base branch is "develop" (NEVER "main")
+4. Fill in the PR template (auto-populated)
+5. Add iredrion-img as Reviewer
+6. Submit PR and notify lead via KakaoTalk/Slack
+
+---
+
+## PART C - NEVER DO THESE
+
+| Prohibited Action | Reason |
+|-------------------|--------|
+| git push origin main | main is protected, will fail |
+| Merge directly to develop without PR | Breaks review process |
+| Self-merge your own PR | Only iredrion-img can merge |
+| Edit database_2026.csv and push | Risk of data corruption |
+| Modify server.js or ragService.js alone | Requires lead review |
+| Commit .bak or temp files | Pollutes repository |
+
+---
+
+## PART D - When You Are Stuck
+
+| Situation | Solution |
+|-----------|----------|
+| git push fails | Contact iredrion-img |
+| Server won't start | Run npm install again, then retry |
+| Branch conflict | Run git pull origin develop, resolve conflicts |
+| Antigravity IDE question | Contact iredrion-img directly |
+
+---
+
+## Onboarding Checklist
+
+- [ ] Node.js installed
+- [ ] Git installed
+- [ ] Antigravity IDE installed
+- [ ] GitHub invitation accepted (iredrion-img/kh-rnd-wms)
+- [ ] git clone completed
+- [ ] npm install completed
+- [ ] Project opened in Antigravity IDE
+- [ ] git config user.name set
+- [ ] GitHub Personal Access Token created
+- [ ] git pull on develop branch succeeded
+- [ ] First feature branch created (feature/weekly-meeting or feature/hana-chatbot)
+- [ ] Development servers running locally (http://localhost:3001)
+- [ ] First commit and push succeeded
+- [ ] First PR created successfully
+
+---
+
+If you have any questions, contact the lead developer iredrion-img anytime.
