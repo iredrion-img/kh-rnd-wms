@@ -6,6 +6,7 @@ import { BarChart, Bar, ResponsiveContainer, Cell, XAxis, PieChart, Pie, Tooltip
 import MiniCalendar from '../components/ui/MiniCalendar';
 import DailyWorkCard from '../components/ui/DailyWorkCard';
 import ContributionGraph from '../components/ui/ContributionGraph';
+import TaskFormModal from '../components/weeklyMeeting/TaskFormModal';
 
 // Custom Tick Component for X-Axis
 const CustomXAxisTick = ({ x, y, payload }) => {
@@ -31,6 +32,7 @@ const Timesheet = ({ currentUser }) => {
 
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [dailyData, setDailyData] = useState({}); // { 'yyyy-MM-dd': { 'CategoryLabel': hours } }
+    const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
 
     // Categories config
     const leaveCategories = [
@@ -311,6 +313,25 @@ const Timesheet = ({ currentUser }) => {
         }
     };
 
+    const handleSaveWeeklyTask = async (taskData) => {
+        try {
+            const res = await fetch('/api/weekly-tasks', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ...taskData, team: currentUser.department || '' })
+            });
+            if (res.ok) {
+                setIsTaskModalOpen(false);
+                alert('주간 업무가 등록되었습니다.');
+            } else {
+                alert('저장에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('오류가 발생했습니다.');
+        }
+    };
+
     // Calculate weekly total
     const weeklyTotal = weeklyChartData.reduce((acc, day) => acc + day.total, 0);
 
@@ -421,9 +442,17 @@ const Timesheet = ({ currentUser }) => {
                         <p className="text-gray-400 text-sm mt-0.5">해당 날짜의 업무 시간을 항목별로 입력해주세요.</p>
                     </div>
 
-                    {/* Leave Toggle */}
-                    <div className="flex items-center gap-3">
-                        <span className="text-sm font-medium text-gray-400">휴가 설정</span>
+                    {/* Action Buttons */}
+                    <div className="flex items-center gap-4">
+                        <button
+                            onClick={() => setIsTaskModalOpen(true)}
+                            className="px-4 py-2 bg-gradient-to-r from-primary to-primary-light text-white rounded-lg hover:shadow-lg transition-all text-sm font-bold flex items-center gap-1"
+                        >
+                            + 주간 업무 추가
+                        </button>
+
+                        <div className="flex items-center gap-3">
+                            <span className="text-sm font-medium text-gray-400">휴가 설정</span>
                         <div className="flex bg-gray-100 rounded-lg p-1">
                             {['없음', '반차', '연차'].map(t => {
                                 const isActive =
@@ -442,6 +471,7 @@ const Timesheet = ({ currentUser }) => {
                                 );
                             })}
                         </div>
+                    </div>
                     </div>
                 </div>
 
@@ -532,6 +562,15 @@ const Timesheet = ({ currentUser }) => {
             </div>
             {/* Bg Decoration */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+            {isTaskModalOpen && (
+                <TaskFormModal
+                    team={currentUser.department || '공통업무&행정'}
+                    onClose={() => setIsTaskModalOpen(false)}
+                    onSave={handleSaveWeeklyTask}
+                    currentWeek={format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')}
+                />
+            )}
         </div >
     );
 };

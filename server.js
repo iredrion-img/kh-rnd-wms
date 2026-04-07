@@ -31,11 +31,43 @@ const getDbFile = (year) => {
 
 const DB_COLUMNS = ['employee', 'department', 'project_name', 'project_code', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun', 'total', 'week_start'];
 
+// Weekly Meeting Files
+const WEEKLY_TASKS_COLUMNS = [
+    'id', 'team', 'category', 'sub_category', 'task_code',
+    'content', 'assignees', 'status', 'priority',
+    'start_date', 'end_date', 'meeting_result', 'note', 'week_start', 'created_at'
+];
+const PROJECTS_COLUMNS = [
+    'id', 'category', 'sub_no', 'project_code', 'project_name',
+    'method', 'bim_cost', 'dept', 'manager', 'status_detail', 'created_at'
+];
+const SCHEDULE_COLUMNS = [
+    'id', 'schedule_type', 'content', 'start_date', 'end_date',
+    'location', 'assignees', 'week_start', 'year', 'created_at'
+];
+
+const getWeeklyTasksFile = (year) => path.join(__dirname, `weekly_tasks_${year || new Date().getFullYear()}.csv`);
+const PROJECTS_FILE = path.join(__dirname, 'projects.csv');
+const SCHEDULE_FILE = path.join(__dirname, 'weekly_schedule.csv');
+
 // --- INITIALIZATION ---
+const currentYear = new Date().getFullYear();
+
+// Ensure weekly files exist
+const currentWeeklyFile = getWeeklyTasksFile(currentYear);
+if (!fs.existsSync(currentWeeklyFile)) {
+    fs.writeFileSync(currentWeeklyFile, WEEKLY_TASKS_COLUMNS.join(',') + '\n');
+}
+if (!fs.existsSync(PROJECTS_FILE)) {
+    fs.writeFileSync(PROJECTS_FILE, PROJECTS_COLUMNS.join(',') + '\n');
+}
+if (!fs.existsSync(SCHEDULE_FILE)) {
+    fs.writeFileSync(SCHEDULE_FILE, SCHEDULE_COLUMNS.join(',') + '\n');
+}
+
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
 
 // Initialize current year DB if not exists
-const currentYear = new Date().getFullYear();
 const currentDb = getDbFile(currentYear); // e.g., database_2026.csv
 
 if (!fs.existsSync(currentDb)) {
@@ -192,9 +224,10 @@ app.post('/api/login', (req, res) => {
 
 app.post('/api/users', (req, res) => {
     try {
-        let { name, department, password } = req.body;
+        let { name, department, password, role } = req.body;
         name = name.trim();
         department = department.trim();
+        role = (role || 'member').trim();
 
         const users = readCsvResilient(USERS_FILE);
         if (users.some(u => u.name.trim().replace(/\s+/g, '') === name.replace(/\s+/g, ''))) {
@@ -202,10 +235,12 @@ app.post('/api/users', (req, res) => {
         }
 
         const id = Date.now().toString();
-        const userRow = stringify([{ id, name, department, password }], { header: false, columns: USER_COLUMNS });
+        const newUser = { id, name, department, password, role };
+        const allColumns = [...USER_COLUMNS, 'role'];
+        const userRow = stringify([newUser], { header: false, columns: allColumns });
         fs.appendFileSync(USERS_FILE, userRow);
 
-        res.json({ success: true, user: { id, name, department } });
+        res.json({ success: true, user: { id, name, department, role } });
     } catch (error) {
         res.status(500).json({ error: '사용자 추가 실패' });
     }
@@ -213,13 +248,13 @@ app.post('/api/users', (req, res) => {
 
 app.get('/api/users', (req, res) => {
     const users = readCsvResilient(USERS_FILE);
-    res.json(users.map(({ password, ...u }) => u));
+    res.json(users.map(({ password, ...u }) => ({ ...u, role: u.role || 'member' })));
 });
 
 app.put('/api/users/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        let { name, department, password } = req.body;
+        let { name, department, password, role } = req.body;
         name = name ? name.trim() : undefined;
         department = department ? department.trim() : undefined;
 
@@ -230,15 +265,17 @@ app.put('/api/users/:id', async (req, res) => {
             return res.status(404).json({ error: '사용자를 찾을 수 없습니다.' });
         }
 
-        // Update fields
         if (name) users[userIndex].name = name;
         if (department) users[userIndex].department = department;
         if (password && password.trim()) users[userIndex].password = password.trim();
+        if (role) users[userIndex].role = role.trim();
+        if (!users[userIndex].role) users[userIndex].role = 'member';
 
-        await writeAtomic(USERS_FILE, stringify(users, { header: true, columns: USER_COLUMNS }));
+        const allColumns = [...USER_COLUMNS, 'role'];
+        await writeAtomic(USERS_FILE, stringify(users, { header: true, columns: allColumns }));
 
         const { password: _, ...updatedUser } = users[userIndex];
-        res.json({ success: true, user: updatedUser });
+        res.json({ success: true, user: { ...updatedUser, role: updatedUser.role || 'member' } });
     } catch (error) {
         console.error('Update User Error:', error);
         res.status(500).json({ error: '사용자 정보 수정 실패' });
@@ -318,7 +355,231 @@ app.post('/api/timesheets', async (req, res) => {
     }
 });
 
+// =============================================
+// --- WEEKLY MEETING API ---
+// =============================================
+
+// Helper: getWeekStart (ISO monday)
+function getWeekStartStr(dateStr) {
+    if (!dateStr) {
+        const d = new Date();
+        const day = d.getDay();
+        const diff = day === 0 ? -6 : 1 - day;
+        d.setDate(d.getDate() + diff);
+        return d.toISOString().slice(0, 10);
+    }
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    const day = d.getDay();
+    const diff = day === 0 ? -6 : 1 - day;
+    d.setDate(d.getDate() + diff);
+    return d.toISOString().slice(0, 10);
+}
+
+// GET /api/weekly-tasks — 주차·팀 필터 조회
+app.get('/api/weekly-tasks', (req, res) => {
+    try {
+        const { week, team, year } = req.query;
+        const y = year || (week ? week.slice(0, 4) : String(new Date().getFullYear()));
+        const file = getWeeklyTasksFile(y);
+        let tasks = readCsvResilient(file);
+
+        // role 없는 데이터 기본값 처리
+        tasks = tasks.map(t => ({ ...t, role: t.role || 'member' }));
+
+        if (week) tasks = tasks.filter(t => t.week_start === week);
+        if (team) tasks = tasks.filter(t => t.team === team);
+
+        res.json(tasks);
+    } catch (e) {
+        console.error('[API] GET /api/weekly-tasks:', e);
+        res.status(500).json({ error: '업무 목록 조회 실패' });
+    }
+});
+
+// GET /api/weekly-tasks/weeks — 등록된 주차 목록
+app.get('/api/weekly-tasks/weeks', (req, res) => {
+    try {
+        const files = fs.readdirSync(__dirname).filter(f => f.startsWith('weekly_tasks_') && f.endsWith('.csv'));
+        const weeks = new Set();
+        files.forEach(f => {
+            const records = readCsvResilient(path.join(__dirname, f));
+            records.forEach(r => { if (r.week_start) weeks.add(r.week_start); });
+        });
+        const sorted = [...weeks].sort().reverse();
+        res.json(sorted);
+    } catch (e) {
+        res.status(500).json({ error: '주차 목록 조회 실패' });
+    }
+});
+
+// POST /api/weekly-tasks — 업무 등록
+app.post('/api/weekly-tasks', async (req, res) => {
+    try {
+        const { team, category, sub_category, task_code, content, assignees,
+                status, priority, start_date, end_date, meeting_result, note } = req.body;
+        if (!content) return res.status(400).json({ error: '주요내용은 필수입니다.' });
+
+        const year = start_date ? start_date.slice(0, 4) : String(new Date().getFullYear());
+        const file = getWeeklyTasksFile(year);
+        if (!fs.existsSync(file)) fs.writeFileSync(file, WEEKLY_TASKS_COLUMNS.join(',') + '\n');
+
+        const records = readCsvResilient(file);
+        const id = Date.now().toString();
+        const weekStart = getWeekStartStr(start_date);
+        const now = new Date().toISOString().slice(0, 10);
+
+        const newTask = {
+            id, team: team || '', category: category || '', sub_category: sub_category || '',
+            task_code: task_code || '', content, assignees: assignees || '',
+            status: status || '진행 중', priority: priority || '중간',
+            start_date: start_date || '', end_date: end_date || '',
+            meeting_result: meeting_result || '', note: note || '',
+            week_start: weekStart, created_at: now
+        };
+
+        const updated = [...records, newTask];
+        await writeAtomic(file, stringify(updated, { header: true, columns: WEEKLY_TASKS_COLUMNS }));
+        res.json({ success: true, task: newTask });
+    } catch (e) {
+        console.error('[API] POST /api/weekly-tasks:', e);
+        res.status(500).json({ error: '업무 등록 실패' });
+    }
+});
+
+// PUT /api/weekly-tasks/:id — 업무 수정
+app.put('/api/weekly-tasks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        const year = updates.start_date ? updates.start_date.slice(0, 4) : String(new Date().getFullYear());
+        const file = getWeeklyTasksFile(year);
+        const records = readCsvResilient(file);
+        const idx = records.findIndex(r => r.id === id);
+        if (idx === -1) return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
+
+        records[idx] = { ...records[idx], ...updates };
+        if (updates.start_date) records[idx].week_start = getWeekStartStr(updates.start_date);
+
+        await writeAtomic(file, stringify(records, { header: true, columns: WEEKLY_TASKS_COLUMNS }));
+        res.json({ success: true, task: records[idx] });
+    } catch (e) {
+        console.error('[API] PUT /api/weekly-tasks/:id:', e);
+        res.status(500).json({ error: '업무 수정 실패' });
+    }
+});
+
+// DELETE /api/weekly-tasks/:id — 업무 삭제
+app.delete('/api/weekly-tasks/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const year = req.query.year || String(new Date().getFullYear());
+        const file = getWeeklyTasksFile(year);
+        const records = readCsvResilient(file);
+        const filtered = records.filter(r => r.id !== id);
+        if (filtered.length === records.length) return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
+        await writeAtomic(file, stringify(filtered, { header: true, columns: WEEKLY_TASKS_COLUMNS }));
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: '업무 삭제 실패' });
+    }
+});
+
+// GET /api/weekly-schedule — 주간 일정 조회
+app.get('/api/weekly-schedule', (req, res) => {
+    try {
+        const { week, year } = req.query;
+        let records = readCsvResilient(SCHEDULE_FILE);
+        if (year) records = records.filter(r => r.year === year);
+        if (week) records = records.filter(r => r.week_start === week);
+        res.json(records);
+    } catch (e) {
+        res.status(500).json({ error: '일정 조회 실패' });
+    }
+});
+
+// POST /api/weekly-schedule — 일정 등록
+app.post('/api/weekly-schedule', async (req, res) => {
+    try {
+        const { schedule_type, content, start_date, end_date, location, assignees } = req.body;
+        if (!content) return res.status(400).json({ error: '내용은 필수입니다.' });
+        const records = readCsvResilient(SCHEDULE_FILE);
+        const id = Date.now().toString();
+        const weekStart = getWeekStartStr(start_date);
+        const year = start_date ? start_date.slice(0, 4) : String(new Date().getFullYear());
+        const now = new Date().toISOString().slice(0, 10);
+        const newRecord = { id, schedule_type: schedule_type || '', content, start_date: start_date || '',
+            end_date: end_date || '', location: location || '', assignees: assignees || '',
+            week_start: weekStart, year, created_at: now };
+        const updated = [...records, newRecord];
+        await writeAtomic(SCHEDULE_FILE, stringify(updated, { header: true, columns: SCHEDULE_COLUMNS }));
+        res.json({ success: true, record: newRecord });
+    } catch (e) {
+        res.status(500).json({ error: '일정 등록 실패' });
+    }
+});
+
+// DELETE /api/weekly-schedule/:id
+app.delete('/api/weekly-schedule/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const records = readCsvResilient(SCHEDULE_FILE);
+        const filtered = records.filter(r => r.id !== id);
+        await writeAtomic(SCHEDULE_FILE, stringify(filtered, { header: true, columns: SCHEDULE_COLUMNS }));
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: '일정 삭제 실패' });
+    }
+});
+
+// GET /api/projects
+app.get('/api/projects', (req, res) => {
+    try {
+        const projects = readCsvResilient(PROJECTS_FILE);
+        res.json(projects);
+    } catch (e) {
+        res.status(500).json({ error: '프로젝트 조회 실패' });
+    }
+});
+
+// POST /api/projects
+app.post('/api/projects', async (req, res) => {
+    try {
+        const { category, sub_no, project_code, project_name, method, bim_cost, dept, manager, status_detail } = req.body;
+        if (!project_name) return res.status(400).json({ error: '프로젝트명은 필수입니다.' });
+        const records = readCsvResilient(PROJECTS_FILE);
+        const id = Date.now().toString();
+        const now = new Date().toISOString().slice(0, 10);
+        const newProject = { id, category: category || '', sub_no: sub_no || '', project_code: project_code || '',
+            project_name, method: method || '', bim_cost: bim_cost || '', dept: dept || '',
+            manager: manager || '', status_detail: status_detail || '', created_at: now };
+        const updated = [...records, newProject];
+        await writeAtomic(PROJECTS_FILE, stringify(updated, { header: true, columns: PROJECTS_COLUMNS }));
+        res.json({ success: true, project: newProject });
+    } catch (e) {
+        res.status(500).json({ error: '프로젝트 등록 실패' });
+    }
+});
+
+// PUT /api/projects/:id
+app.put('/api/projects/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const updates = req.body;
+        const records = readCsvResilient(PROJECTS_FILE);
+        const idx = records.findIndex(r => r.id === id);
+        if (idx === -1) return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
+        records[idx] = { ...records[idx], ...updates };
+        await writeAtomic(PROJECTS_FILE, stringify(records, { header: true, columns: PROJECTS_COLUMNS }));
+        res.json({ success: true, project: records[idx] });
+    } catch (e) {
+        res.status(500).json({ error: '프로젝트 수정 실패' });
+    }
+});
+
+// =============================================
 // --- RAG CHAT API (AI Orchestrator) ---
+// =============================================
 app.post('/api/rag-chat', async (req, res) => {
     try {
         const { messages, query } = req.body;

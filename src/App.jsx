@@ -156,8 +156,8 @@ function App() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard />;
-      case 'weekly-meeting':
-        return <WeeklyMeeting />;
+      case 'weekly':
+        return <WeeklyMeeting currentUser={currentUser} />;
       case 'timesheet':
         return <Timesheet currentUser={currentUser} />;
       default:
