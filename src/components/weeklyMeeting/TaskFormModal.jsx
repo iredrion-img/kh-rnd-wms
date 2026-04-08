@@ -331,7 +331,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
        const details = [];
        const bases = ["직접수행(합사)", "직접수행", "외주", "미정", "수행예정", "추진중"];
        allTasks.forEach(t => {
-          if (t.method && t.team === '프로젝트 추진 및 수행 현황') {
+          if (t.method) {
              let foundBase = '';
              for (const b of bases) {
                  if (t.method.startsWith(b)) { foundBase = b; break; }
