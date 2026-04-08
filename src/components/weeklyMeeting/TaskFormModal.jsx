@@ -204,7 +204,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
            onClick={() => setOpen(!isOpen)}
         >
            {selected.length === 0 ? (
-              <span className="text-gray-400 text-sm py-0.5 px-1">조직도에서 선택...</span>
+              <span className="text-gray-400 text-sm py-0.5 px-1">선택</span>
            ) : (
               selected.map(name => (
                  <span key={name} className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 hover:bg-primary/20 transition-colors" onClick={(e) => { e.stopPropagation(); toggleUser(name); }}>
