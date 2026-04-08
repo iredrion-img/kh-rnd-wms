@@ -64,7 +64,20 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
 
   useEffect(() => {
     if (task) {
-      setFormData(task);
+      let base = '';
+      let detail = '';
+      if (task.method) {
+         const methods = ["직접수행(합사)", "직접수행", "외주", "미정", "수행예정", "추진중"];
+         for (const m of methods) {
+            if (task.method.startsWith(m)) {
+               base = m;
+               detail = task.method.substring(m.length).replace(/^[, ]+/, '').trim();
+               break;
+            }
+         }
+         if (!base && task.method) detail = task.method;
+      }
+      setFormData({ ...task, method_base: base, method_detail: detail });
     } else {
       const authDataStr = localStorage.getItem('kh_current_user');
       const currentUserLocal = authDataStr ? JSON.parse(authDataStr) : null;
@@ -91,7 +104,15 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+        const updated = { ...prev, [name]: value };
+        if (name === 'method_base' || name === 'method_detail') {
+             const b = updated.method_base || '';
+             const d = updated.method_detail || '';
+             updated.method = b && d ? `${b}, ${d}` : (b || d);
+        }
+        return updated;
+    });
   };
 
   useEffect(() => {
@@ -304,6 +325,27 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           .filter(Boolean);
       existingProjectNumbers = Array.from(new Set(nums)).sort();
     }
+    
+    let existingMethodDetails = [];
+    if (allTasks) {
+       const details = [];
+       const bases = ["직접수행(합사)", "직접수행", "외주", "미정", "수행예정", "추진중"];
+       allTasks.forEach(t => {
+          if (t.method && t.team === '프로젝트 추진 및 수행 현황') {
+             let foundBase = '';
+             for (const b of bases) {
+                 if (t.method.startsWith(b)) { foundBase = b; break; }
+             }
+             if (foundBase) {
+                 let d = t.method.substring(foundBase.length).replace(/^[, ]+/, '').trim();
+                 if (d) details.push(d);
+             } else {
+                 if (t.method.trim()) details.push(t.method.trim());
+             }
+          }
+       });
+       existingMethodDetails = Array.from(new Set(details)).filter(Boolean).sort();
+    }
 
     return (
     <>
@@ -358,11 +400,26 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         <input type="text" name="project_name" value={formData.project_name || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
       </div>
       
-      <div className="grid grid-cols-3 gap-4 mb-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">수행방식</label>
-          <input type="text" name="method" value={formData.method || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+      <div className="mb-4">
+        <label className="block text-sm font-medium text-gray-700 mb-1">수행방식</label>
+        <div className="grid grid-cols-2 gap-4">
+           <select name="method_base" value={formData.method_base || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
+              <option value="">기본 방식 선택</option>
+              <option value="직접수행">직접수행</option>
+              <option value="직접수행(합사)">직접수행(합사)</option>
+              <option value="외주">외주</option>
+              <option value="미정">미정</option>
+              <option value="수행예정">수행예정</option>
+              <option value="추진중">추진중</option>
+           </select>
+           <input type="text" list="method_details_list" name="method_detail" value={formData.method_detail || ''} onChange={handleChange} placeholder="기타 직접입력 또는 기존항목 선택" className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+           <datalist id="method_details_list">
+              {existingMethodDetails.map(d => <option key={d} value={d} />)}
+           </datalist>
         </div>
+      </div>
+      
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">BIM 용역비</label>
           <input type="text" name="bim_cost" value={formData.bim_cost || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
@@ -371,10 +428,10 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           <label className="block text-sm font-medium text-gray-700 mb-1">설계담당부서</label>
           <input type="text" name="dept" value={formData.dept || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
         </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">담당자</label>
-        <input type="text" name="manager" value={formData.manager || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">담당자</label>
+          <input type="text" name="manager" value={formData.manager || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+        </div>
       </div>
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">수행현황</label>
