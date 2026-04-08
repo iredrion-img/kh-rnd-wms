@@ -17,6 +17,10 @@ const WeekNavigator = ({ currentWeek, onWeekChange, availableWeeks, isAdmin }) =
     return `${d.getMonth() + 1}/${d.getDate()}`;
   };
 
+  const displayLabel = currentWeek 
+    ? `${currentWeek.substring(0,4)}년 ${getISOWeek(currentWeek)}주차 (${getKoreanDateStr(currentWeek)})`
+    : '로딩 중...';
+
   const getWeekOffset = (dateStr, offsetDays) => {
     if (!dateStr) return '';
     const d = new Date(dateStr);
