@@ -29,24 +29,28 @@ const MIDDLE_CATEGORIES = {
   'R&D센터 공통업무': 'G'
 };
 
-const MINOR_CATEGORIES = Array.from({ length: 20 }, (_, i) => String(i + 1).padStart(3, '0'));
+
 
 const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
   const isProject = team === '프로젝트 추진 및 수행 현황';
   const isSchedule = team === '주간일정';
 
   const [formData, setFormData] = useState({});
+  const [allTasks, setAllTasks] = useState([]);
+  const [codeMode, setCodeMode] = useState('new'); // 'new' | 'existing'
+
+  useEffect(() => {
+    if (!task && !isProject && !isSchedule) {
+      fetch('/api/weekly-tasks')
+        .then(res => res.json())
+        .then(data => setAllTasks(Array.isArray(data) ? data : []))
+        .catch(console.error);
+    }
+  }, [task, isProject, isSchedule]);
 
   useEffect(() => {
     if (task) {
-      let minorCat = '';
-      if (task.task_code) {
-        const parts = task.task_code.split('-');
-        if (parts.length === 3) {
-          minorCat = parts[2];
-        }
-      }
-      setFormData({ ...task, minor_category: minorCat });
+      setFormData(task);
     } else {
       // Default initial values based on team type
       if (isProject) {
@@ -66,26 +70,38 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => {
-      const nextData = { ...prev, [name]: value };
-      
-      // 자동 업무코드 생성 (category, sub_category, minor_category 중 하나라도 변경될 때)
-      if (['category', 'sub_category', 'minor_category'].includes(name)) {
-        const majorStr = MAJOR_CATEGORIES[nextData.category];
-        const middleStr = MIDDLE_CATEGORIES[nextData.sub_category];
-        const minorStr = nextData.minor_category;
-        
-        const parts = [];
-        if (majorStr) parts.push(majorStr);
-        if (middleStr) parts.push(middleStr);
-        if (minorStr) parts.push(minorStr);
-        
-        nextData.task_code = parts.length > 0 ? parts.join('-') : '';
-      }
-      
-      return nextData;
-    });
+    setFormData(prev => ({ ...prev, [name]: value }));
   };
+
+  useEffect(() => {
+    if (task) return; // 기존 업무 수정 시에는 자동 수정 안 함
+    if (isProject || isSchedule) return;
+
+    const majorStr = MAJOR_CATEGORIES[formData.category];
+    const middleStr = MIDDLE_CATEGORIES[formData.sub_category];
+    
+    if (majorStr && middleStr) {
+       const prefix = `${majorStr}-${middleStr}-`;
+       if (codeMode === 'new') {
+           const matchingCodes = allTasks.map(t=>t.task_code).filter(c => c && c.startsWith(prefix));
+           let maxNum = 0;
+           matchingCodes.forEach(c => {
+               const p = c.split('-');
+               if(p.length === 3) {
+                   const num = parseInt(p[2],10);
+                   if(!isNaN(num) && num > maxNum) maxNum = num;
+               }
+           });
+           const nextCode = `${prefix}${String(maxNum+1).padStart(3,'0')}`;
+           setFormData(prev => prev.task_code !== nextCode ? { ...prev, task_code: nextCode } : prev);
+       } else {
+           // 기존 코드 선택 모드일 때 접두사가 다르면 폼 클리어
+           setFormData(prev => prev.task_code && !prev.task_code.startsWith(prefix) ? { ...prev, task_code: '' } : prev);
+       }
+    } else {
+       setFormData(prev => prev.task_code ? { ...prev, task_code: '' } : prev);
+    }
+  }, [formData.category, formData.sub_category, codeMode, allTasks, task, isProject, isSchedule]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -182,9 +198,30 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
     </>
   );
 
-  const renderNormalForm = () => (
+  const renderNormalForm = () => {
+    const majorStr = MAJOR_CATEGORIES[formData.category];
+    const middleStr = MIDDLE_CATEGORIES[formData.sub_category];
+    const prefix = majorStr && middleStr ? `${majorStr}-${middleStr}-` : '';
+    
+    let existingCodesOptions = [];
+    if (prefix && allTasks.length > 0) {
+       existingCodesOptions = Array.from(new Set(allTasks.map(t=>t.task_code).filter(c=>c&&c.startsWith(prefix)))).sort();
+    }
+
+    return (
     <>
-      <div className="grid grid-cols-4 gap-4">
+      <div className="flex gap-6 mb-4 mt-2 px-1">
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="radio" name="codeMode" checked={codeMode === 'new'} onChange={() => setCodeMode('new')} disabled={!!task} className="text-primary w-4 h-4 cursor-pointer focus:ring-primary" />
+          <span className={`text-sm font-medium ${codeMode==='new' ? 'text-gray-800':'text-gray-500'}`}>신규 번호 자동 발급</span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer">
+          <input type="radio" name="codeMode" checked={codeMode === 'existing'} onChange={() => setCodeMode('existing')} disabled={!!task} className="text-primary w-4 h-4 cursor-pointer focus:ring-primary" />
+          <span className={`text-sm font-medium ${codeMode==='existing' ? 'text-gray-800':'text-gray-500'}`}>기존 번호 재사용</span>
+        </label>
+      </div>
+
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">대분류</label>
           <select name="category" value={formData.category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
@@ -200,15 +237,15 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">소분류</label>
-          <select name="minor_category" value={formData.minor_category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
-            <option value="">선택</option>
-            {MINOR_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
-          </select>
-        </div>
-        <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">업무코드</label>
-          <input type="text" name="task_code" value={formData.task_code || ''} readOnly className="w-full rounded-lg border-gray-100 bg-gray-50 border p-2 text-gray-500 font-mono" placeholder="자동 생성" />
+          {codeMode === 'new' || !!task ? (
+             <input type="text" name="task_code" value={formData.task_code || ''} readOnly className="w-full rounded-lg border-gray-100 bg-gray-50 border p-2 text-gray-500 font-mono" placeholder="대/중분류 선택 시 자동 생성" />
+          ) : (
+             <select name="task_code" value={formData.task_code || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
+                <option value="">기존 코드 선택</option>
+                {existingCodesOptions.map(code => <option key={code} value={code}>{code}</option>)}
+             </select>
+          )}
         </div>
       </div>
       
@@ -266,6 +303,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
       </div>
     </>
   );
+};
 
   return (
     <div className="fixed inset-0 min-h-screen bg-black/40 backdrop-blur-sm flex items-center justify-center z-[100] px-4 animate-in fade-in duration-200">
