@@ -61,11 +61,12 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
     } else {
       // Default initial values based on team type
       if (isProject) {
-        setFormData({ status_detail: '' });
+        setFormData({ team, status_detail: '' });
       } else if (isSchedule) {
-        setFormData({ start_date: currentWeek, end_date: currentWeek });
+        setFormData({ team, start_date: currentWeek, end_date: currentWeek });
       } else {
         setFormData({
+          team,
           status: '진행 중',
           priority: '중간',
           start_date: currentWeek,
@@ -73,7 +74,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
         });
       }
     }
-  }, [task, isProject, isSchedule, currentWeek]);
+  }, [task, team, isProject, isSchedule, currentWeek]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -286,6 +287,21 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
 
     return (
     <>
+      <div className="mb-4 bg-gray-50/80 p-3 rounded-lg border border-gray-100 flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700 min-w-max mr-4">소속 팀 (분류)</label>
+        <select name="team" value={formData.team || team} onChange={handleChange} className="w-full rounded-md border-gray-300 border py-1.5 px-3 focus:ring-primary focus:border-primary text-sm font-medium bg-white">
+          <option value="스마트 기술 개발팀">스마트 기술 개발팀</option>
+          <option value="디지털 기술 연구팀">디지털 기술 연구팀</option>
+          <option value="건축사업지원팀">건축사업지원팀</option>
+          <option value="BIM 컨설팅본부">BIM 컨설팅본부</option>
+          <option value="품질혁신팀">품질혁신팀</option>
+          <option value="기술연구소(기계)">기술연구소(기계)</option>
+          <option value="기술연구소(전기)">기술연구소(전기)</option>
+          <option value="연구과제">연구과제</option>
+          <option value="공통업무&행정">공통업무&행정</option>
+          <option value="R&D센터">R&D센터</option>
+        </select>
+      </div>
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">대분류</label>

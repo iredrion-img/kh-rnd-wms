@@ -343,8 +343,11 @@ const Timesheet = ({ currentUser }) => {
                 payload.assignees = currentUser.name;
             }
 
-            const res = await fetch('/api/weekly-tasks', {
-                method: 'POST',
+            const url = payload.id ? `/api/weekly-tasks/${payload.id}` : '/api/weekly-tasks';
+            const method = payload.id ? 'PUT' : 'POST';
+
+            const res = await fetch(url, {
+                method: method,
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });

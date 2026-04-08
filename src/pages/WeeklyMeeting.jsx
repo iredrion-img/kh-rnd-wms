@@ -5,13 +5,17 @@ import WeekNavigator from '../components/weeklyMeeting/WeekNavigator';
 import { Settings, Plus, FileSpreadsheet } from 'lucide-react';
 
 const TEAM_TABS = [
-  '공통업무&행정',
   '스마트 기술 개발팀',
   '디지털 기술 연구팀',
-  '인프라 BIM팀',
-  'AI 응용팀',
-  '프로젝트 추진 및 수행 현황',
+  '건축사업지원팀',
+  'BIM 컨설팅본부',
+  '품질혁신팀',
+  '기술연구소(기계)',
+  '기술연구소(전기)',
   '연구과제',
+  '공통업무&행정',
+  'R&D센터',
+  '프로젝트 추진 및 수행 현황',
   '주간일정'
 ];
 
