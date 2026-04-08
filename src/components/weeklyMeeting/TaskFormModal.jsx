@@ -38,8 +38,15 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
   const [formData, setFormData] = useState({});
   const [allTasks, setAllTasks] = useState([]);
   const [codeMode, setCodeMode] = useState('new'); // 'new' | 'existing'
+  const [usersInfo, setUsersInfo] = useState([]);
+  const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
 
   useEffect(() => {
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(data => setUsersInfo(Array.isArray(data) ? data : []))
+      .catch(console.error);
+
     if (!task && !isProject && !isSchedule) {
       fetch('/api/weekly-tasks')
         .then(res => res.json())
@@ -110,6 +117,76 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
 
   const hasNote = team === '스마트 기술 개발팀';
 
+  const renderAssigneeSelector = () => {
+    const selected = formData.assignees ? formData.assignees.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    
+    const toggleAssignee = (name) => {
+        let newAssignees;
+        if (selected.includes(name)) newAssignees = selected.filter(n => n !== name);
+        else newAssignees = [...selected, name];
+        setFormData(prev => ({ ...prev, assignees: newAssignees.join(', ') }));
+    };
+
+    const groupedUsers = usersInfo.reduce((acc, u) => {
+        if (!acc[u.department]) acc[u.department] = [];
+        acc[u.department].push(u);
+        return acc;
+    }, {});
+
+    return (
+      <div className="relative">
+        <label className="block text-sm font-medium text-gray-700 mb-1">수행인원 *</label>
+        <div 
+           className="w-full rounded-lg border-gray-300 border p-2 min-h-[42px] cursor-pointer bg-white flex flex-wrap gap-1.5 items-center focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all"
+           onClick={() => setIsAssigneeDropdownOpen(!isAssigneeDropdownOpen)}
+        >
+           {selected.length === 0 ? (
+              <span className="text-gray-400 text-sm py-0.5 px-1">조직도에서 선택...</span>
+           ) : (
+              selected.map(name => (
+                 <span key={name} className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 hover:bg-primary/20 transition-colors" onClick={(e) => { e.stopPropagation(); toggleAssignee(name); }}>
+                    {name}
+                    <X className="w-3 h-3 ml-0.5" />
+                 </span>
+              ))
+           )}
+        </div>
+
+        {isAssigneeDropdownOpen && (
+           <>
+             <div className="fixed inset-0 z-40" onClick={() => setIsAssigneeDropdownOpen(false)}></div>
+             <div className="absolute z-50 mt-2 w-full max-h-72 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-2xl p-4 grid gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
+                {Object.keys(groupedUsers).length === 0 ? (
+                   <div className="text-center text-sm text-gray-500 py-4">사용자 정보를 불러오는 중...</div>
+                ) : (
+                   Object.entries(groupedUsers).map(([dept, usrs]) => (
+                      <div key={dept} className="flex flex-col gap-2">
+                         <div className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">{dept}</div>
+                         <div className="flex flex-wrap gap-2">
+                            {usrs.map(u => {
+                               const isSelected = selected.includes(u.name);
+                               return (
+                                 <button 
+                                   key={u.name} 
+                                   type="button"
+                                   onClick={(e) => { e.stopPropagation(); toggleAssignee(u.name); }}
+                                   className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-100'}`}
+                                 >
+                                   {u.name} {u.role === 'admin' && <span className="ml-1 opacity-70 text-[10px]">⭐</span>}
+                                 </button>
+                               );
+                            })}
+                         </div>
+                      </div>
+                   ))
+                )}
+             </div>
+           </>
+        )}
+      </div>
+    );
+  };
+
   const renderScheduleForm = () => (
     <>
       <div className="grid grid-cols-2 gap-4">
@@ -147,8 +224,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
         </div>
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">수행인원 (쉼표로 구분)</label>
-        <input type="text" name="assignees" value={formData.assignees || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+        {renderAssigneeSelector()}
       </div>
     </>
   );
@@ -258,8 +334,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
 
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">수행인원 (쉼표로 구분)</label>
-          <input type="text" name="assignees" value={formData.assignees || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+          {renderAssigneeSelector()}
         </div>
         <div className="grid grid-cols-2 gap-4">
           <div>
