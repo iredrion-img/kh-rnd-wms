@@ -100,7 +100,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     if (isProject) {
         if (formData.category) {
             const prefixRegex = new RegExp(`^${formData.category}\\s*-\\s*(?!\\s*$)`, 'i');
-            const matchingCodes = allTasks.map(t=>t.project_code).filter(c=>c&&prefixRegex.test(c));
+            const matchingCodes = allTasks.map(t=>t.project_code || t.task_code).filter(c=>c&&prefixRegex.test(c));
             let maxNum = 0;
             matchingCodes.forEach(c => {
                 const match = c.match(/\d+$/);
@@ -294,7 +294,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     if (formData.category && allTasks.length > 0) {
       const prefixRegex = new RegExp(`^${formData.category}\\s*-\\s*(?!\\s*$)`, 'i');
       const nums = allTasks
-          .map(t => t.project_code)
+          .map(t => t.project_code || t.task_code)
           .filter(c => c && prefixRegex.test(c))
           .map(c => {
              const m = c.match(/\d+$/);
@@ -318,7 +318,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         </div>
         <div>
            <div className="flex items-center justify-between mb-1">
-             <label className="block text-sm font-medium text-gray-700">숫자 (소분류)</label>
+             <label className="block text-sm font-medium text-gray-700">소분류</label>
              {!task && (
                <label className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
                  <input 
@@ -347,7 +347,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
            )}
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">업무코드 (순번)</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">순번</label>
           <input type="text" name="project_code" value={formData.project_code || ''} readOnly className="w-full rounded-lg border-gray-100 bg-gray-50 border p-2 text-gray-500 font-mono" placeholder="자동 생성" />
         </div>
       </div>
