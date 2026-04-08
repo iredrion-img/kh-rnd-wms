@@ -35,6 +35,12 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
   const isProject = team === '프로젝트 추진 및 수행 현황';
   const isSchedule = team === '주간일정';
 
+  const availableTeams = isFromTimesheet ? [
+      '공통업무&행정', '연구과제', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'
+  ] : [
+      '공지사항', '공통업무&행정', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀', '연구과제'
+  ];
+
   const [formData, setFormData] = useState({});
   const [allTasks, setAllTasks] = useState([]);
   const [codeMode, setCodeMode] = useState('new'); // 'new' | 'existing'
@@ -65,8 +71,9 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       } else if (isSchedule) {
         setFormData({ team, start_date: currentWeek, end_date: currentWeek });
       } else {
+        const initialTeam = isFromTimesheet && !availableTeams.includes(team) ? availableTeams[0] : team;
         setFormData({
-          team,
+          team: initialTeam,
           status: '진행 중',
           priority: '중간',
           start_date: currentWeek,
@@ -74,7 +81,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         });
       }
     }
-  }, [task, team, isProject, isSchedule, currentWeek]);
+  }, [task, team, isProject, isSchedule, currentWeek, isFromTimesheet]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -306,18 +313,12 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
        existingCodesOptions = Array.from(new Set(allTasks.map(t=>t.task_code).filter(c=>c&&c.startsWith(prefix)))).sort();
     }
 
-    const teamOptions = isFromTimesheet ? [
-        '공통업무&행정', '연구과제', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'
-    ] : [
-        '공지사항', '공통업무&행정', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀', '연구과제'
-    ];
-
     return (
     <>
       <div className="mb-4 bg-gray-50/80 p-3 rounded-lg border border-gray-100 flex items-center justify-between">
         <label className="text-sm font-medium text-gray-700 min-w-max mr-4">소속 팀 (분류)</label>
         <select name="team" value={formData.team || team} onChange={handleChange} className="w-full rounded-md border-gray-300 border py-1.5 px-3 focus:ring-primary focus:border-primary text-sm font-medium bg-white">
-          {teamOptions.map(t => <option key={t} value={t}>{t}</option>)}
+          {availableTeams.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
       <div className="grid grid-cols-3 gap-4 mb-4">

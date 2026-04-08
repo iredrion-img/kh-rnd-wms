@@ -590,16 +590,20 @@ const Timesheet = ({ currentUser }) => {
 
                 {/* My Weekly Tasks Section */}
                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-neutral/10 flex flex-col min-h-[160px]">
-                    {noticeTasks.length > 0 && (
-                        <div className="mb-5 pb-4 border-b border-gray-100/60">
-                            <h3 className="text-sm font-bold text-orange-600 flex items-center gap-1.5 mb-2">
-                                📢 이번 주 공지사항
-                            </h3>
+                    <div className="mb-5 pb-4 border-b border-gray-100/60">
+                        <h3 className="text-sm font-bold text-orange-600 flex items-center gap-1.5 mb-2">
+                            📢 이번 주 공지사항
+                        </h3>
+                        {noticeTasks.length > 0 ? (
                             <ul className="space-y-2 list-disc list-inside text-sm text-gray-700 font-medium pl-1 bg-orange-50/30 p-3 rounded-lg">
                                 {noticeTasks.map(t => <li key={t.id}>{t.content}</li>)}
                             </ul>
-                        </div>
-                    )}
+                        ) : (
+                            <div className="text-sm text-gray-400 bg-gray-50/50 p-3 flex justify-center items-center rounded-lg">
+                                등록된 공지사항이 없습니다.
+                            </div>
+                        )}
+                    </div>
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
                            <CalendarIcon size={16} className="text-primary"/> 이번 주 나의 업무 현황
