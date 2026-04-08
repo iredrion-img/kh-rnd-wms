@@ -46,6 +46,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
   const [codeMode, setCodeMode] = useState('new'); // 'new' | 'existing'
   const [usersInfo, setUsersInfo] = useState([]);
   const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
+  const [isMethodBaseDropdownOpen, setIsMethodBaseDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/users')
@@ -68,14 +69,17 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       let detail = '';
       if (task.method) {
          const methods = ["직접수행(합사)", "직접수행", "외주", "미정", "수행예정", "추진중"];
-         for (const m of methods) {
-            if (task.method.startsWith(m)) {
-               base = m;
-               detail = task.method.substring(m.length).replace(/^[, ]+/, '').trim();
-               break;
-            }
-         }
-         if (!base && task.method) detail = task.method;
+         const parts = task.method.split(',').map(s=>s.trim()).filter(Boolean);
+         const extractedBases = [];
+         const remainingDetails = [];
+         
+         parts.forEach(p => {
+             if (methods.includes(p)) extractedBases.push(p);
+             else remainingDetails.push(p);
+         });
+         
+         base = extractedBases.join(', ');
+         detail = remainingDetails.join(', ');
       }
       setFormData({ ...task, method_base: base, method_detail: detail });
     } else {
@@ -311,6 +315,73 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     </>
   );
 
+  const renderMethodBaseSelector = () => {
+    const selected = formData.method_base ? formData.method_base.split(',').map(s=>s.trim()).filter(Boolean) : [];
+    
+    const toggleMethodBase = (val) => {
+        let newBases;
+        if (selected.includes(val)) newBases = selected.filter(n => n !== val);
+        else newBases = [...selected, val];
+        
+        const updatedBase = newBases.join(', ');
+        
+        setFormData(prev => {
+            const b = updatedBase;
+            const d = prev.method_detail || '';
+            return {
+                ...prev,
+                method_base: b,
+                method: b && d ? `${b}, ${d}` : (b || d)
+            };
+        });
+    };
+
+    const bases = ["직접수행", "직접수행(합사)", "외주", "미정", "수행예정", "추진중"];
+
+    return (
+      <div className="relative w-full">
+        <div 
+           className="w-full rounded-lg border-gray-300 border p-2 min-h-[42px] cursor-pointer bg-white flex flex-wrap gap-1.5 items-center focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all"
+           onClick={() => setIsMethodBaseDropdownOpen(!isMethodBaseDropdownOpen)}
+        >
+           {selected.length === 0 ? (
+              <span className="text-gray-400 text-sm py-0.5 px-1">선택</span>
+           ) : (
+              selected.map(val => (
+                 <span key={val} className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 hover:bg-primary/20 transition-colors" onClick={(e) => { e.stopPropagation(); toggleMethodBase(val); }}>
+                    {val}
+                    <X className="w-3 h-3 ml-0.5" />
+                 </span>
+              ))
+           )}
+        </div>
+
+        {isMethodBaseDropdownOpen && (
+           <>
+             <div className="fixed inset-0 z-40" onClick={() => setIsMethodBaseDropdownOpen(false)}></div>
+             <div className="absolute z-50 mt-2 w-full max-h-72 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-2xl p-4 grid gap-2 animate-in fade-in slide-in-from-top-2 duration-200">
+                <div className="flex flex-wrap gap-2">
+                   {bases.map(b => {
+                      const isSelected = selected.includes(b);
+                      return (
+                        <button 
+                          key={b} 
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); toggleMethodBase(b); }}
+                          className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-100'}`}
+                        >
+                          {b}
+                        </button>
+                      );
+                   })}
+                </div>
+             </div>
+           </>
+        )}
+      </div>
+    );
+  };
+
   const renderProjectForm = () => {
     let existingProjectNumbers = [];
     if (formData.category && allTasks.length > 0) {
@@ -406,15 +477,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       <div className="mb-4">
         <label className="block text-sm font-medium text-gray-700 mb-1">수행방식</label>
         <div className="grid grid-cols-2 gap-4">
-           <select name="method_base" value={formData.method_base || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
-              <option value="" disabled hidden>기본 방식 선택</option>
-              <option value="직접수행">직접수행</option>
-              <option value="직접수행(합사)">직접수행(합사)</option>
-              <option value="외주">외주</option>
-              <option value="미정">미정</option>
-              <option value="수행예정">수행예정</option>
-              <option value="추진중">추진중</option>
-           </select>
+           {renderMethodBaseSelector()}
            <input type="text" list="method_details_list" name="method_detail" value={formData.method_detail || ''} onChange={handleChange} placeholder="기타 직접입력 또는 기존항목 선택" className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
            <datalist id="method_details_list">
               {existingMethodDetails.map(d => <option key={d} value={d} />)}
