@@ -358,18 +358,18 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         <input type="text" name="project_name" value={formData.project_name || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
       </div>
       
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">담당부서</label>
-          <input type="text" name="dept" value={formData.dept || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
-        </div>
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">수행방식</label>
-          <input type="text" name="method" value={formData.method || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
+          <input type="text" name="method" value={formData.method || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">BIM용역비</label>
-          <input type="text" name="bim_cost" value={formData.bim_cost || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">BIM 용역비</label>
+          <input type="text" name="bim_cost" value={formData.bim_cost || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">설계담당부서</label>
+          <input type="text" name="dept" value={formData.dept || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
         </div>
       </div>
       <div>
