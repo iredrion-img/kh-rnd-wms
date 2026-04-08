@@ -126,7 +126,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
       </thead>
       <tbody className="divide-y divide-gray-100">
         {tasks.map(t => {
-          const isOwner = isAdmin || t.assignees.includes(currentUser?.name);
+          const isOwner = isAdmin || (t.assignees || '').includes(currentUser?.name);
           return (
             <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
               <td className="px-3 py-3 text-xs text-gray-400 font-mono">{t.task_code}</td>

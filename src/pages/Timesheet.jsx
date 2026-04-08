@@ -334,10 +334,19 @@ const Timesheet = ({ currentUser }) => {
 
     const handleSaveWeeklyTask = async (taskData) => {
         try {
+            const payload = {
+                ...taskData,
+                team: taskData.team || currentUser.department || '공통업무&행정',
+                week_start: taskData.week_start || format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+            };
+            if (!payload.assignees) {
+                payload.assignees = currentUser.name;
+            }
+
             const res = await fetch('/api/weekly-tasks', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ ...taskData, team: currentUser.department || '' })
+                body: JSON.stringify(payload)
             });
             if (res.ok) {
                 setIsTaskModalOpen(false);
