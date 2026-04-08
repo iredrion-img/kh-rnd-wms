@@ -99,20 +99,23 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
 
     if (isProject) {
         if (formData.category) {
-            const prefix = `${formData.category}-`;
-            const matchingCodes = allTasks.map(t=>t.project_code || t.task_code).filter(c=>c&&c.startsWith(prefix));
+            const prefixRegex = new RegExp(`^${formData.category}\\s*-\\s*(?!\\s*$)`, 'i');
+            const matchingCodes = allTasks.map(t=>t.project_code).filter(c=>c&&prefixRegex.test(c));
             let maxNum = 0;
             matchingCodes.forEach(c => {
-                const p = c.split('-');
-                if(p.length === 2 && !isNaN(parseInt(p[1],10))) {
-                    const num = parseInt(p[1],10);
-                    if(num > maxNum) maxNum = num;
+                const match = c.match(/\d+$/);
+                if (match) {
+                    const num = parseInt(match[0], 10);
+                    if (num > maxNum) maxNum = num;
                 }
             });
-            const nextCode = `${prefix}${String(maxNum+1).padStart(3,'0')}`;
-            setFormData(prev => prev.project_code !== nextCode ? { ...prev, project_code: nextCode } : prev);
+            if (codeMode === 'new') {
+                const nextSubNo = String(maxNum + 1).padStart(3, '0');
+                const nextCode = `${formData.category} - ${nextSubNo}`;
+                setFormData(prev => prev.project_code !== nextCode ? { ...prev, sub_no: nextSubNo, project_code: nextCode } : prev);
+            }
         } else {
-            setFormData(prev => prev.project_code ? { ...prev, project_code: '' } : prev);
+            setFormData(prev => prev.project_code ? { ...prev, project_code: '', sub_no: '' } : prev);
         }
         return;
     }
@@ -286,9 +289,24 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     </>
   );
 
-  const renderProjectForm = () => (
+  const renderProjectForm = () => {
+    let existingProjectNumbers = [];
+    if (formData.category && allTasks.length > 0) {
+      const prefixRegex = new RegExp(`^${formData.category}\\s*-\\s*(?!\\s*$)`, 'i');
+      const nums = allTasks
+          .map(t => t.project_code)
+          .filter(c => c && prefixRegex.test(c))
+          .map(c => {
+             const m = c.match(/\d+$/);
+             return m ? m[0] : null;
+          })
+          .filter(Boolean);
+      existingProjectNumbers = Array.from(new Set(nums)).sort();
+    }
+
+    return (
     <>
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">분류</label>
           <select name="category" value={formData.category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
@@ -299,18 +317,50 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">담당부서</label>
-          <input type="text" name="dept" value={formData.dept || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
+           <div className="flex items-center justify-between mb-1">
+             <label className="block text-sm font-medium text-gray-700">숫자 (소분류)</label>
+             {!task && (
+               <label className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
+                 <input 
+                   type="checkbox" 
+                   checked={codeMode === 'existing'} 
+                   onChange={(e) => {
+                       setCodeMode(e.target.checked ? 'existing' : 'new');
+                       setFormData(prev => ({...prev, sub_no: '', project_code: ''}));
+                   }} 
+                   className="rounded border-gray-300 text-primary focus:ring-primary w-3.5 h-3.5"
+                 />
+                 <span className="text-xs text-gray-500 font-medium whitespace-nowrap">기존 코드 사용</span>
+               </label>
+             )}
+           </div>
+           {codeMode === 'new' || !!task ? (
+             <input type="text" name="sub_no" value={formData.sub_no || ''} readOnly className="w-full rounded-lg border-gray-100 bg-gray-50 border p-2 text-gray-500 font-mono text-center" placeholder="분류 시 자동생성" />
+           ) : (
+             <select name="sub_no" value={formData.sub_no || ''} onChange={(e) => {
+                 const newNo = e.target.value;
+                 setFormData(prev => ({ ...prev, sub_no: newNo, project_code: prev.category && newNo ? `${prev.category} - ${newNo}` : '' }));
+             }} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary text-center">
+                <option value="">번호 선택</option>
+                {existingProjectNumbers.map(num => <option key={num} value={num}>{num}</option>)}
+             </select>
+           )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">업무코드 (순번)</label>
+          <input type="text" name="project_code" value={formData.project_code || ''} readOnly className="w-full rounded-lg border-gray-100 bg-gray-50 border p-2 text-gray-500 font-mono" placeholder="자동 생성" />
         </div>
       </div>
+      
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트명 *</label>
         <input type="text" name="project_name" value={formData.project_name || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
       </div>
+      
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">업무코드</label>
-          <input type="text" name="project_code" value={formData.project_code || ''} readOnly className="w-full rounded-lg border-gray-100 bg-gray-50 border p-2 font-mono text-gray-500" placeholder="분류 선택 시 자동 부여" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">담당부서</label>
+          <input type="text" name="dept" value={formData.dept || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">수행방식</label>
@@ -331,6 +381,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       </div>
     </>
   );
+  };
 
   const renderNormalForm = () => {
     const majorStr = MAJOR_CATEGORIES[formData.category];
