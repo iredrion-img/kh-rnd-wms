@@ -577,6 +577,20 @@ app.put('/api/projects/:id', async (req, res) => {
     }
 });
 
+// DELETE /api/projects/:id
+app.delete('/api/projects/:id', async (req, res) => {
+    try {
+        const { id } = req.params;
+        const records = readCsvResilient(PROJECTS_FILE);
+        const filtered = records.filter(r => r.id !== id);
+        if (filtered.length === records.length) return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
+        await writeAtomic(PROJECTS_FILE, stringify(filtered, { header: true, columns: PROJECTS_COLUMNS }));
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: '프로젝트 삭제 실패' });
+    }
+});
+
 // =============================================
 // --- RAG CHAT API (AI Orchestrator) ---
 // =============================================

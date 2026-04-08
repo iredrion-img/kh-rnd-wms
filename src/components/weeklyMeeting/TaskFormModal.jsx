@@ -180,7 +180,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
 
   const hasNote = team === '스마트 기술 개발팀';
 
-  const renderMultiUserSelector = (fieldName, labelText, isOpen, setOpen) => {
+  const renderMultiUserSelector = (fieldName, labelText, isOpen, setOpen, showGroups = true) => {
     const selected = formData[fieldName] ? formData[fieldName].split(',').map(s=>s.trim()).filter(Boolean) : [];
     
     const toggleUser = (name) => {
@@ -224,24 +224,26 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                  ) : (
                     <>
                        {/* 그룹 태그 추가 */}
-                       <div className="flex flex-col gap-2 pb-3 border-b border-gray-100 mb-1">
-                          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">조직 그룹</div>
-                          <div className="flex flex-wrap gap-2">
-                             {['All', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'].map(group => {
-                                const isSelected = selected.includes(group);
-                                return (
-                                  <button 
-                                    key={group} 
-                                    type="button"
-                                    onClick={(e) => { e.stopPropagation(); toggleUser(group); }}
-                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-100'}`}
-                                  >
-                                    {group}
-                                  </button>
-                                );
-                             })}
-                          </div>
-                       </div>
+                       {showGroups && (
+                         <div className="flex flex-col gap-2 pb-3 border-b border-gray-100 mb-1">
+                            <div className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">조직 그룹</div>
+                            <div className="flex flex-wrap gap-2">
+                               {['All', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'].map(group => {
+                                  const isSelected = selected.includes(group);
+                                  return (
+                                    <button 
+                                      key={group} 
+                                      type="button"
+                                      onClick={(e) => { e.stopPropagation(); toggleUser(group); }}
+                                      className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-100'}`}
+                                    >
+                                      {group}
+                                    </button>
+                                  );
+                               })}
+                            </div>
+                         </div>
+                       )}
                        
                        {/* 기존 부서별 유저 렌더링 */}
                        {Object.entries(groupedUsers).map(([dept, usrs]) => (
@@ -507,7 +509,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           </datalist>
         </div>
         <div>
-          {renderMultiUserSelector('manager', '담당자', isManagerDropdownOpen, setIsManagerDropdownOpen)}
+          {renderMultiUserSelector('manager', '담당자', isManagerDropdownOpen, setIsManagerDropdownOpen, false)}
         </div>
       </div>
       <div>
