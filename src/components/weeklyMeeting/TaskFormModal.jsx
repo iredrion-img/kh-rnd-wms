@@ -386,9 +386,11 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">진행 상태 *</label>
             <select name="status" value={formData.status || '진행 중'} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
-              <option value="완료">완료</option>
+              <option value="계획">계획</option>
               <option value="진행 중">진행 중</option>
+              <option value="완료">완료</option>
               <option value="보류">보류</option>
+              <option value="타절">타절</option>
             </select>
           </div>
         </div>

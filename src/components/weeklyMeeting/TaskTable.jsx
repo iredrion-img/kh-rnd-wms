@@ -8,9 +8,11 @@ const PRIORITY_COLORS = {
 };
 
 const STATUS_COLORS = {
+  '계획': 'bg-blue-100 text-blue-700 border-blue-200',
   '완료': 'bg-green-100 text-green-700 border-green-200',
   '진행 중': 'bg-indigo-100 text-indigo-700 border-indigo-200',
   '보류': 'bg-gray-100 text-gray-700 border-gray-200',
+  '타절': 'bg-red-100 text-red-700 border-red-200',
 };
 
 const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
