@@ -82,7 +82,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
             <th className="px-4 py-3">담당부서</th>
             <th className="px-4 py-3">담당자</th>
             <th className="px-4 py-3 min-w-[200px]">수행현황</th>
-            {isAdmin && <th className="px-4 py-3 w-24 text-right rounded-tr-lg">관리</th>}
+            <th className="px-4 py-3 w-24 text-right rounded-tr-lg">관리</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -96,12 +96,10 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
               <td className="px-4 py-3">{t.dept}</td>
               <td className="px-4 py-3">{t.manager}</td>
               <td className="px-4 py-3 whitespace-pre-wrap">{t.status_detail}</td>
-              {isAdmin && (
                 <td className="px-4 py-3 text-right whitespace-nowrap">
                   <button onClick={() => onEdit(t)} className="p-1 text-gray-400 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
                   <button onClick={() => onDelete(t)} className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-1"><Trash2 className="w-4 h-4" /></button>
                 </td>
-              )}
             </tr>
           ))}
         </tbody>
