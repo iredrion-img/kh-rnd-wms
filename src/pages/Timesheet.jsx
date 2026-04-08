@@ -364,7 +364,11 @@ const Timesheet = ({ currentUser }) => {
                 const wtRes = await fetch(`/api/weekly-tasks?week=${weekStr}`);
                 if (wtRes.ok) {
                     const allWeekly = await wtRes.json();
-                    setMyWeeklyTasks(allWeekly.filter(t => t.assignees && t.assignees.includes(currentUser.name)));
+                    const userDept = currentUser.department || '';
+                    setMyWeeklyTasks(allWeekly.filter(t => {
+                        const assigns = t.assignees || '';
+                        return assigns.includes(currentUser.name) || assigns.includes('All') || assigns.includes(userDept);
+                    }));
                     setNoticeTasks(allWeekly.filter(t => t.team === '공지사항'));
                 }
             } else {

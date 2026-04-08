@@ -184,10 +184,32 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
            <>
              <div className="fixed inset-0 z-40" onClick={() => setIsAssigneeDropdownOpen(false)}></div>
              <div className="absolute z-50 mt-2 w-full max-h-72 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-2xl p-4 grid gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
-                {Object.keys(groupedUsers).length === 0 ? (
-                   <div className="text-center text-sm text-gray-500 py-4">사용자 정보를 불러오는 중...</div>
-                ) : (
-                   Object.entries(groupedUsers).map(([dept, usrs]) => (
+                 {Object.keys(groupedUsers).length === 0 ? (
+                    <div className="text-center text-sm text-gray-500 py-4">사용자 정보를 불러오는 중...</div>
+                 ) : (
+                    <>
+                       {/* 그룹 태그 추가 */}
+                       <div className="flex flex-col gap-2 pb-3 border-b border-gray-100 mb-1">
+                          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">조직 그룹</div>
+                          <div className="flex flex-wrap gap-2">
+                             {['All', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'].map(group => {
+                                const isSelected = selected.includes(group);
+                                return (
+                                  <button 
+                                    key={group} 
+                                    type="button"
+                                    onClick={(e) => { e.stopPropagation(); toggleAssignee(group); }}
+                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-100'}`}
+                                  >
+                                    {group}
+                                  </button>
+                                );
+                             })}
+                          </div>
+                       </div>
+                       
+                       {/* 기존 부서별 유저 렌더링 */}
+                       {Object.entries(groupedUsers).map(([dept, usrs]) => (
                       <div key={dept} className="flex flex-col gap-2">
                          <div className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">{dept}</div>
                          <div className="flex flex-wrap gap-2">
@@ -205,10 +227,12 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                                );
                             })}
                          </div>
-                      </div>
-                   ))
-                )}
-             </div>
+                       </div>
+                    ))
+                    }
+                    </>
+                 )}
+              </div>
            </>
         )}
       </div>
