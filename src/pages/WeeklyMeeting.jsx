@@ -173,15 +173,13 @@ const WeeklyMeeting = ({ currentUser }) => {
         <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
           <h2 className="text-lg font-semibold text-gray-800">{activeTeam} 상세 현황</h2>
           
-          {(isAdmin || activeTeam !== '프로젝트 추진 및 수행 현황') && (
-            <button
+          <button
               onClick={() => handleOpenModal()}
               className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-primary to-primary-light text-white rounded-lg hover:shadow-lg transition-all text-sm font-medium"
             >
               <Plus className="w-4 h-4" />
               업무 추가
-            </button>
-          )}
+          </button>
         </div>
 
         <div className="flex-1 overflow-auto">
