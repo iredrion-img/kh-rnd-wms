@@ -435,9 +435,16 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
 
     return (
     <>
+      <div className="mb-4 bg-gray-50/80 p-3 rounded-lg border border-gray-100 flex items-center justify-between">
+        <label className="text-sm font-medium text-gray-700 min-w-max mr-4">분류</label>
+        <select name="team" value={formData.team || team} onChange={handleChange} className="w-full rounded-md border-gray-300 border py-1.5 px-3 focus:ring-primary focus:border-primary text-sm font-medium bg-white">
+          {availableTeams.map(t => <option key={t} value={t}>{t}</option>)}
+        </select>
+      </div>
+
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">분류</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트 분류</label>
           <select name="category" value={formData.category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
             <option value="">선택</option>
             <option value="AI">AI</option>

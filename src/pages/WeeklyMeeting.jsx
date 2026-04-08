@@ -123,11 +123,16 @@ const WeeklyMeeting = ({ currentUser }) => {
       if (isProject) url = `/api/projects/${task.id}`;
       else if (isSchedule) url = `/api/weekly-schedule/${task.id}`;
 
+      console.log(`[Delete] Requesting URL: ${url}`);
       const res = await fetch(url, { method: 'DELETE' });
+      console.log(`[Delete] Response Status: ${res.status}`);
+      
       if (res.ok) {
         fetchTasks();
       } else {
-        alert('삭제에 실패했습니다.');
+        const errData = await res.json().catch(()=>({}));
+        console.error('[Delete] Failed:', errData);
+        alert(`삭제에 실패했습니다. (Error: ${errData.error || res.statusText})`);
       }
     } catch (e) {
       console.error(e);
@@ -171,7 +176,7 @@ const WeeklyMeeting = ({ currentUser }) => {
 
       <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 p-6 flex flex-col overflow-hidden">
         <div className="flex justify-between items-center mb-4 pb-4 border-b border-gray-100">
-          <h2 className="text-lg font-semibold text-gray-800">{activeTeam === '프로젝트 추진 및 수행 현황' ? activeTeam : `${activeTeam} 상세 현황`}</h2>
+          <h2 className="text-lg font-semibold text-gray-800">상세 현황</h2>
           
           <button
               onClick={() => handleOpenModal()}
