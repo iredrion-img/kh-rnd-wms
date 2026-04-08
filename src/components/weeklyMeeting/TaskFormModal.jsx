@@ -321,6 +321,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           {availableTeams.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
+      {formData.team !== '공지사항' && (
       <div className="grid grid-cols-3 gap-4 mb-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">대분류</label>
@@ -361,6 +362,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           )}
         </div>
       </div>
+      )}
       
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">주요내용 *</label>
