@@ -596,7 +596,14 @@ const Timesheet = ({ currentUser }) => {
                         </h3>
                         {noticeTasks.length > 0 ? (
                             <ul className="space-y-2 list-disc list-inside text-sm text-gray-700 font-medium pl-1 bg-orange-50/30 p-3 rounded-lg">
-                                {noticeTasks.map(t => <li key={t.id}>{t.content}</li>)}
+                                {noticeTasks.map(t => (
+                                    <li key={t.id}>
+                                        {t.content}
+                                        <span className="text-xs text-orange-600/70 font-normal ml-2">
+                                            ({t.start_date.slice(5)}{t.end_date && t.start_date !== t.end_date ? ` ~ ${t.end_date.slice(5)}` : ''})
+                                        </span>
+                                    </li>
+                                ))}
                             </ul>
                         ) : (
                             <div className="text-sm text-gray-400 bg-gray-50/50 p-3 flex justify-center items-center rounded-lg">
