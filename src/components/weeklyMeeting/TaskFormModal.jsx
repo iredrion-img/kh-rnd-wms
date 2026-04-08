@@ -236,7 +236,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
                   onChange={(e) => setCodeMode(e.target.checked ? 'existing' : 'new')} 
                   className="rounded border-gray-300 text-primary focus:ring-primary w-3.5 h-3.5"
                 />
-                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">기존 번호 재사용</span>
+                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">기존 코드 사용</span>
               </label>
             )}
           </div>

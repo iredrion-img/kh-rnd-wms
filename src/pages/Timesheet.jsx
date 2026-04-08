@@ -33,6 +33,13 @@ const Timesheet = ({ currentUser }) => {
     const [selectedDate, setSelectedDate] = useState(new Date());
     const [dailyData, setDailyData] = useState({}); // { 'yyyy-MM-dd': { 'CategoryLabel': hours } }
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
+    const [editingTask, setEditingTask] = useState(null);
+    const [myWeeklyTasks, setMyWeeklyTasks] = useState([]);
+
+    const openTaskModal = (task = null) => {
+        setEditingTask(task);
+        setIsTaskModalOpen(true);
+    };
 
     // Categories config
     const leaveCategories = [
@@ -196,9 +203,21 @@ const Timesheet = ({ currentUser }) => {
 
         const fetchData = async () => {
             try {
-                const response = await fetch('/api/timesheets');
-                if (response.ok) {
-                    const allRecords = await response.json();
+                // Fetch timesheets and weekly tasks concurrently
+                const weekStr = format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+                const [tsResponse, wtResponse] = await Promise.all([
+                    fetch('/api/timesheets'),
+                    fetch(`/api/weekly-tasks?week=${weekStr}`)
+                ]);
+
+                if (wtResponse.ok) {
+                    const allWeekly = await wtResponse.json();
+                    const mine = allWeekly.filter(t => t.assignees && t.assignees.includes(currentUser.name));
+                    setMyWeeklyTasks(mine);
+                }
+
+                if (tsResponse.ok) {
+                    const allRecords = await tsResponse.json();
 
                     // Filter for current user (Load ALL history for Heatmap)
                     const userRecords = allRecords.filter(r => r.employee === currentUser.name);
@@ -235,7 +254,7 @@ const Timesheet = ({ currentUser }) => {
 
                 }
             } catch (error) {
-                console.error("Failed to fetch timesheet:", error);
+                console.error("Failed to fetch data:", error);
             }
         };
 
@@ -322,7 +341,16 @@ const Timesheet = ({ currentUser }) => {
             });
             if (res.ok) {
                 setIsTaskModalOpen(false);
-                alert('주간 업무가 등록되었습니다.');
+                setEditingTask(null);
+                alert('주간 업무가 저장되었습니다.');
+                
+                // Refresh my tasks
+                const weekStr = format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+                const wtRes = await fetch(`/api/weekly-tasks?week=${weekStr}`);
+                if (wtRes.ok) {
+                    const allWeekly = await wtRes.json();
+                    setMyWeeklyTasks(allWeekly.filter(t => t.assignees && t.assignees.includes(currentUser.name)));
+                }
             } else {
                 alert('저장에 실패했습니다.');
             }
@@ -445,7 +473,7 @@ const Timesheet = ({ currentUser }) => {
                     {/* Action Buttons */}
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => setIsTaskModalOpen(true)}
+                            onClick={() => openTaskModal(null)}
                             className="px-4 py-2 bg-gradient-to-r from-primary to-primary-light text-white rounded-lg hover:shadow-lg transition-all text-sm font-bold flex items-center gap-1"
                         >
                             + 주간 업무 추가
@@ -544,6 +572,39 @@ const Timesheet = ({ currentUser }) => {
                     </div>
                 </div>
 
+                {/* My Weekly Tasks Section */}
+                <div className="bg-white rounded-2xl p-5 shadow-sm border border-neutral/10 flex flex-col min-h-[160px]">
+                    <div className="flex items-center justify-between mb-3">
+                        <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
+                           <CalendarIcon size={16} className="text-primary"/> 이번 주 나의 업무 현황
+                        </h3>
+                    </div>
+                    {myWeeklyTasks.length > 0 ? (
+                        <div className="flex flex-col gap-2 overflow-y-auto max-h-48 pr-1">
+                            {myWeeklyTasks.map(task => (
+                               <div key={task.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors">
+                                  <div className="flex flex-col">
+                                     <span className="text-xs font-bold text-primary mb-0.5">{task.task_code || '일반 업무'}</span>
+                                     <span className="text-sm text-gray-800 font-medium">{task.content}</span>
+                                  </div>
+                                  <div className="flex items-center gap-3">
+                                     <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${task.status === '완료' ? 'bg-green-100 text-green-700' : task.status === '보류' ? 'bg-orange-100 text-orange-700' : 'bg-primary/10 text-primary'}`}>
+                                         {task.status || '진행 중'}
+                                     </span>
+                                     <button onClick={() => openTaskModal(task)} className="text-xs font-medium text-gray-400 hover:text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm transition-all hover:shadow">
+                                         수정
+                                     </button>
+                                  </div>
+                               </div>
+                            ))}
+                        </div>
+                    ) : (
+                        <div className="flex-1 flex items-center justify-center text-sm font-medium text-gray-400 p-4 border border-dashed border-gray-200 rounded-xl bg-gray-50">
+                            이번 주에 등록된 주간 업무가 없습니다. 상단의 '+ 업무 추가'를 클릭하세요.
+                        </div>
+                    )}
+                </div>
+
                 {/* Save Button */}
                 <div className="z-10 flex-none sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:static lg:bg-transparent lg:backdrop-filter-none">
                     <button
@@ -565,8 +626,9 @@ const Timesheet = ({ currentUser }) => {
 
             {isTaskModalOpen && (
                 <TaskFormModal
-                    team={currentUser.department || '공통업무&행정'}
-                    onClose={() => setIsTaskModalOpen(false)}
+                    team={editingTask ? editingTask.team : (currentUser.department || '공통업무&행정')}
+                    task={editingTask}
+                    onClose={() => { setIsTaskModalOpen(false); setEditingTask(null); }}
                     onSave={handleSaveWeeklyTask}
                     currentWeek={format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')}
                 />
