@@ -31,7 +31,7 @@ const MIDDLE_CATEGORIES = {
 
 
 
-const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
+const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimesheet }) => {
   const isProject = team === '프로젝트 추진 및 수행 현황';
   const isSchedule = team === '주간일정';
 
@@ -47,13 +47,13 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
       .then(data => setUsersInfo(Array.isArray(data) ? data : []))
       .catch(console.error);
 
-    if (!task && !isProject && !isSchedule) {
+    if (!task && !isSchedule) {
       fetch('/api/weekly-tasks')
         .then(res => res.json())
         .then(data => setAllTasks(Array.isArray(data) ? data : []))
         .catch(console.error);
     }
-  }, [task, isProject, isSchedule]);
+  }, [task, isSchedule]);
 
   useEffect(() => {
     if (task) {
@@ -83,7 +83,27 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
 
   useEffect(() => {
     if (task) return; // 기존 업무 수정 시에는 자동 수정 안 함
-    if (isProject || isSchedule) return;
+    if (isSchedule) return;
+
+    if (isProject) {
+        if (formData.category) {
+            const prefix = `${formData.category}-`;
+            const matchingCodes = allTasks.map(t=>t.project_code || t.task_code).filter(c=>c&&c.startsWith(prefix));
+            let maxNum = 0;
+            matchingCodes.forEach(c => {
+                const p = c.split('-');
+                if(p.length === 2 && !isNaN(parseInt(p[1],10))) {
+                    const num = parseInt(p[1],10);
+                    if(num > maxNum) maxNum = num;
+                }
+            });
+            const nextCode = `${prefix}${String(maxNum+1).padStart(3,'0')}`;
+            setFormData(prev => prev.project_code !== nextCode ? { ...prev, project_code: nextCode } : prev);
+        } else {
+            setFormData(prev => prev.project_code ? { ...prev, project_code: '' } : prev);
+        }
+        return;
+    }
 
     const majorStr = MAJOR_CATEGORIES[formData.category];
     const middleStr = MIDDLE_CATEGORIES[formData.sub_category];
@@ -232,14 +252,15 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
 
   const renderProjectForm = () => (
     <>
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">대분류</label>
-          <input type="text" name="category" value={formData.category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">순번</label>
-          <input type="text" name="sub_no" value={formData.sub_no || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">분류</label>
+          <select name="category" value={formData.category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
+            <option value="">선택</option>
+            <option value="AI">AI</option>
+            <option value="BIM">BIM</option>
+            <option value="R&D">R&D</option>
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">담당부서</label>
@@ -252,8 +273,8 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
       </div>
       <div className="grid grid-cols-3 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">프로젝트코드</label>
-          <input type="text" name="project_code" value={formData.project_code || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">업무코드</label>
+          <input type="text" name="project_code" value={formData.project_code || ''} readOnly className="w-full rounded-lg border-gray-100 bg-gray-50 border p-2 font-mono text-gray-500" placeholder="분류 선택 시 자동 부여" />
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">수행방식</label>
@@ -285,18 +306,18 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
        existingCodesOptions = Array.from(new Set(allTasks.map(t=>t.task_code).filter(c=>c&&c.startsWith(prefix)))).sort();
     }
 
+    const teamOptions = isFromTimesheet ? [
+        '공통업무&행정', '연구과제', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'
+    ] : [
+        '공지사항', '공통업무&행정', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀', '연구과제'
+    ];
+
     return (
     <>
       <div className="mb-4 bg-gray-50/80 p-3 rounded-lg border border-gray-100 flex items-center justify-between">
         <label className="text-sm font-medium text-gray-700 min-w-max mr-4">소속 팀 (분류)</label>
         <select name="team" value={formData.team || team} onChange={handleChange} className="w-full rounded-md border-gray-300 border py-1.5 px-3 focus:ring-primary focus:border-primary text-sm font-medium bg-white">
-          <option value="공지사항">공지사항</option>
-          <option value="공통업무&행정">공통업무&행정</option>
-          <option value="스마트 기술 개발팀">스마트 기술 개발팀</option>
-          <option value="디지털 기술 연구팀">디지털 기술 연구팀</option>
-          <option value="인프라 BIM팀">인프라 BIM팀</option>
-          <option value="AI 응용팀">AI 응용팀</option>
-          <option value="연구과제">연구과제</option>
+          {teamOptions.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
       </div>
       <div className="grid grid-cols-3 gap-4 mb-4">

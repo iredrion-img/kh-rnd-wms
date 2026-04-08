@@ -35,6 +35,7 @@ const Timesheet = ({ currentUser }) => {
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState(null);
     const [myWeeklyTasks, setMyWeeklyTasks] = useState([]);
+    const [noticeTasks, setNoticeTasks] = useState([]);
 
     const openTaskModal = (task = null) => {
         setEditingTask(task);
@@ -213,7 +214,9 @@ const Timesheet = ({ currentUser }) => {
                 if (wtResponse.ok) {
                     const allWeekly = await wtResponse.json();
                     const mine = allWeekly.filter(t => t.assignees && t.assignees.includes(currentUser.name));
+                    const notices = allWeekly.filter(t => t.team === '공지사항');
                     setMyWeeklyTasks(mine);
+                    setNoticeTasks(notices);
                 }
 
                 if (tsResponse.ok) {
@@ -356,12 +359,13 @@ const Timesheet = ({ currentUser }) => {
                 setEditingTask(null);
                 alert('주간 업무가 저장되었습니다.');
                 
-                // Refresh my tasks
+                // Refresh my tasks & notices
                 const weekStr = format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
                 const wtRes = await fetch(`/api/weekly-tasks?week=${weekStr}`);
                 if (wtRes.ok) {
                     const allWeekly = await wtRes.json();
                     setMyWeeklyTasks(allWeekly.filter(t => t.assignees && t.assignees.includes(currentUser.name)));
+                    setNoticeTasks(allWeekly.filter(t => t.team === '공지사항'));
                 }
             } else {
                 alert('저장에 실패했습니다.');
@@ -586,6 +590,16 @@ const Timesheet = ({ currentUser }) => {
 
                 {/* My Weekly Tasks Section */}
                 <div className="bg-white rounded-2xl p-5 shadow-sm border border-neutral/10 flex flex-col min-h-[160px]">
+                    {noticeTasks.length > 0 && (
+                        <div className="mb-5 pb-4 border-b border-gray-100/60">
+                            <h3 className="text-sm font-bold text-orange-600 flex items-center gap-1.5 mb-2">
+                                📢 이번 주 공지사항
+                            </h3>
+                            <ul className="space-y-2 list-disc list-inside text-sm text-gray-700 font-medium pl-1 bg-orange-50/30 p-3 rounded-lg">
+                                {noticeTasks.map(t => <li key={t.id}>{t.content}</li>)}
+                            </ul>
+                        </div>
+                    )}
                     <div className="flex items-center justify-between mb-3">
                         <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
                            <CalendarIcon size={16} className="text-primary"/> 이번 주 나의 업무 현황
@@ -643,6 +657,7 @@ const Timesheet = ({ currentUser }) => {
                     onClose={() => { setIsTaskModalOpen(false); setEditingTask(null); }}
                     onSave={handleSaveWeeklyTask}
                     currentWeek={format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')}
+                    isFromTimesheet={true}
                 />
             )}
         </div >

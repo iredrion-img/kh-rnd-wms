@@ -71,8 +71,8 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
       <table className="w-full text-sm text-left">
         <thead className="text-xs text-gray-500 bg-gray-50 uppercase sticky top-0">
           <tr>
-            <th className="px-4 py-3 rounded-tl-lg">대분류</th>
-            <th className="px-4 py-3">순번</th>
+            <th className="px-4 py-3 rounded-tl-lg">분류</th>
+            <th className="px-4 py-3">업무코드</th>
             <th className="px-4 py-3 min-w-[200px]">프로젝트명</th>
             <th className="px-4 py-3">수행방식</th>
             <th className="px-4 py-3">BIM용역비</th>
@@ -86,7 +86,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
           {tasks.map(t => (
             <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
               <td className="px-4 py-3 font-medium text-gray-900">{t.category}</td>
-              <td className="px-4 py-3 text-gray-500">{t.sub_no}</td>
+              <td className="px-4 py-3 text-gray-500 font-mono text-xs">{t.project_code}</td>
               <td className="px-4 py-3 font-medium text-primary">{t.project_name}</td>
               <td className="px-4 py-3">{t.method}</td>
               <td className="px-4 py-3 whitespace-nowrap">{t.bim_cost}</td>
