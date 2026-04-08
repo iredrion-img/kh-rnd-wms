@@ -32,16 +32,17 @@ const MIDDLE_CATEGORIES = {
 
 
 const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimesheet }) => {
-  const isProject = team === '프로젝트 추진 및 수행 현황';
-  const isSchedule = team === '주간일정';
+  const [formData, setFormData] = useState({});
+  const currentTeam = formData.team || team;
+  const isProject = currentTeam === '프로젝트 추진 및 수행 현황';
+  const isSchedule = currentTeam === '주간일정';
 
   const availableTeams = isFromTimesheet ? [
       '공통업무&행정', '연구과제', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'
   ] : [
-      '공지사항', '공통업무&행정', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀', '연구과제'
+      '공지사항', '공통업무&행정', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀', '연구과제', '프로젝트 추진 및 수행 현황'
   ];
 
-  const [formData, setFormData] = useState({});
   const [allTasks, setAllTasks] = useState([]);
   const [codeMode, setCodeMode] = useState('new'); // 'new' | 'existing'
   const [usersInfo, setUsersInfo] = useState([]);
