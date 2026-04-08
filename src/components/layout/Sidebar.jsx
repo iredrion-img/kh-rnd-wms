@@ -22,7 +22,7 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
 
     const menuItems = [
         { id: 'dashboard', label: '대시보드', subLabel: 'Dashboard', icon: LayoutDashboard },
-        { id: 'weekly-meeting', label: '주간공정회의', subLabel: 'Weekly Meeting', icon: Users },
+        { id: 'weekly', label: '주간공정회의', subLabel: 'Weekly Meeting', icon: Users },
         { id: 'timesheet', label: '업무 기록', subLabel: 'Timesheet', icon: Clock },
     ];
 
