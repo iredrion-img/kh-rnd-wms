@@ -1,6 +1,36 @@
 import React, { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
+const MAJOR_CATEGORIES = {
+  'BIM': 'B',
+  'AI': 'A',
+  '디지털기술': 'D',
+  'R&D 및 신기술': 'R',
+  '교육': 'T',
+  '대내외 활동': 'C',
+  '기타업무': 'E'
+};
+
+const MIDDLE_CATEGORIES = {
+  '프로젝트': 'P',
+  '업무지원': 'S',
+  'CDE': 'C',
+  '촬영': 'F',
+  '시각화': 'V',
+  '개발': 'D',
+  '기타': 'E',
+  '내부': 'I',
+  '외부': 'O',
+  '신기술': 'N',
+  '매뉴얼': 'M',
+  '세미나, 박람회': 'R',
+  '논문, 집필': 'W',
+  '대외활동, 자문회의': 'A',
+  'R&D센터 공통업무': 'G'
+};
+
+const MINOR_CATEGORIES = Array.from({ length: 20 }, (_, i) => String(i + 1).padStart(3, '0'));
+
 const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
   const isProject = team === '프로젝트 추진 및 수행 현황';
   const isSchedule = team === '주간일정';
@@ -9,7 +39,14 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
 
   useEffect(() => {
     if (task) {
-      setFormData(task);
+      let minorCat = '';
+      if (task.task_code) {
+        const parts = task.task_code.split('-');
+        if (parts.length === 3) {
+          minorCat = parts[2];
+        }
+      }
+      setFormData({ ...task, minor_category: minorCat });
     } else {
       // Default initial values based on team type
       if (isProject) {
@@ -29,7 +66,25 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData(prev => {
+      const nextData = { ...prev, [name]: value };
+      
+      // 자동 업무코드 생성 (category, sub_category, minor_category 중 하나라도 변경될 때)
+      if (['category', 'sub_category', 'minor_category'].includes(name)) {
+        const majorStr = MAJOR_CATEGORIES[nextData.category];
+        const middleStr = MIDDLE_CATEGORIES[nextData.sub_category];
+        const minorStr = nextData.minor_category;
+        
+        const parts = [];
+        if (majorStr) parts.push(majorStr);
+        if (middleStr) parts.push(middleStr);
+        if (minorStr) parts.push(minorStr);
+        
+        nextData.task_code = parts.length > 0 ? parts.join('-') : '';
+      }
+      
+      return nextData;
+    });
   };
 
   const handleSubmit = (e) => {
@@ -129,18 +184,31 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek }) => {
 
   const renderNormalForm = () => (
     <>
-      <div className="grid grid-cols-3 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">업무코드</label>
-          <input type="text" name="task_code" value={formData.task_code || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" placeholder="Ex: B-P-001" />
-        </div>
+      <div className="grid grid-cols-4 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">대분류</label>
-          <input type="text" name="category" value={formData.category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
+          <select name="category" value={formData.category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
+            <option value="">선택</option>
+            {Object.keys(MAJOR_CATEGORIES).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">중분류</label>
-          <input type="text" name="sub_category" value={formData.sub_category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2" />
+          <select name="sub_category" value={formData.sub_category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
+            <option value="">선택</option>
+            {Object.keys(MIDDLE_CATEGORIES).map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">소분류</label>
+          <select name="minor_category" value={formData.minor_category || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
+            <option value="">선택</option>
+            {MINOR_CATEGORIES.map(cat => <option key={cat} value={cat}>{cat}</option>)}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">업무코드</label>
+          <input type="text" name="task_code" value={formData.task_code || ''} readOnly className="w-full rounded-lg border-gray-100 bg-gray-50 border p-2 text-gray-500 font-mono" placeholder="자동 생성" />
         </div>
       </div>
       
