@@ -65,7 +65,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     if (task) {
       setFormData(task);
     } else {
-      const authDataStr = localStorage.getItem('authData');
+      const authDataStr = localStorage.getItem('kh_current_user');
       const currentUserLocal = authDataStr ? JSON.parse(authDataStr) : null;
       const initialAssignees = currentUserLocal?.name || '';
 
