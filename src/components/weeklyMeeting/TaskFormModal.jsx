@@ -47,6 +47,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
   const [usersInfo, setUsersInfo] = useState([]);
   const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
   const [isMethodBaseDropdownOpen, setIsMethodBaseDropdownOpen] = useState(false);
+  const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/users')
@@ -179,14 +180,14 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
 
   const hasNote = team === '스마트 기술 개발팀';
 
-  const renderAssigneeSelector = () => {
-    const selected = formData.assignees ? formData.assignees.split(',').map(s=>s.trim()).filter(Boolean) : [];
+  const renderMultiUserSelector = (fieldName, labelText, isOpen, setOpen) => {
+    const selected = formData[fieldName] ? formData[fieldName].split(',').map(s=>s.trim()).filter(Boolean) : [];
     
-    const toggleAssignee = (name) => {
-        let newAssignees;
-        if (selected.includes(name)) newAssignees = selected.filter(n => n !== name);
-        else newAssignees = [...selected, name];
-        setFormData(prev => ({ ...prev, assignees: newAssignees.join(', ') }));
+    const toggleUser = (name) => {
+        let newUsers;
+        if (selected.includes(name)) newUsers = selected.filter(n => n !== name);
+        else newUsers = [...selected, name];
+        setFormData(prev => ({ ...prev, [fieldName]: newUsers.join(', ') }));
     };
 
     const groupedUsers = usersInfo.reduce((acc, u) => {
@@ -196,17 +197,17 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     }, {});
 
     return (
-      <div className="relative">
-        <label className="block text-sm font-medium text-gray-700 mb-1">수행인원 *</label>
+      <div className="relative w-full">
+        <label className="block text-sm font-medium text-gray-700 mb-1">{labelText}</label>
         <div 
            className="w-full rounded-lg border-gray-300 border p-2 min-h-[42px] cursor-pointer bg-white flex flex-wrap gap-1.5 items-center focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all"
-           onClick={() => setIsAssigneeDropdownOpen(!isAssigneeDropdownOpen)}
+           onClick={() => setOpen(!isOpen)}
         >
            {selected.length === 0 ? (
               <span className="text-gray-400 text-sm py-0.5 px-1">조직도에서 선택...</span>
            ) : (
               selected.map(name => (
-                 <span key={name} className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 hover:bg-primary/20 transition-colors" onClick={(e) => { e.stopPropagation(); toggleAssignee(name); }}>
+                 <span key={name} className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 hover:bg-primary/20 transition-colors" onClick={(e) => { e.stopPropagation(); toggleUser(name); }}>
                     {name}
                     <X className="w-3 h-3 ml-0.5" />
                  </span>
@@ -214,9 +215,9 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
            )}
         </div>
 
-        {isAssigneeDropdownOpen && (
+        {isOpen && (
            <>
-             <div className="fixed inset-0 z-40" onClick={() => setIsAssigneeDropdownOpen(false)}></div>
+             <div className="fixed inset-0 z-40" onClick={() => setOpen(false)}></div>
              <div className="absolute z-50 mt-2 w-full max-h-72 overflow-y-auto bg-white border border-gray-100 rounded-xl shadow-2xl p-4 grid gap-4 animate-in fade-in slide-in-from-top-2 duration-200">
                  {Object.keys(groupedUsers).length === 0 ? (
                     <div className="text-center text-sm text-gray-500 py-4">사용자 정보를 불러오는 중...</div>
@@ -232,7 +233,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                                   <button 
                                     key={group} 
                                     type="button"
-                                    onClick={(e) => { e.stopPropagation(); toggleAssignee(group); }}
+                                    onClick={(e) => { e.stopPropagation(); toggleUser(group); }}
                                     className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-100'}`}
                                   >
                                     {group}
@@ -253,7 +254,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                                  <button 
                                    key={u.name} 
                                    type="button"
-                                   onClick={(e) => { e.stopPropagation(); toggleAssignee(u.name); }}
+                                   onClick={(e) => { e.stopPropagation(); toggleUser(u.name); }}
                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-100'}`}
                                  >
                                    {u.name} {u.role === 'admin' && <span className="ml-1 opacity-70 text-[10px]">⭐</span>}
@@ -272,6 +273,8 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       </div>
     );
   };
+
+  const renderAssigneeSelector = () => renderMultiUserSelector('assignees', '수행인원 *', isAssigneeDropdownOpen, setIsAssigneeDropdownOpen);
 
   const renderScheduleForm = () => (
     <>
@@ -420,6 +423,12 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           .filter(d => !bases.includes(d))
           .sort();
     }
+    
+    let existingDepartments = [];
+    if (allTasks) {
+       const depts = allTasks.map(t => t.dept).filter(Boolean).map(d => d.trim().replace(/^[, ]+/, ''));
+       existingDepartments = Array.from(new Set(depts)).sort();
+    }
 
     return (
     <>
@@ -492,11 +501,13 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         </div>
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">설계담당부서</label>
-          <input type="text" name="dept" value={formData.dept || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+          <input type="text" list="dept_list" name="dept" value={formData.dept || ''} onChange={handleChange} placeholder="부서 선택 및 입력" className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+          <datalist id="dept_list">
+             {existingDepartments.map(d => <option key={d} value={d} />)}
+          </datalist>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">담당자</label>
-          <input type="text" name="manager" value={formData.manager || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+          {renderMultiUserSelector('manager', '담당자', isManagerDropdownOpen, setIsManagerDropdownOpen)}
         </div>
       </div>
       <div>
