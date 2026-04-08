@@ -316,7 +316,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     return (
     <>
       <div className="mb-4 bg-gray-50/80 p-3 rounded-lg border border-gray-100 flex items-center justify-between">
-        <label className="text-sm font-medium text-gray-700 min-w-max mr-4">소속 팀 (분류)</label>
+        <label className="text-sm font-medium text-gray-700 min-w-max mr-4">분류</label>
         <select name="team" value={formData.team || team} onChange={handleChange} className="w-full rounded-md border-gray-300 border py-1.5 px-3 focus:ring-primary focus:border-primary text-sm font-medium bg-white">
           {availableTeams.map(t => <option key={t} value={t}>{t}</option>)}
         </select>
