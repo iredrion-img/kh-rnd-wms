@@ -65,11 +65,15 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     if (task) {
       setFormData(task);
     } else {
+      const authDataStr = localStorage.getItem('authData');
+      const currentUserLocal = authDataStr ? JSON.parse(authDataStr) : null;
+      const initialAssignees = currentUserLocal?.name || '';
+
       // Default initial values based on team type
       if (isProject) {
-        setFormData({ team, status_detail: '' });
+        setFormData({ team, status_detail: '', assignees: initialAssignees });
       } else if (isSchedule) {
-        setFormData({ team, start_date: currentWeek, end_date: currentWeek });
+        setFormData({ team, start_date: currentWeek, end_date: currentWeek, assignees: initialAssignees });
       } else {
         const initialTeam = isFromTimesheet && !availableTeams.includes(team) ? availableTeams[0] : team;
         setFormData({
@@ -77,7 +81,8 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           status: '진행 중',
           priority: '중간',
           start_date: currentWeek,
-          end_date: currentWeek
+          end_date: currentWeek,
+          assignees: initialAssignees
         });
       }
     }
