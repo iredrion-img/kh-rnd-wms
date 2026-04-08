@@ -16,6 +16,7 @@ const STATUS_COLORS = {
 const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
   const isProject = team === '프로젝트 추진 및 수행 현황';
   const isSchedule = team === '주간일정';
+  const isNotice = team === '공지사항';
 
   if (!tasks || tasks.length === 0) {
     return (
@@ -113,12 +114,12 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
     <table className="w-full text-sm text-left">
       <thead className="text-xs text-gray-500 bg-gray-50 uppercase sticky top-0">
         <tr>
-          <th className="px-3 py-3 w-24 rounded-tl-lg">코드</th>
-          <th className="px-3 py-3 w-20">대분류</th>
-          <th className="px-3 py-3 min-w-[250px]">주요내용</th>
-          <th className="px-3 py-3 w-28">수행인원</th>
-          <th className="px-3 py-3 w-24 text-center">상태</th>
-          <th className="px-3 py-3 w-20 text-center">중요도</th>
+          {!isNotice && <th className="px-3 py-3 w-24 rounded-tl-lg">코드</th>}
+          {!isNotice && <th className="px-3 py-3 w-20">대분류</th>}
+          <th className={`px-3 py-3 min-w-[250px] ${isNotice ? 'rounded-tl-lg' : ''}`}>주요내용</th>
+          {!isNotice && <th className="px-3 py-3 w-28">수행인원</th>}
+          {!isNotice && <th className="px-3 py-3 w-24 text-center">상태</th>}
+          {!isNotice && <th className="px-3 py-3 w-20 text-center">중요도</th>}
           <th className="px-3 py-3 w-32">기간</th>
           {hasNote && <th className="px-3 py-3 min-w-[150px]">비고</th>}
           <th className="px-3 py-3 w-20 text-right rounded-tr-lg">관리</th>
@@ -129,22 +130,22 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
           const isOwner = isAdmin || (t.assignees || '').includes(currentUser?.name);
           return (
             <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
-              <td className="px-3 py-3 text-xs text-gray-400 font-mono">{t.task_code}</td>
-              <td className="px-3 py-3 font-medium text-gray-700">{t.category}</td>
+              {!isNotice && <td className="px-3 py-3 text-xs text-gray-400 font-mono">{t.task_code}</td>}
+              {!isNotice && <td className="px-3 py-3 font-medium text-gray-700">{t.category}</td>}
               <td className="px-3 py-3 text-gray-900 whitespace-pre-wrap">{t.content}</td>
-              <td className="px-3 py-3 text-gray-600">{t.assignees}</td>
+              {!isNotice && <td className="px-3 py-3 text-gray-600">{t.assignees}</td>}
               
-              <td className="px-3 py-3 text-center">
+              {!isNotice && <td className="px-3 py-3 text-center">
                 <span className={`px-2 py-1 text-xs font-medium rounded-md border ${STATUS_COLORS[t.status] || STATUS_COLORS['보류']}`}>
                   {t.status || '보류'}
                 </span>
-              </td>
+              </td>}
               
-              <td className="px-3 py-3 text-center">
+              {!isNotice && <td className="px-3 py-3 text-center">
                 <span className={`px-2 py-1 text-xs font-semibold rounded-full border ${PRIORITY_COLORS[t.priority] || PRIORITY_COLORS['중간']}`}>
                   {t.priority || '중간'}
                 </span>
-              </td>
+              </td>}
               
               <td className="px-3 py-3 text-xs text-gray-500 whitespace-nowrap">
                 {t.start_date.slice(5)} {t.end_date && t.start_date !== t.end_date ? ` ~ ${t.end_date.slice(5)}` : ''}
