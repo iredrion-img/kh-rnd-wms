@@ -40,33 +40,25 @@ const WeekNavigator = ({ currentWeek, onWeekChange, availableWeeks, isAdmin }) =
     <div className="flex items-center gap-3 bg-white p-1.5 px-3 rounded-full border border-gray-200 shadow-sm">
       <CalendarDays className="w-4 h-4 text-primary ml-1" />
       
-      {isAdmin ? (
-        <>
-          <button 
-            onClick={handlePrev}
-            disabled={currentIndex >= availableWeeks.length - 1 || currentIndex === -1}
-            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-          >
-            <ChevronLeft className="w-4 h-4 text-gray-600" />
-          </button>
-          
-          <span className="text-sm font-semibold text-gray-800 min-w-[140px] text-center select-none tracking-tight">
-            {displayLabel}
-          </span>
-          
-          <button 
-            onClick={handleNext}
-            disabled={currentIndex <= 0}
-            className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
-          >
-            <ChevronRight className="w-4 h-4 text-gray-600" />
-          </button>
-        </>
-      ) : (
-        <span className="text-sm font-semibold text-gray-800 min-w-[140px] text-center select-none tracking-tight mr-2">
-          {displayLabel}
-        </span>
-      )}
+      <button 
+        onClick={handlePrev}
+        disabled={currentIndex >= availableWeeks.length - 1 || currentIndex === -1}
+        className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+      >
+        <ChevronLeft className="w-4 h-4 text-gray-600" />
+      </button>
+      
+      <span className="text-sm font-semibold text-gray-800 min-w-[140px] text-center select-none tracking-tight">
+        {displayLabel}
+      </span>
+      
+      <button 
+        onClick={handleNext}
+        disabled={currentIndex <= 0}
+        className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+      >
+        <ChevronRight className="w-4 h-4 text-gray-600" />
+      </button>
     </div>
   );
 };
