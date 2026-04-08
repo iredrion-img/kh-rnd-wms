@@ -17,23 +17,20 @@ const WeekNavigator = ({ currentWeek, onWeekChange, availableWeeks, isAdmin }) =
     return `${d.getMonth() + 1}/${d.getDate()}`;
   };
 
-  const currentIndex = availableWeeks.indexOf(currentWeek);
-  
-  // 만약 availableWeeks가 덜 로드됐거나 현재 주가 리스트에 없다면 기본 UI 표시
-  const displayLabel = currentWeek 
-    ? `${currentWeek.substring(0,4)}년 ${getISOWeek(currentWeek)}주차 (${getKoreanDateStr(currentWeek)})`
-    : '로딩 중...';
+  const getWeekOffset = (dateStr, offsetDays) => {
+    if (!dateStr) return '';
+    const d = new Date(dateStr);
+    if (isNaN(d)) return dateStr;
+    d.setDate(d.getDate() + offsetDays);
+    return d.toISOString().slice(0, 10);
+  };
 
   const handlePrev = () => {
-    if (currentIndex < availableWeeks.length - 1) {
-      onWeekChange(availableWeeks[currentIndex + 1]);
-    }
+    onWeekChange(getWeekOffset(currentWeek, -7));
   };
 
   const handleNext = () => {
-    if (currentIndex > 0) {
-      onWeekChange(availableWeeks[currentIndex - 1]);
-    }
+    onWeekChange(getWeekOffset(currentWeek, 7));
   };
 
   return (
@@ -42,8 +39,7 @@ const WeekNavigator = ({ currentWeek, onWeekChange, availableWeeks, isAdmin }) =
       
       <button 
         onClick={handlePrev}
-        disabled={currentIndex >= availableWeeks.length - 1 || currentIndex === -1}
-        className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+        className="p-1 rounded-full hover:bg-gray-100 transition-colors"
       >
         <ChevronLeft className="w-4 h-4 text-gray-600" />
       </button>
@@ -54,8 +50,7 @@ const WeekNavigator = ({ currentWeek, onWeekChange, availableWeeks, isAdmin }) =
       
       <button 
         onClick={handleNext}
-        disabled={currentIndex <= 0}
-        className="p-1 rounded-full hover:bg-gray-100 disabled:opacity-30 disabled:hover:bg-transparent transition-colors"
+        className="p-1 rounded-full hover:bg-gray-100 transition-colors"
       >
         <ChevronRight className="w-4 h-4 text-gray-600" />
       </button>
