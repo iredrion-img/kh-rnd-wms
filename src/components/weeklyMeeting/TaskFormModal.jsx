@@ -54,12 +54,13 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       .catch(console.error);
 
     if (!task && !isSchedule) {
-      fetch('/api/weekly-tasks')
+      const endpoint = isProject ? '/api/projects' : '/api/weekly-tasks';
+      fetch(endpoint)
         .then(res => res.json())
         .then(data => setAllTasks(Array.isArray(data) ? data : []))
         .catch(console.error);
     }
-  }, [task, isSchedule]);
+  }, [task, isSchedule, isProject]);
 
   useEffect(() => {
     if (task) {
@@ -103,7 +104,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
             const matchingCodes = allTasks.map(t=>t.project_code || t.task_code).filter(c=>c&&prefixRegex.test(c));
             let maxNum = 0;
             matchingCodes.forEach(c => {
-                const match = c.match(/\d+$/);
+                const match = c.trim().match(/\d+$/);
                 if (match) {
                     const num = parseInt(match[0], 10);
                     if (num > maxNum) maxNum = num;
@@ -295,9 +296,9 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       const prefixRegex = new RegExp(`^${formData.category}\\s*-\\s*(?!\\s*$)`, 'i');
       const nums = allTasks
           .map(t => t.project_code || t.task_code)
-          .filter(c => c && prefixRegex.test(c))
+          .filter(c => c && prefixRegex.test(c.trim()))
           .map(c => {
-             const m = c.match(/\d+$/);
+             const m = c.trim().match(/\d+$/);
              return m ? m[0] : null;
           })
           .filter(Boolean);
