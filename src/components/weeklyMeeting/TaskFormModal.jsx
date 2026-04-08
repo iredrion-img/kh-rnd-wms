@@ -369,6 +369,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         <textarea name="content" value={formData.content || ''} onChange={handleChange} required rows={3} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
       </div>
 
+      {formData.team !== '공지사항' && (
       <div className="grid grid-cols-2 gap-4">
         <div>
           {renderAssigneeSelector()}
@@ -392,6 +393,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           </div>
         </div>
       </div>
+      )}
 
       <div className="grid grid-cols-2 gap-4">
         <div>
