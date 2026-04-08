@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { X } from 'lucide-react';
 
 const MAJOR_CATEGORIES = {
@@ -49,6 +49,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
   const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
   const [isMethodBaseDropdownOpen, setIsMethodBaseDropdownOpen] = useState(false);
   const [isManagerDropdownOpen, setIsManagerDropdownOpen] = useState(false);
+  const initialized = useRef(false);
 
   useEffect(() => {
     fetch('/api/users')
@@ -63,7 +64,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         .then(data => setAllTasks(Array.isArray(data) ? data : []))
         .catch(console.error);
     }
-  }, [task, isSchedule, isProject]);
+  }, [isProject, isSchedule, task]);
 
   useEffect(() => {
     if (task) {
@@ -84,29 +85,31 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
          detail = remainingDetails.join(', ');
       }
       setFormData({ ...task, method_base: base, method_detail: detail });
-    } else {
+    } else if (!initialized.current) {
       const authDataStr = localStorage.getItem('kh_current_user');
       const currentUserLocal = authDataStr ? JSON.parse(authDataStr) : null;
       const initialAssignees = currentUserLocal?.name || '';
 
-      // Default initial values based on team type
+      const baseData = {
+        team: team,
+        status: '진행 중',
+        priority: '중간',
+        start_date: currentWeek,
+        end_date: currentWeek,
+        assignees: initialAssignees
+      };
+
       if (isProject) {
-        setFormData({ team, status_detail: '', assignees: initialAssignees });
+        setFormData({ ...baseData, status_detail: '' });
       } else if (isSchedule) {
-        setFormData({ team, start_date: currentWeek, end_date: currentWeek, assignees: initialAssignees });
+        setFormData({ ...baseData, schedule_type: '', content: '' });
       } else {
         const initialTeam = isFromTimesheet && !availableTeams.includes(team) ? availableTeams[0] : team;
-        setFormData({
-          team: initialTeam,
-          status: '진행 중',
-          priority: '중간',
-          start_date: currentWeek,
-          end_date: currentWeek,
-          assignees: initialAssignees
-        });
+        setFormData({ ...baseData, team: initialTeam });
       }
+      initialized.current = true;
     }
-  }, [task, team, isProject, isSchedule, currentWeek, isFromTimesheet]);
+  }, [task, team, currentWeek]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;

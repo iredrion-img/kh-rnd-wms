@@ -581,12 +581,21 @@ app.put('/api/projects/:id', async (req, res) => {
 app.delete('/api/projects/:id', async (req, res) => {
     try {
         const { id } = req.params;
+        console.log(`[API] DELETE /api/projects/${id}`);
         const records = readCsvResilient(PROJECTS_FILE);
-        const filtered = records.filter(r => r.id !== id);
-        if (filtered.length === records.length) return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
+        
+        const filtered = records.filter(r => r.id && r.id.trim() !== id.trim());
+        
+        if (filtered.length === records.length) {
+            console.log(`[API] Delete Failed: ID ${id} not found among: ${records.map(r=>r.id).slice(0,5).join(', ')}...`);
+            return res.status(404).json({ error: '프로젝트를 찾을 수 없습니다.' });
+        }
+        
         await writeAtomic(PROJECTS_FILE, stringify(filtered, { header: true, columns: PROJECTS_COLUMNS }));
+        console.log(`[API] Delete Success: ${id}`);
         res.json({ success: true });
     } catch (e) {
+        console.error(`[API] DELETE /api/projects/${id} Error:`, e);
         res.status(500).json({ error: '프로젝트 삭제 실패' });
     }
 });
