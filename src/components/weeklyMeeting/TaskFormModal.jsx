@@ -344,7 +344,10 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
              }
           }
        });
-       existingMethodDetails = Array.from(new Set(details)).filter(Boolean).sort();
+       existingMethodDetails = Array.from(new Set(details))
+          .filter(Boolean)
+          .filter(d => !bases.includes(d))
+          .sort();
     }
 
     return (
@@ -404,7 +407,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         <label className="block text-sm font-medium text-gray-700 mb-1">수행방식</label>
         <div className="grid grid-cols-2 gap-4">
            <select name="method_base" value={formData.method_base || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
-              <option value="">기본 방식 선택</option>
+              <option value="" disabled hidden>기본 방식 선택</option>
               <option value="직접수행">직접수행</option>
               <option value="직접수행(합사)">직접수행(합사)</option>
               <option value="외주">외주</option>
