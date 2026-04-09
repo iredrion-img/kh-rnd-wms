@@ -366,14 +366,14 @@ function getWeekStartStr(dateStr) {
         const day = d.getDay();
         const diff = day === 0 ? -6 : 1 - day;
         d.setDate(d.getDate() + diff);
-        return d.toISOString().slice(0, 10);
+        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
     }
     const d = new Date(dateStr);
     if (isNaN(d)) return dateStr;
     const day = d.getDay();
     const diff = day === 0 ? -6 : 1 - day;
     d.setDate(d.getDate() + diff);
-    return d.toISOString().slice(0, 10);
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
 // GET /api/weekly-tasks — 주차·팀 필터 조회

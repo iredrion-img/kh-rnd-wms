@@ -337,9 +337,16 @@ const Timesheet = ({ currentUser }) => {
 
     const handleSaveWeeklyTask = async (taskData) => {
         try {
+            const availableTeams = [
+                '공통업무&행정', '연구과제', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'
+            ];
+            
+            const dept = currentUser.department || '';
+            const defaultTeam = availableTeams.includes(dept) ? dept : '공통업무&행정';
+
             const payload = {
                 ...taskData,
-                team: taskData.team || currentUser.department || '공통업무&행정',
+                team: taskData.team || defaultTeam,
                 week_start: taskData.week_start || format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
             };
             if (!payload.assignees) {

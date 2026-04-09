@@ -16,12 +16,12 @@ import YearlyChartBoard from '../components/dashboard/YearlyChartBoard';
 /* ═══════════════════════════════════════════
    Constants & Color System
    ═══════════════════════════════════════════ */
-const DEPARTMENT_ORDER = ['R&D센터', '기술연구소', '스마트기술개발팀', '디지털기술연구팀', '인프라BIM팀', 'AI응용팀'];
+const DEPARTMENT_ORDER = ['R&D센터', '기술연구소', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'];
 const TEAM_MEMBER_ORDER = {
-    '스마트기술개발팀': ['임문구', '김진희', '이정선', '강수민', '김하빈', '노유빈'],
-    '디지털기술연구팀': ['최형태', '이충재', '박도해'],
-    '인프라BIM팀': ['이동근', '나기태', '김기윤', '김동찬', '임규민', '강병주'],
-    'AI응용팀': ['김동욱', '장민욱', '한형서'],
+    '스마트 기술 개발팀': ['임문구', '김진희', '이정선', '강수민', '김하빈', '노유빈'],
+    '디지털 기술 연구팀': ['최형태', '이충재', '박도해'],
+    '인프라 BIM팀': ['이동근', '나기태', '김기윤', '김동찬', '임규민', '강병주'],
+    'AI 응용팀': ['김동욱', '장민욱', '한형서'],
 };
 const DEPARTMENT_HEAD = { name: '김영근', department: 'R&D센터' };
 
@@ -813,7 +813,7 @@ const Dashboard = () => {
                                 <button onClick={() => setShowStaffDetail(false)}><X size={24} className="text-gray-400" /></button>
                             </div>
                             <div className="flex flex-wrap gap-2">
-                                {['전체', '스마트기술개발팀', '디지털기술연구팀', '인프라BIM팀', 'AI응용팀'].map(dept => (
+                                {['전체', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'].map(dept => (
                                     <button key={dept} onClick={() => setFilterDept(dept)} className={`px-4 py-1.5 text-sm font-bold rounded-full transition-all ${filterDept === dept ? 'bg-kh-green text-white shadow-md' : 'bg-white text-gray-500 border border-gray-200'}`}>{dept}</button>
                                 ))}
                             </div>

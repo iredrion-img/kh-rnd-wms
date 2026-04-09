@@ -14,10 +14,10 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
     const DEPARTMENTS = [
         'R&D센터',
         '기술연구소',
-        '스마트기술개발팀',
-        '디지털기술연구팀',
-        '인프라BIM팀',
-        'AI응용팀'
+        '스마트 기술 개발팀',
+        '디지털 기술 연구팀',
+        '인프라 BIM팀',
+        'AI 응용팀'
     ];
 
     const menuItems = [
