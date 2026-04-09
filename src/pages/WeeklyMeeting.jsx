@@ -114,7 +114,14 @@ const WeeklyMeeting = ({ currentUser }) => {
   };
 
   const handleDeleteTask = async (task) => {
-    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+    setTaskToDelete(task);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!taskToDelete) return;
+    const task = taskToDelete;
+    
     try {
       const isProject = activeTeam === '프로젝트 추진 및 수행 현황';
       const isSchedule = activeTeam === '주간일정';
@@ -123,19 +130,20 @@ const WeeklyMeeting = ({ currentUser }) => {
       if (isProject) url = `/api/projects/${task.id}`;
       else if (isSchedule) url = `/api/weekly-schedule/${task.id}`;
 
-      console.log(`[Delete] Requesting URL: ${url}`);
       const res = await fetch(url, { method: 'DELETE' });
-      console.log(`[Delete] Response Status: ${res.status}`);
       
       if (res.ok) {
         fetchTasks();
       } else {
         const errData = await res.json().catch(()=>({}));
-        console.error('[Delete] Failed:', errData);
         alert(`삭제에 실패했습니다. (Error: ${errData.error || res.statusText})`);
       }
     } catch (e) {
       console.error(e);
+      alert('오류가 발생했습니다.');
+    } finally {
+      setShowDeleteConfirm(false);
+      setTaskToDelete(null);
     }
   };
 
@@ -209,10 +217,40 @@ const WeeklyMeeting = ({ currentUser }) => {
         <TaskFormModal
           team={activeTeam}
           task={editingTask}
-          onClose={() => setIsModalOpen(false)}
+          onClose={() => { setIsModalOpen(false); setEditingTask(null); }}
           onSave={handleSaveTask}
           currentWeek={currentWeek}
         />
+      )}
+
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform animate-in zoom-in-95 duration-200 border border-gray-100">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="w-7 h-7 text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">업무 삭제</h3>
+              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                정말 이 업무를 삭제하시겠습니까?<br/>이 작업은 되돌릴 수 없습니다.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button 
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  취소
+                </button>
+                <button 
+                  onClick={confirmDelete}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
+                >
+                  삭제하기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

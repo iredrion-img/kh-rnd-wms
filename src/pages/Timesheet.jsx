@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Save, Calendar as CalendarIcon, PieChart as PieChartIcon, Palmtree, Sun, Sunrise, Sunset, Building2 } from 'lucide-react';
+import { Save, Calendar as CalendarIcon, PieChart as PieChartIcon, Palmtree, Sun, Sunrise, Sunset, Building2, Trash2 } from 'lucide-react';
 import { BarChart, Bar, ResponsiveContainer, Cell, XAxis, PieChart, Pie, Tooltip } from 'recharts';
 import MiniCalendar from '../components/ui/MiniCalendar';
 import DailyWorkCard from '../components/ui/DailyWorkCard';
@@ -34,6 +34,8 @@ const Timesheet = ({ currentUser }) => {
     const [dailyData, setDailyData] = useState({}); // { 'yyyy-MM-dd': { 'CategoryLabel': hours } }
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState(null);
+    const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+    const [taskToDelete, setTaskToDelete] = useState(null);
     const [myWeeklyTasks, setMyWeeklyTasks] = useState([]);
     const [noticeTasks, setNoticeTasks] = useState([]);
 
@@ -388,7 +390,13 @@ const Timesheet = ({ currentUser }) => {
     };
 
     const handleDeleteWeeklyTask = async (task) => {
-        if (!window.confirm('정말 이 업무 구성을 삭제하시겠습니까?')) return;
+        setTaskToDelete(task);
+        setShowDeleteConfirm(true);
+    };
+
+    const confirmDelete = async () => {
+        if (!taskToDelete) return;
+        const task = taskToDelete;
         try {
             const res = await fetch(`/api/weekly-tasks/${task.id}`, { method: 'DELETE' });
             if (res.ok) {
@@ -409,6 +417,9 @@ const Timesheet = ({ currentUser }) => {
         } catch (e) {
             console.error(e);
             alert('삭제 도중 오류가 발생했습니다.');
+        } finally {
+            setShowDeleteConfirm(false);
+            setTaskToDelete(null);
         }
     };
 
@@ -706,9 +717,39 @@ const Timesheet = ({ currentUser }) => {
                     task={editingTask}
                     onClose={() => { setIsTaskModalOpen(false); setEditingTask(null); }}
                     onSave={handleSaveWeeklyTask}
+                    currentUser={currentUser}
                     currentWeek={format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')}
-                    isFromTimesheet={true}
                 />
+            )}
+
+            {showDeleteConfirm && (
+                <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+                    <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform animate-in zoom-in-95 duration-200 border border-gray-100">
+                        <div className="flex flex-col items-center text-center">
+                            <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                                <Trash2 className="w-7 h-7 text-red-500" />
+                            </div>
+                            <h3 className="text-xl font-bold text-gray-900 mb-2">업무 삭제</h3>
+                            <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                                정말 이 업무 구성을 삭제하시겠습니까?<br />이 작업은 되돌릴 수 없습니다.
+                            </p>
+                            <div className="flex gap-3 w-full">
+                                <button
+                                    onClick={() => setShowDeleteConfirm(false)}
+                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                                >
+                                    취소
+                                </button>
+                                <button
+                                    onClick={confirmDelete}
+                                    className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
+                                >
+                                    삭제하기
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             )}
         </div >
     );

@@ -150,7 +150,15 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
 
               <td className="px-3 py-3 text-right whitespace-nowrap">
                 <button onClick={() => onEdit(t)} className="p-1.5 text-gray-400 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
-                <button onClick={() => onDelete(t)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors ml-1"><Trash2 className="w-4 h-4" /></button>
+                <button 
+                  onClick={(e) => { 
+                    e.stopPropagation();
+                    onDelete(t); 
+                  }} 
+                  className="p-1.5 text-gray-400 hover:text-red-500 transition-colors ml-1"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
               </td>
             </tr>
           );
