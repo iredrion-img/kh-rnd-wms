@@ -54,12 +54,8 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
               <td className="px-4 py-3">{t.location}</td>
               <td className="px-4 py-3 text-gray-600">{t.assignees}</td>
               <td className="px-4 py-3 text-right whitespace-nowrap">
-                {(isAdmin || currentUser?.name === t.assignees) && (
-                  <>
-                    <button onClick={() => onEdit(t)} className="p-1 text-gray-400 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={() => onDelete(t)} className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-1"><Trash2 className="w-4 h-4" /></button>
-                  </>
-                )}
+                <button onClick={() => onEdit(t)} className="p-1 text-gray-400 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
+                <button onClick={() => onDelete(t)} className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-1"><Trash2 className="w-4 h-4" /></button>
               </td>
             </tr>
           ))}
@@ -120,18 +116,13 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
           {!isNotice && <th className="px-3 py-3 w-28">수행인원</th>}
           {!isNotice && <th className="px-3 py-3 w-24 text-center">상태</th>}
           {!isNotice && <th className="px-3 py-3 w-20 text-center">중요도</th>}
-          <th className={`px-3 py-3 w-32 ${isNotice && !hasNote ? 'rounded-tr-lg' : ''}`}>기간</th>
-          {hasNote && <th className={`px-3 py-3 min-w-[150px] ${isNotice ? 'rounded-tr-lg' : ''}`}>비고</th>}
-          {!isNotice && <th className="px-3 py-3 w-20 text-right rounded-tr-lg">관리</th>}
+          <th className="px-3 py-3 w-32">기간</th>
+          {hasNote && <th className="px-3 py-3 min-w-[150px]">비고</th>}
+          <th className="px-3 py-3 w-20 text-right rounded-tr-lg">관리</th>
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-100">
         {tasks.map(t => {
-          const assignees = t.assignees || '';
-          const isOwner = isAdmin || 
-                          assignees.includes(currentUser?.name) || 
-                          assignees.includes('All') || 
-                          assignees.includes(currentUser?.department);
           return (
             <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
               {!isNotice && <td className="px-3 py-3 text-xs text-gray-400 font-mono">{t.task_code}</td>}
@@ -157,14 +148,10 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin }) => {
 
               {hasNote && <td className="px-3 py-3 text-gray-500">{t.note}</td>}
 
-              {!isNotice && <td className="px-3 py-3 text-right whitespace-nowrap">
-                {isOwner && (
-                  <>
-                    <button onClick={() => onEdit(t)} className="p-1.5 text-gray-400 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
-                    <button onClick={() => onDelete(t)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors ml-1"><Trash2 className="w-4 h-4" /></button>
-                  </>
-                )}
-              </td>}
+              <td className="px-3 py-3 text-right whitespace-nowrap">
+                <button onClick={() => onEdit(t)} className="p-1.5 text-gray-400 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
+                <button onClick={() => onDelete(t)} className="p-1.5 text-gray-400 hover:text-red-500 transition-colors ml-1"><Trash2 className="w-4 h-4" /></button>
+              </td>
             </tr>
           );
         })}
