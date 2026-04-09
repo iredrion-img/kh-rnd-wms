@@ -387,6 +387,31 @@ const Timesheet = ({ currentUser }) => {
         }
     };
 
+    const handleDeleteWeeklyTask = async (task) => {
+        if (!window.confirm('정말 이 업무 구성을 삭제하시겠습니까?')) return;
+        try {
+            const res = await fetch(`/api/weekly-tasks/${task.id}`, { method: 'DELETE' });
+            if (res.ok) {
+                // Refresh my tasks
+                const weekStr = format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
+                const wtRes = await fetch(`/api/weekly-tasks?week=${weekStr}`);
+                if (wtRes.ok) {
+                    const allWeekly = await wtRes.json();
+                    const userDept = currentUser.department || '';
+                    setMyWeeklyTasks(allWeekly.filter(t => {
+                        const assigns = t.assignees || '';
+                        return assigns.includes(currentUser.name) || assigns.includes('All') || assigns.includes(userDept);
+                    }));
+                }
+            } else {
+                alert('삭제에 실패했습니다.');
+            }
+        } catch (e) {
+            console.error(e);
+            alert('삭제 도중 오류가 발생했습니다.');
+        }
+    };
+
     // Calculate weekly total
     const weeklyTotal = weeklyChartData.reduce((acc, day) => acc + day.total, 0);
 
@@ -639,8 +664,11 @@ const Timesheet = ({ currentUser }) => {
                                      <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${task.status === '완료' ? 'bg-green-100 text-green-700' : task.status === '보류' ? 'bg-orange-100 text-orange-700' : 'bg-primary/10 text-primary'}`}>
                                          {task.status || '진행 중'}
                                      </span>
-                                     <button onClick={() => openTaskModal(task)} className="text-xs font-medium text-gray-400 hover:text-gray-700 bg-white border border-gray-200 px-3 py-1.5 rounded-lg shadow-sm transition-all hover:shadow">
+                                     <button onClick={() => openTaskModal(task)} className="text-xs font-medium text-gray-400 hover:text-primary bg-white border border-gray-100 px-2.5 py-1.5 rounded-lg shadow-sm transition-all hover:border-primary/30">
                                          수정
+                                     </button>
+                                     <button onClick={() => handleDeleteWeeklyTask(task)} className="text-xs font-medium text-gray-400 hover:text-red-500 bg-white border border-gray-100 px-2.5 py-1.5 rounded-lg shadow-sm transition-all hover:border-red-200">
+                                         삭제
                                      </button>
                                   </div>
                                </div>

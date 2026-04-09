@@ -476,11 +476,19 @@ app.delete('/api/weekly-tasks/:id', async (req, res) => {
         const year = req.query.year || String(new Date().getFullYear());
         const file = getWeeklyTasksFile(year);
         const records = readCsvResilient(file);
-        const filtered = records.filter(r => r.id !== id);
-        if (filtered.length === records.length) return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
+        
+        const filtered = records.filter(r => r.id && r.id.trim() !== id.trim());
+        
+        if (filtered.length === records.length) {
+            console.log(`[API] Task Delete Failed: ID ${id} not found.`);
+            return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
+        }
+        
         await writeAtomic(file, stringify(filtered, { header: true, columns: WEEKLY_TASKS_COLUMNS }));
+        console.log(`[API] Task Delete Success: ${id}`);
         res.json({ success: true });
     } catch (e) {
+        console.error('[API] DELETE /api/weekly-tasks Error:', e);
         res.status(500).json({ error: '업무 삭제 실패' });
     }
 });
@@ -524,10 +532,18 @@ app.delete('/api/weekly-schedule/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const records = readCsvResilient(SCHEDULE_FILE);
-        const filtered = records.filter(r => r.id !== id);
+        const filtered = records.filter(r => r.id && r.id.trim() !== id.trim());
+
+        if (filtered.length === records.length) {
+            console.log(`[API] Schedule Delete Failed: ID ${id} not found.`);
+            return res.status(404).json({ error: '일정을 찾을 수 없습니다.' });
+        }
+
         await writeAtomic(SCHEDULE_FILE, stringify(filtered, { header: true, columns: SCHEDULE_COLUMNS }));
+        console.log(`[API] Schedule Delete Success: ${id}`);
         res.json({ success: true });
     } catch (e) {
+        console.error('[API] DELETE /api/weekly-schedule Error:', e);
         res.status(500).json({ error: '일정 삭제 실패' });
     }
 });
