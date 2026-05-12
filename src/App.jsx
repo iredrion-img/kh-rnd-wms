@@ -5,11 +5,14 @@ import Dashboard from './pages/Dashboard';
 import Timesheet from './pages/Timesheet';
 import Login from './pages/Login';
 import WeeklyMeeting from './pages/WeeklyMeeting';
+import { Trash2 } from 'lucide-react';
 
 
 function App() {
   const [activeTab, setActiveTab] = useState('dashboard');
   const [isChatModalOpen, setChatModalOpen] = useState(false);
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
+  const [userToDelete, setUserToDelete] = useState(null);
 
   // API endpoint
   const API_URL = '/api/users';
@@ -124,8 +127,14 @@ function App() {
   };
 
   // Delete User
-  const handleDeleteEmployee = async (id) => {
-    if (!window.confirm('정말 삭제하시겠습니까?')) return;
+  const handleDeleteEmployee = (id) => {
+    setUserToDelete(id);
+    setShowDeleteConfirm(true);
+  };
+
+  const confirmDeleteEmployee = async () => {
+    if (!userToDelete) return;
+    const id = userToDelete;
     try {
       const res = await fetch(`${API_URL}/${id}`, {
         method: 'DELETE'
@@ -138,6 +147,9 @@ function App() {
       }
     } catch (err) {
       alert('삭제 실패');
+    } finally {
+      setShowDeleteConfirm(false);
+      setUserToDelete(null);
     }
   };
 
@@ -155,7 +167,7 @@ function App() {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard />;
+        return <Dashboard currentUser={currentUser} />;
       case 'weekly':
         return <WeeklyMeeting currentUser={currentUser} />;
       case 'timesheet':
@@ -200,6 +212,37 @@ function App() {
         onClose={() => setChatModalOpen(false)}
         currentUser={currentUser}
       />
+
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm transform animate-in zoom-in-95 duration-200 border border-gray-100">
+            <div className="flex flex-col items-center text-center">
+              <div className="w-14 h-14 bg-red-50 rounded-full flex items-center justify-center mb-4">
+                <Trash2 className="w-7 h-7 text-red-500" />
+              </div>
+              <h3 className="text-xl font-bold text-gray-900 mb-2">사용자 삭제</h3>
+              <p className="text-gray-500 text-sm mb-6 leading-relaxed">
+                정말 이 사용자를 삭제하시겠습니까?<br/>이 작업은 되돌릴 수 없습니다.
+              </p>
+              <div className="flex gap-3 w-full">
+                <button 
+                  onClick={() => setShowDeleteConfirm(false)}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors"
+                >
+                  취소
+                </button>
+                <button 
+                  onClick={confirmDeleteEmployee}
+                  className="flex-1 py-3 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-lg shadow-red-200"
+                >
+                  삭제하기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </Layout>
   );
 }

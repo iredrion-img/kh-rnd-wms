@@ -12,6 +12,8 @@ import { CATEGORIES, CATEGORY_COLORS, GRADIENT_ENDS, GlassTooltip, CustomLegend 
 import WeeklyChartBoard from '../components/dashboard/WeeklyChartBoard';
 import MonthlyChartBoard from '../components/dashboard/MonthlyChartBoard';
 import YearlyChartBoard from '../components/dashboard/YearlyChartBoard';
+import StatusBoard from '../components/dashboard/StatusBoard';
+import ManpowerAnalysis from '../components/dashboard/ManpowerAnalysis';
 
 /* ═══════════════════════════════════════════
    Constants & Color System
@@ -239,7 +241,7 @@ const HeatmapChart = ({ data }) => {
 /* ═══════════════════════════════════════════
    Dashboard Component
    ═══════════════════════════════════════════ */
-const Dashboard = () => {
+const Dashboard = ({ currentUser }) => {
     // 현황판(Kiosk) 모드 플래그: true일 경우 모든 hover 및 tooltip 반응 비활성화
     const isDisplayBoardMode = true; 
 
@@ -247,11 +249,13 @@ const Dashboard = () => {
     const [currentDate, setCurrentDate] = useState(new Date());
     const [rawTimesheets, setRawTimesheets] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [showManpowerAnalysis, setShowManpowerAnalysis] = useState(false);
     const [showOvertimeModal, setShowOvertimeModal] = useState(false);
     const [viewMode, setViewMode] = useState('hours');
     const [showStaffDetail, setShowStaffDetail] = useState(false);
     const [filterDept, setFilterDept] = useState('전체');
     const [activeDonutIdx, setActiveDonutIdx] = useState(-1);
+    const [showStatusBoard, setShowStatusBoard] = useState(false);
 
     const activeViewMode = viewMode;
 
@@ -485,7 +489,7 @@ const Dashboard = () => {
     const topDecreases = [...processedData.project].filter(d => d.diffHours < 0).sort((a,b) => a.diffHours - b.diffHours).slice(0, 2);
 
     return (
-        <div className="flex flex-col h-full w-full overflow-hidden bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 p-[clamp(1rem,2vw,2.5rem)] gap-[clamp(0.5rem,1.5vh,1.5rem)]">
+        <div className="flex flex-col h-full w-full bg-gradient-to-br from-gray-50 via-gray-100 to-gray-200 p-[clamp(1rem,2vw,2.5rem)] gap-[clamp(0.5rem,1.5vh,1.5rem)]">
 
             {/* ═══ 1. Header (flex-none: 고정 높이) ═══ */}
             <header className="flex-none flex justify-between items-center">
@@ -507,8 +511,20 @@ const Dashboard = () => {
                         <span className="min-w-[clamp(8rem,12vw,14rem)] text-center font-bold text-kh-text-main">{formatDateLabel()}</span>
                         <button onClick={handleNext} className="p-1 hover:text-kh-text-main hover:bg-gray-100 rounded-full transition-colors"><ChevronRight size={20} /></button>
                     </div>
-                    <button onClick={() => { setShowStaffDetail(true); setFilterDept('전체'); }} className="px-[clamp(0.75rem,1vw,1.5rem)] py-[clamp(0.4rem,0.6vh,0.75rem)] bg-white border border-gray-200 text-gray-700 rounded-xl text-[clamp(0.7rem,0.9vw,1rem)] font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
+                    <button onClick={() => { setShowStaffDetail(true); setFilterDept('전체'); }} className="whitespace-nowrap px-[clamp(0.75rem,1vw,1.5rem)] py-[clamp(0.4rem,0.6vh,0.75rem)] bg-white border border-gray-200 text-gray-700 rounded-xl text-[clamp(0.7rem,0.9vw,1rem)] font-bold hover:bg-gray-50 transition-colors flex items-center gap-2 shadow-sm">
                         상세 현황 보기
+                    </button>
+                    <button
+                        onClick={() => setShowManpowerAnalysis(true)}
+                        className="whitespace-nowrap px-[clamp(0.75rem,1vw,1.5rem)] py-[clamp(0.4rem,0.6vh,0.75rem)] bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl text-[clamp(0.7rem,0.9vw,1rem)] font-bold hover:shadow-lg transition-all flex items-center justify-center shadow-sm"
+                    >
+                        맨아워 분석
+                    </button>
+                    <button
+                        onClick={() => setShowStatusBoard(true)}
+                        className="whitespace-nowrap px-[clamp(0.75rem,1vw,1.5rem)] py-[clamp(0.4rem,0.6vh,0.75rem)] bg-gradient-to-r from-kh-green to-kh-green/80 text-white rounded-xl text-[clamp(0.7rem,0.9vw,1rem)] font-bold hover:shadow-lg transition-all flex items-center justify-center shadow-sm"
+                    >
+                        현황판
                     </button>
                     <button onClick={() => setShowOvertimeModal(true)} className="p-[clamp(0.4rem,0.6vh,0.75rem)] bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors">
                         <Users size={20} />
@@ -783,6 +799,15 @@ const Dashboard = () => {
                 </div>
             </section>
 
+            {/* ═══ 현황판 (Status Board) 팝업 모달 ═══ */}
+            {showStatusBoard && (
+                <StatusBoard
+                    currentUser={currentUser}
+                    isModal={true}
+                    onClose={() => setShowStatusBoard(false)}
+                />
+            )}
+
             {/* ═══ Overtime Modal ═══ */}
             {showOvertimeModal && (
                 <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
@@ -920,6 +945,10 @@ const Dashboard = () => {
                         </div>
                     </div>
                 </div>
+            )}
+            
+            {showManpowerAnalysis && (
+                <ManpowerAnalysis onClose={() => setShowManpowerAnalysis(false)} />
             )}
         </div>
     );

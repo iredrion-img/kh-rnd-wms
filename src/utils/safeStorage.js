@@ -7,31 +7,37 @@ import path from 'path';
  */
 const locks = new Map();
 
-const getLock = (file) => {
-    if (!locks.has(file)) {
-        let release = () => { };
-        const promise = Promise.resolve();
-        locks.set(file, { promise, release });
-    }
-    return locks.get(file);
-};
+const queue = new Map();
 
+/**
+ * Acquires a lock for the given file path.
+ * Returns a function to release the lock.
+ */
 const acquireLock = async (file) => {
-    const lock = getLock(file);
-    const releasePromise = new Promise(resolve => {
-        lock.release = resolve;
+    if (!queue.has(file)) {
+        queue.set(file, Promise.resolve());
+    }
+
+    const previousPromise = queue.get(file);
+    let resolveNext;
+    const nextPromise = new Promise(resolve => {
+        resolveNext = resolve;
     });
 
-    // Wait for previous operation to finish
-    await lock.promise;
+    // Update the queue to the next promise ASAP
+    queue.set(file, nextPromise);
 
-    // Update lock with new promise
-    lock.promise = releasePromise;
-};
+    // Wait for the previous lock owner to finish
+    await previousPromise;
 
-const releaseLock = (file) => {
-    const lock = getLock(file);
-    lock.release();
+    // Return the release function
+    return () => {
+        resolveNext();
+        // Cleanup map if no more waiters
+        if (queue.get(file) === nextPromise) {
+            queue.delete(file);
+        }
+    };
 };
 
 /**
@@ -41,16 +47,12 @@ const releaseLock = (file) => {
  * 3. Renames temp file to target file.
  */
 export const writeAtomic = async (filePath, data) => {
-    await acquireLock(filePath);
+    const release = await acquireLock(filePath);
     const tempPath = `${filePath}.tmp.${Date.now()}`;
 
     try {
         // 1. Write to temp file
         fs.writeFileSync(tempPath, data);
-
-        // 2. Sync to disk (ensure data is safe physically)
-        // (Node.js writeFileSync usually handles flushing, but we can be explicit if needed. 
-        //  For simple CSVs, writeFileSync is sufficient blocking I/O)
 
         // 3. Atomic Rename
         // Retrying rename is good practice on Windows where AV might lock file briefly
@@ -71,6 +73,6 @@ export const writeAtomic = async (filePath, data) => {
         try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch (e) { }
         throw error;
     } finally {
-        releaseLock(filePath);
+        release();
     }
 };

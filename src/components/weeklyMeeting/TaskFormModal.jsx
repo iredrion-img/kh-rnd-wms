@@ -53,9 +53,19 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
 
   useEffect(() => {
     fetch('/api/users')
-      .then(res => res.json())
-      .then(data => setUsersInfo(Array.isArray(data) ? data : []))
-      .catch(console.error);
+      .then(res => {
+        if (!res.ok) throw new Error('Users fetch failed');
+        return res.json();
+      })
+      .then(data => {
+        const usersArray = Array.isArray(data) ? data : [];
+        setUsersInfo(usersArray);
+        console.log('[DEBUG] UsersInfo loaded:', usersArray.length);
+      })
+      .catch(err => {
+        console.error('[DEBUG] Users fetch error:', err);
+        setUsersInfo([]);
+      });
 
     if (!task && !isSchedule) {
       const endpoint = isProject ? '/api/projects' : '/api/weekly-tasks';
@@ -90,12 +100,16 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       const currentUserLocal = authDataStr ? JSON.parse(authDataStr) : null;
       const initialAssignees = currentUserLocal?.name || '';
 
+      const now = new Date();
+      const offset = now.getTimezoneOffset() * 60000; 
+      const today = new Date(now.getTime() - offset).toISOString().split('T')[0];
+
       const baseData = {
         team: team,
         status: '진행 중',
         priority: '중간',
-        start_date: currentWeek,
-        end_date: currentWeek,
+        start_date: today,
+        end_date: today,
         assignees: initialAssignees
       };
 
@@ -115,6 +129,22 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     const { name, value } = e.target;
     setFormData(prev => {
         const updated = { ...prev, [name]: value };
+        
+        // 시작일 변경 시 종료일 자동 동기화
+        if (name === 'start_date') {
+            const now = new Date();
+            const offset = now.getTimezoneOffset() * 60000;
+            const todayStr = new Date(now.getTime() - offset).toISOString().split('T')[0];
+            
+            if (value > todayStr) {
+                // 미래인 경우 시작일과 종료일 동기화
+                updated.end_date = value;
+            } else {
+                // 과거이거나 오늘인 경우 종료일을 오늘로 유지
+                updated.end_date = todayStr;
+            }
+        }
+
         if (name === 'method_base' || name === 'method_detail') {
              const b = updated.method_base || '';
              const d = updated.method_detail || '';
@@ -125,7 +155,8 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
   };
 
   useEffect(() => {
-    if (task) return; // 기존 업무 수정 시에는 자동 수정 안 함
+    // 기존 업무 수정 시(초기 로딩), 대/중분류 값을 변경하지 않았다면 본래 코드를 유지함
+    if (task && formData.category === task.category && formData.sub_category === task.sub_category) return;
     if (isSchedule) return;
 
     if (isProject) {
@@ -194,9 +225,10 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         setFormData(prev => ({ ...prev, [fieldName]: newUsers.join(', ') }));
     };
 
-    const groupedUsers = usersInfo.reduce((acc, u) => {
-        if (!acc[u.department]) acc[u.department] = [];
-        acc[u.department].push(u);
+    const groupedUsers = (usersInfo || []).reduce((acc, u) => {
+        const dept = u.department || '기타';
+        if (!acc[dept]) acc[dept] = [];
+        acc[dept].push(u);
         return acc;
     }, {});
 
@@ -289,12 +321,17 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           <label className="block text-sm font-medium text-gray-700 mb-1">업무분야 *</label>
           <select name="schedule_type" value={formData.schedule_type || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
             <option value="">선택</option>
+            <option value="합사">합사</option>
+            <option value="업무협의">업무협의</option>
+            <option value="프로젝트">프로젝트</option>
+            <option value="부서지원">부서지원</option>
+            <option value="연구과제">연구과제</option>
+            <option value="매뉴얼작성">매뉴얼작성</option>
+            <option value="TFT">TFT</option>
+            <option value="행정">행정</option>
             <option value="휴가">휴가</option>
             <option value="세미나">세미나</option>
             <option value="교육">교육</option>
-            <option value="TFT">TFT</option>
-            <option value="연구과제">연구과제</option>
-            <option value="부서지원">부서지원</option>
             <option value="대외활동">대외활동</option>
             <option value="기타">기타</option>
           </select>
@@ -500,10 +537,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         <label className="block text-sm font-medium text-gray-700 mb-1">수행방식</label>
         <div className="grid grid-cols-2 gap-4">
            {renderMethodBaseSelector()}
-           <input type="text" list="method_details_list" name="method_detail" value={formData.method_detail || ''} onChange={handleChange} placeholder="기타 직접입력 또는 기존항목 선택" className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
-           <datalist id="method_details_list">
-              {existingMethodDetails.map(d => <option key={d} value={d} />)}
-           </datalist>
+           <input type="text" name="method_detail" value={formData.method_detail || ''} onChange={handleChange} placeholder="기타 직접입력 또는 기존항목 선택" className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
         </div>
       </div>
       
@@ -646,7 +680,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       {formData.team !== '공지사항' && (
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">공유회의/결과보고 (옵션)</label>
-        <input type="text" name="meeting_result" value={formData.meeting_result || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+        <input type="date" name="meeting_result" value={formData.meeting_result || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
       </div>
       )}
     </>
@@ -666,7 +700,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           </button>
         </div>
 
-        <div className="p-6 overflow-y-auto flex-1">
+        <div className="p-6 overflow-y-auto flex-1 pb-48">
           <form id="task-form" onSubmit={handleSubmit} className="flex flex-col gap-5">
             {isSchedule ? renderScheduleForm() : (isProject ? renderProjectForm() : renderNormalForm())}
           </form>
@@ -676,7 +710,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           <button type="button" onClick={onClose} className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
             취소
           </button>
-          <button type="submit" form="task-form" className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-primary to-primary-light rounded-lg hover:shadow-lg transition-all">
+          <button type="submit" form="task-form" className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-kh-green to-kh-green/80 rounded-lg hover:shadow-lg hover:brightness-110 transition-all">
             {task ? '저장' : '추가'}
           </button>
         </div>

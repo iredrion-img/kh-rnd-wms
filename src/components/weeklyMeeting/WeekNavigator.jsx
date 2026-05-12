@@ -18,7 +18,7 @@ const WeekNavigator = ({ currentWeek, onWeekChange, availableWeeks, isAdmin }) =
   };
 
   const displayLabel = currentWeek 
-    ? `${currentWeek.substring(0,4)}년 ${getISOWeek(currentWeek)}주차 (${getKoreanDateStr(currentWeek)})`
+    ? `${currentWeek.substring(0,4)}년 ${getISOWeek(currentWeek)}주차`
     : '로딩 중...';
 
   const getWeekOffset = (dateStr, offsetDays) => {

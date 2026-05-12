@@ -59,8 +59,8 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
                 <nav className="flex-1 overflow-y-auto py-[clamp(1rem,3vh,2.5rem)] px-[clamp(0.75rem,1.5vw,1.5rem)] space-y-2 md:space-y-4 custom-scrollbar">
                     <p className="px-4 text-[clamp(0.8rem,1.2vw,1.25rem)] font-bold text-gray-500 uppercase tracking-widest mb-4">Menu</p>
                     {menuItems.map((item) => {
-                        const Icon = item.icon;
-                        const isActive = activeTab === item.id;
+                            const Icon = item.icon;
+                            const isActive = activeTab === item.id;
                         return (
                             <button
                                 key={item.id}

@@ -1,12 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { format, startOfWeek, addDays, isSameDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import { Save, Calendar as CalendarIcon, PieChart as PieChartIcon, Palmtree, Sun, Sunrise, Sunset, Building2, Trash2 } from 'lucide-react';
+import { Save, Calendar as CalendarIcon, PieChart as PieChartIcon, Palmtree, Sun, Sunrise, Sunset, Building2, Trash2, Pencil } from 'lucide-react';
 import { BarChart, Bar, ResponsiveContainer, Cell, XAxis, PieChart, Pie, Tooltip } from 'recharts';
 import MiniCalendar from '../components/ui/MiniCalendar';
 import DailyWorkCard from '../components/ui/DailyWorkCard';
 import ContributionGraph from '../components/ui/ContributionGraph';
 import TaskFormModal from '../components/weeklyMeeting/TaskFormModal';
+import WeeklyTaskHubModal from '../components/weeklyMeeting/WeeklyTaskHubModal';
+import WeeklyScheduleHubModal from '../components/weeklyMeeting/WeeklyScheduleHubModal';
+import StatusBoard from '../components/dashboard/StatusBoard';
 
 // Custom Tick Component for X-Axis
 const CustomXAxisTick = ({ x, y, payload }) => {
@@ -34,6 +37,9 @@ const Timesheet = ({ currentUser }) => {
     const [dailyData, setDailyData] = useState({}); // { 'yyyy-MM-dd': { 'CategoryLabel': hours } }
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [editingTask, setEditingTask] = useState(null);
+    const [isHubModalOpen, setIsHubModalOpen] = useState(false);
+    const [isScheduleHubModalOpen, setIsScheduleHubModalOpen] = useState(false);
+    const [isStatusBoardOpen, setIsStatusBoardOpen] = useState(false);
     const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [myWeeklyTasks, setMyWeeklyTasks] = useState([]);
@@ -42,6 +48,10 @@ const Timesheet = ({ currentUser }) => {
     const openTaskModal = (task = null) => {
         setEditingTask(task);
         setIsTaskModalOpen(true);
+    };
+
+    const openHubModal = () => {
+        setIsHubModalOpen(true);
     };
 
     // Categories config
@@ -71,16 +81,17 @@ const Timesheet = ({ currentUser }) => {
 
     const handleLeaveToggle = (type) => {
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
+        const currentDayData = dailyData[dateKey] || {};
+        const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차'].includes(k));
+        const currentWorkTotal = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
 
         if (type === 'full') {
-            if (!window.confirm('연차(8h)를 설정하시겠습니까? 다른 모든 업무 입력이 초기화됩니다.')) {
-                return;
+            if (currentWorkTotal > 0) {
+                if (!window.confirm('연차(8h)를 설정하시겠습니까? 다른 모든 업무 입력이 초기화됩니다.')) {
+                    return;
+                }
             }
         } else if (type === 'half') {
-            const currentDayData = dailyData[dateKey] || {};
-            const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차'].includes(k));
-            const currentWorkTotal = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
-
             if (currentWorkTotal > 4) {
                 if (!window.confirm('반차 설정 시 업무시간은 최대 4시간입니다. 기존 업무시간을 초기화하시겠습니까?')) {
                     return;
@@ -163,7 +174,8 @@ const Timesheet = ({ currentUser }) => {
     const getDailyTotalForDate = (date) => {
         const dateKey = format(date, 'yyyy-MM-dd');
         const dayData = dailyData[dateKey] || {};
-        return Object.values(dayData).reduce((a, b) => a + b, 0);
+        // Sum only defined categories to ensure total matches visible cards
+        return categories.reduce((sum, cat) => sum + (dayData[cat.label] || 0), 0);
     };
 
     const dailyTotal = getDailyTotalForDate(selectedDate);
@@ -244,9 +256,23 @@ const Timesheet = ({ currentUser }) => {
                             if (hours > 0) {
                                 if (!newDailyData[dateKey]) newDailyData[dateKey] = {};
                                 let projectName = record.project_name;
-                                if (projectName === '오전반차' || projectName === '오후반차') {
-                                    projectName = '반차';
+                                
+                                // Map legacy long names to current shorthand labels for UI consistency
+                                const projectMap = {
+                                    'AI 기반 WMS 고도화': 'AI',
+                                    'BIM 자동화 프로세스 구축': 'BIM',
+                                    '스마트 건설 기술 지원': 'Smart R&D',
+                                    '디지털 트윈 모니터링 테스트': 'Digital Technology',
+                                    '공통업무 및 행정': '기타 (Etc)',
+                                    '공통업무 & 행정': '기타 (Etc)',
+                                    '오전반차': '반차',
+                                    '오후반차': '반차'
+                                };
+                                
+                                if (projectMap[projectName]) {
+                                    projectName = projectMap[projectName];
                                 }
+                                
                                 newDailyData[dateKey][projectName] = (newDailyData[dateKey][projectName] || 0) + hours;
                             }
                         });
@@ -390,8 +416,45 @@ const Timesheet = ({ currentUser }) => {
     };
 
     const handleDeleteWeeklyTask = async (task) => {
-        setTaskToDelete(task);
-        setShowDeleteConfirm(true);
+        try {
+            const res = await fetch(`/api/weekly-tasks/${task.id}`, { method: 'DELETE' });
+            if (!res.ok) alert('삭제에 실패했습니다.');
+        } catch (e) {
+            console.error(e);
+            alert('삭제 도중 오류가 발생했습니다.');
+        }
+    };
+
+    const handleSaveWeeklySchedule = async (scheduleData) => {
+        try {
+            const url = scheduleData.id ? `/api/weekly-schedule/${scheduleData.id}` : '/api/weekly-schedule';
+            const method = scheduleData.id ? 'PUT' : 'POST';
+            const payload = {
+                ...scheduleData,
+                assignees: scheduleData.assignees || currentUser.name,
+                week_start: scheduleData.week_start || format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')
+            };
+
+            const res = await fetch(url, {
+                method,
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            });
+            if (!res.ok) alert('일정 저장에 실패했습니다.');
+        } catch (e) {
+            console.error(e);
+            alert('일정 저장 중 오류가 발생했습니다.');
+        }
+    };
+
+    const handleDeleteWeeklySchedule = async (sch) => {
+        try {
+            const res = await fetch(`/api/weekly-schedule/${sch.id}`, { method: 'DELETE' });
+            if (!res.ok) alert('일정 삭제에 실패했습니다.');
+        } catch (e) {
+            console.error(e);
+            alert('일정 삭제 중 오류가 발생했습니다.');
+        }
     };
 
     const confirmDelete = async () => {
@@ -536,10 +599,17 @@ const Timesheet = ({ currentUser }) => {
                     {/* Action Buttons */}
                     <div className="flex items-center gap-4">
                         <button
-                            onClick={() => openTaskModal(null)}
-                            className="px-4 py-2 bg-gradient-to-r from-primary to-primary-light text-white rounded-lg hover:shadow-lg transition-all text-sm font-bold flex items-center gap-1"
+                            onClick={openHubModal}
+                            className="py-2 w-[100px] bg-gradient-to-r from-kh-green to-kh-green/80 text-white rounded-lg hover:shadow-lg transition-all text-sm font-bold flex items-center justify-center gap-1 shadow-sm shrink-0"
                         >
-                            + 주간 업무 추가
+                            주간 업무
+                        </button>
+
+                        <button
+                            onClick={() => setIsScheduleHubModalOpen(true)}
+                            className="py-2 w-[100px] bg-gradient-to-r from-kh-green to-kh-green/80 text-white rounded-lg hover:shadow-lg transition-all text-sm font-bold flex items-center justify-center gap-1 shadow-sm shrink-0"
+                        >
+                            주간 일정
                         </button>
 
                         <div className="flex items-center gap-3">
@@ -635,65 +705,8 @@ const Timesheet = ({ currentUser }) => {
                     </div>
                 </div>
 
-                {/* My Weekly Tasks Section */}
-                <div className="bg-white rounded-2xl p-5 shadow-sm border border-neutral/10 flex flex-col min-h-[160px]">
-                    <div className="mb-5 pb-4 border-b border-gray-100/60">
-                        <h3 className="text-sm font-bold text-orange-600 flex items-center gap-1.5 mb-2">
-                            📢 이번 주 공지사항
-                        </h3>
-                        {noticeTasks.length > 0 ? (
-                            <ul className="space-y-2 list-disc list-inside text-sm text-gray-700 font-medium pl-1 bg-orange-50/30 p-3 rounded-lg">
-                                {noticeTasks.map(t => (
-                                    <li key={t.id}>
-                                        {t.content}
-                                        <span className="text-xs text-orange-600/70 font-normal ml-2">
-                                            ({t.start_date.slice(5)}{t.end_date && t.start_date !== t.end_date ? ` ~ ${t.end_date.slice(5)}` : ''})
-                                        </span>
-                                    </li>
-                                ))}
-                            </ul>
-                        ) : (
-                            <div className="text-sm text-gray-400 bg-gray-50/50 p-3 flex justify-center items-center rounded-lg">
-                                등록된 공지사항이 없습니다.
-                            </div>
-                        )}
-                    </div>
-                    <div className="flex items-center justify-between mb-3">
-                        <h3 className="text-sm font-bold text-gray-700 flex items-center gap-2">
-                           <CalendarIcon size={16} className="text-primary"/> 이번 주 나의 업무 현황
-                        </h3>
-                    </div>
-                    {myWeeklyTasks.length > 0 ? (
-                        <div className="flex flex-col gap-2 overflow-y-auto max-h-48 pr-1">
-                            {myWeeklyTasks.map(task => (
-                               <div key={task.id} className="flex items-center justify-between p-3 rounded-xl border border-gray-100 bg-gray-50/50 hover:bg-gray-50 transition-colors">
-                                  <div className="flex flex-col">
-                                     <span className="text-xs font-bold text-primary mb-0.5">{task.task_code || '일반 업무'}</span>
-                                     <span className="text-sm text-gray-800 font-medium">{task.content}</span>
-                                  </div>
-                                  <div className="flex items-center gap-3">
-                                     <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${task.status === '완료' ? 'bg-green-100 text-green-700' : task.status === '보류' ? 'bg-orange-100 text-orange-700' : 'bg-primary/10 text-primary'}`}>
-                                         {task.status || '진행 중'}
-                                     </span>
-                                     <button onClick={() => openTaskModal(task)} className="text-xs font-medium text-gray-400 hover:text-primary bg-white border border-gray-100 px-2.5 py-1.5 rounded-lg shadow-sm transition-all hover:border-primary/30">
-                                         수정
-                                     </button>
-                                     <button onClick={() => handleDeleteWeeklyTask(task)} className="text-xs font-medium text-gray-400 hover:text-red-500 bg-white border border-gray-100 px-2.5 py-1.5 rounded-lg shadow-sm transition-all hover:border-red-200">
-                                         삭제
-                                     </button>
-                                  </div>
-                               </div>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="flex-1 flex items-center justify-center text-sm font-medium text-gray-400 p-4 border border-dashed border-gray-200 rounded-xl bg-gray-50">
-                            이번 주에 등록된 주간 업무가 없습니다. 상단의 '+ 업무 추가'를 클릭하세요.
-                        </div>
-                    )}
-                </div>
-
                 {/* Save Button */}
-                <div className="z-10 flex-none sticky bottom-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:static lg:bg-transparent lg:backdrop-filter-none">
+                <div className="z-10 flex-none bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 lg:bg-transparent lg:backdrop-filter-none mb-4">
                     <button
                         onClick={handleSave}
                         className="w-full py-3 rounded-xl font-bold text-base transition-all shadow-lg flex items-center justify-center space-x-2 bg-neutral text-white hover:bg-neutral/80 shadow-neutral/30 active:scale-[0.98]"
@@ -703,6 +716,7 @@ const Timesheet = ({ currentUser }) => {
                     </button>
                 </div>
 
+
                 {/* Contribution Graph Section */}
                 <div className="flex-none h-auto">
                     <ContributionGraph dailyData={dailyData} onDateClick={setSelectedDate} />
@@ -710,6 +724,28 @@ const Timesheet = ({ currentUser }) => {
             </div>
             {/* Bg Decoration */}
             <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+            {isHubModalOpen && (
+                <WeeklyTaskHubModal
+                    onClose={() => setIsHubModalOpen(false)}
+                    onSaveTask={handleSaveWeeklyTask}
+                    onDeleteTask={handleDeleteWeeklyTask}
+                    currentUser={currentUser}
+                    currentWeek={format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')}
+                    selectedDate={selectedDate}
+                />
+            )}
+
+            {isScheduleHubModalOpen && (
+                <WeeklyScheduleHubModal
+                    onClose={() => setIsScheduleHubModalOpen(false)}
+                    onSaveSchedule={handleSaveWeeklySchedule}
+                    onDeleteSchedule={handleDeleteWeeklySchedule}
+                    currentUser={currentUser}
+                    currentWeek={format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')}
+                    selectedDate={selectedDate}
+                />
+            )}
 
             {isTaskModalOpen && (
                 <TaskFormModal
@@ -719,6 +755,7 @@ const Timesheet = ({ currentUser }) => {
                     onSave={handleSaveWeeklyTask}
                     currentUser={currentUser}
                     currentWeek={format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd')}
+                    isFromTimesheet={true}
                 />
             )}
 
@@ -751,7 +788,15 @@ const Timesheet = ({ currentUser }) => {
                     </div>
                 </div>
             )}
-        </div >
+
+            {isStatusBoardOpen && (
+                <StatusBoard 
+                    currentUser={currentUser} 
+                    isModal={true} 
+                    onClose={() => setIsStatusBoardOpen(false)} 
+                />
+            )}
+        </div>
     );
 };
 
