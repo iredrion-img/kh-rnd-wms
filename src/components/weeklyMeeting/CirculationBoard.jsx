@@ -4,17 +4,26 @@ import { format, addDays, startOfMonth, getDaysInMonth } from 'date-fns';
 
 const TEAMS = ['R&D센터, 기술연구소', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'];
 const USERS = [
-  { team: 'R&D센터, 기술연구소', name: '김영근 부사장' },
-  { team: 'R&D센터, 기술연구소', name: '차정석 이사' },
-  { team: 'AI 응용팀', name: '장민욱 차장' },
-  { team: 'AI 응용팀', name: '한형서 사원' },
-  { team: '인프라 BIM팀', name: '이동근 이사대우' },
-  { team: '인프라 BIM팀', name: '나기태 부장' },
-  { team: '스마트 기술 개발팀', name: '임문구 상무' },
-  { team: '스마트 기술 개발팀', name: '김진희 부장' },
-  { team: '스마트 기술 개발팀', name: '이정선 대리' },
-  { team: '디지털 기술 연구팀', name: '이충재 이사대우' },
-  { team: '디지털 기술 연구팀', name: '박도해 차장' },
+  { team: 'R&D센터, 기술연구소', name: '김영근', rank: '부사장' },
+  { team: 'R&D센터, 기술연구소', name: '최형태', rank: '이사' },
+  { team: '스마트 기술 개발팀', name: '임문구', rank: '부장' },
+  { team: '스마트 기술 개발팀', name: '김진희', rank: '부장' },
+  { team: '스마트 기술 개발팀', name: '김경훈', rank: '과장' },
+  { team: '스마트 기술 개발팀', name: '강수민', rank: '대리' },
+  { team: '스마트 기술 개발팀', name: '이정선', rank: '대리' },
+  { team: '스마트 기술 개발팀', name: '김하빈', rank: '사원' },
+  { team: '스마트 기술 개발팀', name: '노유빈', rank: '사원' },
+  { team: '디지털 기술 연구팀', name: '이충재', rank: '이사대우' },
+  { team: '디지털 기술 연구팀', name: '박도해', rank: '차장' },
+  { team: '인프라 BIM팀', name: '이동근', rank: '이사대우' },
+  { team: '인프라 BIM팀', name: '김기윤', rank: '부장' },
+  { team: '인프라 BIM팀', name: '나기태', rank: '부장' },
+  { team: '인프라 BIM팀', name: '김동찬', rank: '차장' },
+  { team: '인프라 BIM팀', name: '강병주', rank: '과장' },
+  { team: '인프라 BIM팀', name: '임규민', rank: '과장' },
+  { team: 'AI 응용팀', name: '김동욱', rank: '이사대우' },
+  { team: 'AI 응용팀', name: '장민욱', rank: '차장' },
+  { team: 'AI 응용팀', name: '한형서', rank: '사원' },
 ];
 
 const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
@@ -52,10 +61,10 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   // ─── 3. 하계 휴가 달력 State ───
   const currentYear = new Date().getFullYear();
   const [vacations, setVacations] = useState([
-    { name: '김영근 부사장', date: `${currentYear}-07-28`, type: '연차' },
-    { name: '김영근 부사장', date: `${currentYear}-07-29`, type: '연차' },
-    { name: '김진희 부장', date: `${currentYear}-08-05`, type: '오전반차' },
-    { name: '이정선 대리', date: `${currentYear}-08-10`, type: '오후반차' },
+    { name: '김영근', date: `${currentYear}-07-28`, type: '연차' },
+    { name: '김영근', date: `${currentYear}-07-29`, type: '연차' },
+    { name: '김진희', date: `${currentYear}-08-05`, type: '오전반차' },
+    { name: '이정선', date: `${currentYear}-08-10`, type: '오후반차' },
   ]);
 
   // ─── Handlers ───
@@ -219,7 +228,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
                     <tr key={row.id} className="hover:bg-blue-50/30 transition-colors">
                       <td className="px-6 py-3 font-bold text-gray-800 pl-8 flex items-center gap-2 whitespace-nowrap text-left name-cell">
                         <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0"></div>
-                        {row.name}
+                        {row.name}<span className="ml-1 text-xs font-medium text-gray-400">{row.rank}</span>
                       </td>
                       <td className="px-6 py-3 text-center">
                         <button 

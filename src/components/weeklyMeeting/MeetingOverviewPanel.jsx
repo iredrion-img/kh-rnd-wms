@@ -4,13 +4,17 @@ import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 
 // R&D센터 + 기술연구소는 함께 표시
+// keys: DB에 저장된 실제 department 값 (공백 없음 기준, 공백 있는 값도 normalize 후 매칭)
 const GROUPED_TEAMS = [
   { label: 'R&D센터, 기술연구소', keys: ['R&D센터', '기술연구소'] },
-  { label: '스마트 기술 개발팀', keys: ['스마트 기술 개발팀'] },
-  { label: '디지털 기술 연구팀', keys: ['디지털 기술 연구팀'] },
-  { label: '인프라 BIM팀', keys: ['인프라 BIM팀'] },
-  { label: 'AI 응용팀', keys: ['AI 응용팀'] },
+  { label: '스마트 기술 개발팀', keys: ['스마트기술개발팀', '스마트 기술 개발팀'] },
+  { label: '디지털 기술 연구팀', keys: ['디지털기술연구팀', '디지털 기술 연구팀'] },
+  { label: '인프라 BIM팀', keys: ['인프라BIM팀', '인프라 BIM팀'] },
+  { label: 'AI 응용팀', keys: ['AI응용팀', 'AI 응용팀'] },
 ];
+
+// 공백을 제거하여 부서명을 정규화 (DB값과 표시값 모두 허용)
+const normalizeKey = (str) => (str || '').replace(/\s+/g, '');
 
 const ATTENDANCE_STORAGE_KEY = (week) => `kh_attendance_${week}`;
 const MEETING_DATE_STORAGE_KEY = (week) => `kh_meeting_date_${week}`;
@@ -91,9 +95,13 @@ const MeetingOverviewPanel = ({
     localStorage.setItem(MEETING_DATE_STORAGE_KEY(currentWeek), val);
   };
 
-  // 4. 데이터 가공
+  // 4. 데이터 가공 (공백 정규화로 DB 저장값과 표시값 모두 매칭)
   const teamRows = GROUPED_TEAMS.map(group => {
-    const members = users.filter(u => group.keys.includes(u.team) || group.keys.includes(u.department));
+    const normalizedKeys = group.keys.map(normalizeKey);
+    const members = users.filter(u => {
+      const userDept = normalizeKey(u.department || u.team || '');
+      return normalizedKeys.includes(userDept);
+    });
     const attending = members.filter(u => !absentees.has(u.name));
     return { ...group, members, attending };
   });
