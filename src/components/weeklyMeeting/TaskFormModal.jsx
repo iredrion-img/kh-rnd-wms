@@ -44,7 +44,8 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
   ];
 
   const [allTasks, setAllTasks] = useState([]);
-  const [codeMode, setCodeMode] = useState('new'); // 'new' | 'existing'
+  // 수정 모드에서는 기존 코드가 있으므로 기본값을 'existing'으로 설정
+  const [codeMode, setCodeMode] = useState(task ? 'existing' : 'new'); // 'new' | 'existing'
   const [usersInfo, setUsersInfo] = useState([]);
   const [isAssigneeDropdownOpen, setIsAssigneeDropdownOpen] = useState(false);
   const [isMethodBaseDropdownOpen, setIsMethodBaseDropdownOpen] = useState(false);
@@ -155,7 +156,8 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
   };
 
   useEffect(() => {
-    // 기존 업무 수정 시(초기 로딩), 대/중분류 값을 변경하지 않았다면 본래 코드를 유지함
+    // '기존 코드 사용' 모드이거나, 수정 중 분류를 바꾸지 않았으면 자동 채번을 건너뜀
+    if (codeMode === 'existing') return;
     if (task && formData.category === task.category && formData.sub_category === task.sub_category) return;
     if (isSchedule) return;
 
@@ -199,7 +201,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     } else {
        setFormData(prev => prev.task_code && (prev.category || prev.sub_category) ? { ...prev, task_code: '' } : prev);
     }
-  }, [formData.category, formData.sub_category, allTasks, task, isProject, isSchedule]);
+  }, [formData.category, formData.sub_category, codeMode, allTasks, task, isProject, isSchedule]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -598,22 +600,20 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         <div>
           <div className="flex items-center justify-between mb-1">
             <label className="block text-sm font-medium text-gray-700">업무코드</label>
-            {!task && (
-              <label className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
-                <input
-                  type="checkbox"
-                  checked={codeMode === 'existing'}
-                  onChange={(e) => {
-                    setCodeMode(e.target.checked ? 'existing' : 'new');
-                    if (!e.target.checked) setFormData(prev => ({ ...prev, task_code: '' }));
-                  }}
-                  className="rounded border-gray-300 text-primary focus:ring-primary w-3.5 h-3.5"
-                />
-                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">기존 코드 사용</span>
-              </label>
-            )}
+            <label className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
+              <input
+                type="checkbox"
+                checked={codeMode === 'existing'}
+                onChange={(e) => {
+                  setCodeMode(e.target.checked ? 'existing' : 'new');
+                  if (!e.target.checked) setFormData(prev => ({ ...prev, task_code: '' }));
+                }}
+                className="rounded border-gray-300 text-primary focus:ring-primary w-3.5 h-3.5"
+              />
+              <span className="text-xs text-gray-500 font-medium whitespace-nowrap">기존 코드 사용</span>
+            </label>
           </div>
-          {codeMode === 'existing' && !task ? (
+          {codeMode === 'existing' ? (
             <select name="task_code" value={formData.task_code || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
               <option value="">기존 코드 선택</option>
               {existingCodesOptions.map(code => <option key={code} value={code}>{code}</option>)}
