@@ -6,166 +6,154 @@ import { fileURLToPath } from 'url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-// ISO 월요일 계산 헬퍼 함수
-function getWeekStartStr(dateStr) {
-    if (!dateStr) {
-        const d = new Date();
-        const day = d.getDay();
-        const diff = day === 0 ? -6 : 1 - day;
-        d.setHours(0,0,0,0);
-        d.setDate(d.getDate() + diff);
-        return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+// 엑셀 날짜(시리얼 번호 또는 문자열)를 표준 YYYY-MM-DD로 변환
+function serialToDate(serial) {
+  if (!serial) return '';
+  // 문자열 형태의 날짜인 경우 (예: "26. 03. 03" -> "2026-03-03")
+  if (typeof serial === 'string') {
+    let s = serial.replace(/\s+/g, '').trim();
+    let parts = s.split('.');
+    if (parts.length >= 3) {
+      let y = parts[0];
+      if (y.length === 2) y = "20" + y;
+      return `${y}-${parts[1].padStart(2, '0')}-${parts[2].padStart(2, '0')}`;
     }
-    // 입력된 텍스트 정제 (예: "2026.05.11" -> "2026-05-11")
-    let cleanStr = String(dateStr).trim().replace(/\./g, '-');
-    const d = new Date(cleanStr);
-    if (isNaN(d)) {
-        return getWeekStartStr(); // 파싱 불가 시 이번 주 월요일로 대체
-    }
-    const day = d.getDay();
-    const diff = day === 0 ? -6 : 1 - day;
-    d.setHours(0,0,0,0);
-    d.setDate(d.getDate() + diff);
-    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    return serial.trim();
+  }
+  if (isNaN(serial)) return '';
+  const date = new Date(Math.round((serial - 25569) * 86400 * 1000));
+  return date.toISOString().slice(0, 10);
 }
 
-// 다양한 열 헤더 이름에 유연하게 대응하는 키 찾기 헬퍼
-function findKey(row, possibleKeys) {
-    const keys = Object.keys(row);
-    for (const pk of possibleKeys) {
-        const found = keys.find(k => k.replace(/\s+/g, '').toLowerCase().includes(pk));
-        if (found) return row[found];
-    }
-    return '';
-}
-
-// 부서명 표준화 헬퍼
-function normalizeTeam(raw) {
-    if (!raw) return '공통업무&행정';
-    const t = String(raw).replace(/\s+/g, '');
-    if (t.includes('스마트')) return '스마트 기술 개발팀';
-    if (t.includes('디지털')) return '디지털 기술 연구팀';
-    if (t.includes('인프라') || t.includes('BIM') || t.includes('bim')) return '인프라 BIM팀';
-    if (t.includes('AI') || t.includes('ai') || t.includes('응용')) return 'AI 응용팀';
-    if (t.includes('연구과제')) return '연구과제';
-    if (t.includes('공지')) return '공지사항';
-    return '공통업무&행정';
+// 해당 날짜가 속한 주차의 월요일 날짜 계산
+function getWeekStart(dateStr) {
+  if (!dateStr) return '2026-05-11';
+  const d = new Date(dateStr);
+  if (isNaN(d)) {
+    return '2026-05-11'; // 기본값으로 2026년 5월 11일 주차 배정
+  }
+  const day = d.getDay(); // 0=일, 1=월
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setHours(0,0,0,0);
+  d.setDate(d.getDate() + diff);
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
 }
 
 async function run() {
-    const args = process.argv.slice(2);
-    const targetExcel = args[0] || '2026년 주간공정회의.xlsx';
-    const filePath = path.resolve(__dirname, targetExcel);
+  // 실제 파일이 존재할 수 있는 모든 후보 경로를 지능적으로 탐색
+  const candidates = [
+    process.argv[2],
+    'C:/KH_WMS/2026년 주간공정회의.xlsx',
+    path.join(__dirname, '2026년 주간공정회의.xlsx'),
+    path.join(__dirname, 'wms_data.xlsx')
+  ].filter(Boolean);
 
-    console.log(`==================================================`);
-    console.log(` KH WMS - 엑셀 주간공정회의 자동 이전 스크립트`);
-    console.log(`==================================================`);
-    console.log(`[1] 엑셀 파일 로드 시도: ${filePath}`);
+  let targetPath = null;
+  for (const c of candidates) {
+    if (fs.existsSync(c)) {
+      targetPath = c;
+      break;
+    }
+  }
 
-    if (!fs.existsSync(filePath)) {
-        console.error(`❌ 오류: 엑셀 파일을 찾을 수 없습니다.`);
-        console.error(`서버 PC의 폴더 내에 '${targetExcel}' 파일이 정확히 위치해 있는지 확인해주세요.`);
-        console.error(`사용법: node migrate_excel.js [파일명.xlsx]`);
-        process.exit(1);
+  console.log(`==================================================`);
+  console.log(` KH WMS - 엑셀 주간공정회의 완벽 이전 스크립트`);
+  console.log(`==================================================`);
+  
+  if (!targetPath) {
+    console.error(`❌ 오류: 엑셀 파일을 찾을 수 없습니다.`);
+    console.error(`탐색한 경로 목록:\n - ${candidates.join('\n - ')}`);
+    process.exit(1);
+  }
+
+  console.log(`[1] 엑셀 파일 로드 성공: ${targetPath}`);
+  const wb = xlsx.readFile(targetPath);
+
+  // 이관 대상 6개 팀 정의
+  const TASK_SHEETS = [
+    { sheetName: '공통업무&행정',          team: '공통업무&행정' },
+    { sheetName: '스마트 기술 개발팀',     team: '스마트 기술 개발팀' },
+    { sheetName: '디지털 기술 연구팀',     team: '디지털 기술 연구팀' },
+    { sheetName: '인프라 BIM팀',           team: '인프라 BIM팀' },
+    { sheetName: 'AI 응용팀',              team: 'AI 응용팀' },
+    { sheetName: '연구과제',               team: '연구과제' },
+  ];
+
+  const targetYear = '2026';
+  const targetJsonPath = path.join(__dirname, `weekly_tasks_${targetYear}.json`);
+  let tasks = [];
+
+  let idCounter = Date.now();
+  const now = new Date().toISOString().slice(0, 10);
+  let totalCount = 0;
+
+  TASK_SHEETS.forEach(({ sheetName, team }) => {
+    const ws = wb.Sheets[sheetName];
+    if (!ws) { 
+      console.warn(`⚠️ [${team}] 엑셀 시트를 찾을 수 없어 건너뜁니다.`); 
+      return; 
     }
 
-    try {
-        const workbook = xlsx.readFile(filePath);
-        const sheetName = workbook.SheetNames[0];
-        console.log(`[2] 시트 파싱 중... (시트명: "${sheetName}")`);
-        
-        // 엑셀 시트를 JSON 배열로 파싱
-        const rows = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' });
-        console.log(`총 ${rows.length}개의 행(Row) 데이터를 발견했습니다.`);
+    // header: 1 옵션으로 실제 열(Column) 인덱스를 정확히 매핑
+    const raw = xlsx.utils.sheet_to_json(ws, { header: 1, defval: '' });
+    const dataRows = raw.slice(1); // 첫 줄(헤더) 제외
+    let sheetCount = 0;
 
-        if (rows.length === 0) {
-            console.log(`내용이 비어있습니다. 이전을 종료합니다.`);
-            return;
-        }
+    dataRows.forEach(row => {
+      if (!row || row.every(c => c === '' || c === null)) return;
 
-        // 기존 대상 JSON 파일 로드
-        const targetYear = '2026';
-        const targetJsonPath = path.join(__dirname, `weekly_tasks_${targetYear}.json`);
-        let existingTasks = [];
-        if (fs.existsSync(targetJsonPath)) {
-            try { existingTasks = JSON.parse(fs.readFileSync(targetJsonPath, 'utf8')); } catch(e){}
-        }
+      const category   = String(row[0] || '').trim();
+      const subCat     = String(row[1] || '').trim().replace(/^\s+$/, '');
+      const taskCode   = String(row[3] || '').trim();
+      const content    = String(row[4] || '').trim();
+      const assignees  = String(row[5] || '').trim();
+      const status     = String(row[6] || '').trim() || '진행 중';
+      const priority   = String(row[7] || '').trim() || '중간';
+      const startDate  = serialToDate(row[8]);
+      const endDate    = serialToDate(row[9]);
+      const meetResult = String(row[10] || '').trim();
+      const note       = String(row[11] || '').trim();
 
-        console.log(`기존 WMS DB (${path.basename(targetJsonPath)})에 ${existingTasks.length}개의 안건이 존재합니다.`);
+      // 주요내용과 과제코드가 모두 없으면 단순 빈 줄이므로 스킵
+      if (!content && !taskCode) return;
 
-        let newCount = 0;
-        let mergedCount = 0;
+      // 시작일이 없으면 최근 기준일 배정
+      const cleanStartDate = startDate || '2026-05-11';
+      const weekStart = getWeekStart(cleanStartDate);
+      const id = String(idCounter++);
 
-        rows.forEach((row) => {
-            // 유연한 컬럼 매핑 (구글 시트의 열 이름이 조금씩 달라도 스마트하게 찾아냄)
-            const content = findKey(row, ['주요내용', '내용', '안건', 'content', '업무내용', '회의내용']);
-            if (!content || String(content).trim() === '') {
-                // 주요내용이 비어있으면 빈 줄이나 병합된 헤더일 확률이 높으므로 스킵
-                return;
-            }
+      tasks.push({
+        id,
+        team,
+        category,
+        sub_category: subCat,
+        task_code: taskCode,
+        content: content || taskCode, // 주요내용이 비어있으면 과제코드로 대체
+        assignees,
+        status,
+        priority,
+        start_date: cleanStartDate,
+        end_date: endDate,
+        meeting_result: meetResult,
+        note,
+        week_start: weekStart,
+        created_at: now
+      });
+      sheetCount++;
+      totalCount++;
+    });
 
-            const rawTeam = findKey(row, ['부서', '팀', '부서명', 'team', '소속', '부문']);
-            const team = normalizeTeam(rawTeam);
-            
-            const assignees = findKey(row, ['담당자', '성명', '이름', '담당', 'assignee']);
-            const startDateRaw = findKey(row, ['시작일', '일자', '날짜', '등록일', 'date', 'start']);
-            const endDateRaw = findKey(row, ['종료일', '완료일', 'end']);
-            const statusRaw = findKey(row, ['상태', '진행상황', 'status']);
-            const priorityRaw = findKey(row, ['중요도', '우선순위', 'priority']);
-            const resultRaw = findKey(row, ['회의결과', '결과', '조치', 'result']);
-            const noteRaw = findKey(row, ['비고', '참고', 'note']);
-            const categoryRaw = findKey(row, ['대분류', '구분', 'category']);
+    console.log(`✅ [${team}] 데이터 추출 완료: ${sheetCount}건`);
+  });
 
-            // 날짜를 기반으로 속한 주차(월요일) 자동 계산
-            const weekStart = getWeekStartStr(startDateRaw);
-            const now = new Date().toISOString().slice(0, 10);
-
-            // 중복 방지 로직: 동일 주차, 동일 부서에 완전히 같은 내용이 이미 존재하는지 검사
-            const isDup = existingTasks.some(t => 
-                t.week_start === weekStart && 
-                t.team === team && 
-                t.content.replace(/\s+/g, '') === String(content).replace(/\s+/g, '')
-            );
-
-            if (!isDup) {
-                const newTask = {
-                    id: Date.now().toString() + '-' + Math.floor(Math.random() * 10000),
-                    team,
-                    category: String(categoryRaw).trim(),
-                    sub_category: '',
-                    task_code: '',
-                    content: String(content).trim(),
-                    assignees: String(assignees).trim(),
-                    status: String(statusRaw).trim() || '진행 중',
-                    priority: String(priorityRaw).trim() || '중간',
-                    start_date: String(startDateRaw).trim() || weekStart,
-                    end_date: String(endDateRaw).trim() || '',
-                    meeting_result: String(resultRaw).trim(),
-                    note: String(noteRaw).trim(),
-                    week_start: weekStart,
-                    created_at: now
-                };
-                existingTasks.push(newTask);
-                newCount++;
-            } else {
-                mergedCount++;
-            }
-        });
-
-        // 최종 JSON 파일 업데이트 (원자적 저장 방식)
-        fs.writeFileSync(targetJsonPath, JSON.stringify(existingTasks, null, 2), 'utf8');
-        
-        console.log(`==================================================`);
-        console.log(`✨ 마이그레이션 완료!`);
-        console.log(` - 성공적으로 신규 적재된 안건: ${newCount}건`);
-        console.log(` - 중복으로 병합/스킵된 안건: ${mergedCount}건`);
-        console.log(` - 최종 누적 DB 데이터 수: ${existingTasks.length}건`);
-        console.log(`==================================================`);
-        console.log(`서버 PC 브라우저에서 사이트를 새로고침하시면 완벽히 연동된 안건들을 바로 보실 수 있습니다.`);
-
-    } catch (e) {
-        console.error(`❌ 엑셀 파일 읽기/변환 중 예상치 못한 오류가 발생했습니다:`, e);
-    }
+  // 최종 JSON 파일 원자적 덮어쓰기 저장
+  fs.writeFileSync(targetJsonPath, JSON.stringify(tasks, null, 2), 'utf8');
+  console.log(`==================================================`);
+  console.log(`✨ 전체 안건 JSON 데이터베이스 구축 완료!`);
+  console.log(` - 저장 파일: ${path.basename(targetJsonPath)}`);
+  console.log(` - 총 연동된 안건 수: ${tasks.length}건`);
+  console.log(`==================================================`);
+  console.log(`이제 브라우저에서 새로고침을 하시면 모든 팀의 주간공정회의 안건이 완벽하게 나타납니다.`);
 }
 
 run();
