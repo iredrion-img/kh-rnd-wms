@@ -67,7 +67,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         setUsersInfo([]);
       });
 
-    if (!task && !isSchedule) {
+    if (!isSchedule) {
       const endpoint = isProject ? '/api/projects' : '/api/weekly-tasks';
       fetch(endpoint)
         .then(res => res.json())
@@ -171,11 +171,9 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                     if (num > maxNum) maxNum = num;
                 }
             });
-            if (codeMode === 'new') {
-                const nextSubNo = String(maxNum + 1).padStart(3, '0');
-                const nextCode = `${formData.category} - ${nextSubNo}`;
-                setFormData(prev => prev.project_code !== nextCode ? { ...prev, sub_no: nextSubNo, project_code: nextCode } : prev);
-            }
+            const nextSubNo = String(maxNum + 1).padStart(3, '0');
+            const nextCode = `${formData.category} - ${nextSubNo}`;
+            setFormData(prev => prev.project_code !== nextCode ? { ...prev, sub_no: nextSubNo, project_code: nextCode } : prev);
         } else {
             setFormData(prev => prev.project_code ? { ...prev, project_code: '', sub_no: '' } : prev);
         }
@@ -187,26 +185,21 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     
     if (majorStr && middleStr) {
        const prefix = `${majorStr}-${middleStr}-`;
-       if (codeMode === 'new') {
-           const matchingCodes = allTasks.map(t=>t.task_code).filter(c => c && c.startsWith(prefix));
-           let maxNum = 0;
-           matchingCodes.forEach(c => {
-               const p = c.split('-');
-               if(p.length === 3) {
-                   const num = parseInt(p[2],10);
-                   if(!isNaN(num) && num > maxNum) maxNum = num;
-               }
-           });
-           const nextCode = `${prefix}${String(maxNum+1).padStart(3,'0')}`;
-           setFormData(prev => prev.task_code !== nextCode ? { ...prev, task_code: nextCode } : prev);
-       } else {
-           // 기존 코드 선택 모드일 때 접두사가 다르면 폼 클리어
-           setFormData(prev => prev.task_code && !prev.task_code.startsWith(prefix) ? { ...prev, task_code: '' } : prev);
-       }
+       const matchingCodes = allTasks.map(t=>t.task_code).filter(c => c && c.toUpperCase().startsWith(prefix));
+       let maxNum = 0;
+       matchingCodes.forEach(c => {
+           const m = c.trim().match(/\d+$/);
+           if (m) {
+               const num = parseInt(m[0], 10);
+               if (num > maxNum) maxNum = num;
+           }
+       });
+       const nextCode = `${prefix}${String(maxNum+1).padStart(3,'0')}`;
+       setFormData(prev => prev.task_code !== nextCode ? { ...prev, task_code: nextCode } : prev);
     } else {
-       setFormData(prev => prev.task_code ? { ...prev, task_code: '' } : prev);
+       setFormData(prev => prev.task_code && (prev.category || prev.sub_category) ? { ...prev, task_code: '' } : prev);
     }
-  }, [formData.category, formData.sub_category, codeMode, allTasks, task, isProject, isSchedule]);
+  }, [formData.category, formData.sub_category, allTasks, task, isProject, isSchedule]);
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -571,8 +564,11 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     const prefix = majorStr && middleStr ? `${majorStr}-${middleStr}-` : '';
     
     let existingCodesOptions = [];
-    if (prefix && allTasks.length > 0) {
-       existingCodesOptions = Array.from(new Set(allTasks.map(t=>t.task_code).filter(c=>c&&c.startsWith(prefix)))).sort();
+    if (allTasks.length > 0) {
+       const filtered = prefix 
+         ? allTasks.map(t=>t.task_code).filter(c=>c&&c.toUpperCase().startsWith(prefix))
+         : allTasks.map(t=>t.task_code).filter(Boolean);
+       existingCodesOptions = Array.from(new Set(filtered)).sort();
     }
 
     return (
@@ -600,28 +596,19 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           </select>
         </div>
         <div>
-          <div className="flex items-center justify-between mb-1">
-            <label className="block text-sm font-medium text-gray-700">업무코드</label>
-            {!task && (
-              <label className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
-                <input 
-                  type="checkbox" 
-                  checked={codeMode === 'existing'} 
-                  onChange={(e) => setCodeMode(e.target.checked ? 'existing' : 'new')} 
-                  className="rounded border-gray-300 text-primary focus:ring-primary w-3.5 h-3.5"
-                />
-                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">기존 코드 사용</span>
-              </label>
-            )}
-          </div>
-          {codeMode === 'new' || !!task ? (
-             <input type="text" name="task_code" value={formData.task_code || ''} readOnly className="w-full rounded-lg border-gray-100 bg-gray-50 border p-2 text-gray-500 font-mono" placeholder="대/중분류 선택 시 자동 생성" />
-          ) : (
-             <select name="task_code" value={formData.task_code || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
-                <option value="">기존 코드 선택</option>
-                {existingCodesOptions.map(code => <option key={code} value={code}>{code}</option>)}
-             </select>
-          )}
+          <label className="block text-sm font-medium text-gray-700 mb-1">업무코드</label>
+          <input 
+             type="text" 
+             list="task_codes_datalist"
+             name="task_code" 
+             value={formData.task_code || ''} 
+             onChange={handleChange} 
+             className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary font-mono text-sm bg-white" 
+             placeholder="선택 시 자동입력 또는 직접 수정/선택" 
+          />
+          <datalist id="task_codes_datalist">
+             {existingCodesOptions.map(code => <option key={code} value={code} />)}
+          </datalist>
         </div>
       </div>
       )}
