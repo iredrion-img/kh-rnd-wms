@@ -251,20 +251,20 @@ const InlineAttendanceCell = ({ row, onRemove, onAdd, disabled }) => {
 
   return (
     <div className="flex items-center justify-between gap-2">
-      <div className="flex flex-wrap items-center justify-center gap-1.5 flex-1">
+      <div className="flex flex-wrap items-center gap-1.5 flex-1">
         {row.attending.map(u => (
           <button
             key={u.name}
             onClick={() => !disabled && onRemove(u.name)}
             disabled={disabled}
             title="클릭하여 불참 처리"
-            className="group flex items-center gap-1 px-2.5 py-1 rounded-md text-xs font-semibold
+            className="group relative flex items-center justify-center px-3 py-1 rounded-md text-xs font-semibold
               bg-white text-gray-800 border border-gray-300
               hover:bg-red-50 hover:border-red-300 hover:text-red-600
-              transition-all duration-150"
+              transition-all duration-150 overflow-hidden"
           >
-            {u.name}
-            <UserMinus size={10} className="opacity-0 group-hover:opacity-100 text-red-400 transition-opacity" />
+            <span className="transition-transform duration-150 group-hover:-translate-x-1.5">{u.name}</span>
+            <UserMinus size={10} className="absolute right-1.5 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 text-red-400 transition-all duration-150" />
           </button>
         ))}
         {row.members.length === 0 && (
