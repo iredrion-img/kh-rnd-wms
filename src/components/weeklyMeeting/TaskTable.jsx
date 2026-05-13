@@ -157,7 +157,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
           {!isNotice && <th className="px-3 py-3 w-24 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">진행 상태</th>}
           <th className="px-3 py-3 w-28 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">시작일</th>
           <th className="px-3 py-3 w-28 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">마감일</th>
-          {showMeetingResult && <th className="px-3 py-3 min-w-[200px] sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">공유회의/결과보고</th>}
+          {showMeetingResult && <th className="px-3 py-3 w-32 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">공유회의/결과보고</th>}
           <th className={`px-3 py-3 min-w-[300px] sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] ${isNotice ? 'rounded-tl-lg' : ''}`}>주요내용</th>
           {!hideActions && <th className="px-3 py-3 w-20 text-right rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
         </tr>
