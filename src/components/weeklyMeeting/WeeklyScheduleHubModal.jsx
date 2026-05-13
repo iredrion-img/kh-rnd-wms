@@ -22,7 +22,8 @@ const WeeklyScheduleHubModal = ({
     if (!currentUser) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/weekly-schedule?week=${currentWeek}`);
+      // 전체 나의 일정을 로드하여 이번 주 및 예정된 일정으로 분류 표시
+      const res = await fetch('/api/weekly-schedule');
       if (res.ok) {
         const all = await res.json();
         // Filter schedules where the current user is mentioned in assignees
@@ -103,81 +104,142 @@ const WeeklyScheduleHubModal = ({
     return map[type] || 'bg-gray-100 text-gray-700';
   };
 
-  const renderViewTab = () => (
-    <div className="flex flex-col gap-4">
-      <h3 className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-1">
-        <CalendarRange size={15} className="text-primary" />
-        이번 주 나의 일정
-      </h3>
-      {isLoading ? (
-        <div className="text-sm text-gray-400 animate-pulse p-3 bg-gray-50 rounded-lg">불러오는 중...</div>
-      ) : mySchedules.length > 0 ? (
-        <div className="flex flex-col gap-3">
-          {(() => {
-            const today = format(new Date(), 'yyyy-MM-dd');
-            return mySchedules.map(sch => {
-              const isPast = (sch.end_date || sch.start_date || '') < today;
-              return (
-                <React.Fragment key={sch.id}>
-                  <div className={`flex items-center justify-between gap-3 p-4 rounded-xl border transition-colors ${
-                    isPast
-                      ? 'border-gray-100 bg-gray-50/30 opacity-60 hover:opacity-80'
-                      : 'border-gray-100 bg-gray-50/60 hover:bg-gray-50'
-                  }`}>
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${typeBadge(sch.schedule_type)}`}>
-                          {sch.schedule_type || '기타'}
-                        </span>
-                        {sch.location && (
-                          <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
-                            <MapPin size={10} />
-                            {sch.location}
-                          </span>
-                        )}
-                      </div>
-                      <span className="text-sm text-gray-800 font-bold truncate" title={sch.content}>
-                        {sch.content}
-                      </span>
-                      <span className="text-[11px] text-gray-500 mt-1">
-                        {sch.start_date === sch.end_date
-                          ? sch.start_date
-                          : `${sch.start_date} ~ ${sch.end_date}`}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2 flex-none">
-                      <button
-                        onClick={() => handleEdit(sch)}
-                        className="p-2 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/10"
-                      >
-                        <Pencil size={14} />
-                      </button>
-                      <button
-                        onClick={() => handleDelete(sch)}
-                        className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
-                      >
-                        <Trash2 size={14} />
-                      </button>
-                    </div>
-                  </div>
-                </React.Fragment>
-              );
-            });
-          })()}
+  const isScheduleInCurrentWeek = (startStr, endStr) => {
+    if (!currentWeek) return false;
+    const reqStart = new Date(currentWeek);
+    reqStart.setHours(0, 0, 0, 0);
+    const reqEnd = new Date(reqStart);
+    reqEnd.setDate(reqEnd.getDate() + 6);
+    reqEnd.setHours(23, 59, 59, 999);
+
+    if (!startStr) return false;
+    const tStart = new Date(startStr);
+    tStart.setHours(0, 0, 0, 0);
+
+    const tEnd = endStr ? new Date(endStr) : new Date(tStart);
+    tEnd.setHours(23, 59, 59, 999);
+
+    return tStart <= reqEnd && tEnd >= reqStart;
+  };
+
+  const isScheduleUpcoming = (startStr) => {
+    if (!currentWeek || !startStr) return false;
+    const reqStart = new Date(currentWeek);
+    reqStart.setHours(0, 0, 0, 0);
+    const reqEnd = new Date(reqStart);
+    reqEnd.setDate(reqEnd.getDate() + 6);
+    reqEnd.setHours(23, 59, 59, 999);
+
+    const tStart = new Date(startStr);
+    tStart.setHours(0, 0, 0, 0);
+
+    return tStart > reqEnd;
+  };
+
+  const renderScheduleCard = (sch) => {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const isPast = (sch.end_date || sch.start_date || '') < today;
+    return (
+      <div key={sch.id} className={`flex items-center justify-between gap-3 p-4 rounded-xl border transition-colors ${
+        isPast
+          ? 'border-gray-100 bg-gray-50/30 opacity-60 hover:opacity-80'
+          : 'border-gray-100 bg-white shadow-sm hover:border-gray-200'
+      }`}>
+        <div className="flex flex-col flex-1 min-w-0">
+          <div className="flex items-center gap-2 mb-1">
+            <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${typeBadge(sch.schedule_type)}`}>
+              {sch.schedule_type || '기타'}
+            </span>
+            {sch.location && (
+              <span className="flex items-center gap-0.5 text-[10px] text-gray-400">
+                <MapPin size={10} />
+                {sch.location}
+              </span>
+            )}
+          </div>
+          <span className="text-sm text-gray-800 font-bold truncate" title={sch.content}>
+            {sch.content}
+          </span>
+          <span className="text-[11px] text-gray-500 mt-1">
+            {sch.start_date === sch.end_date
+              ? sch.start_date
+              : `${sch.start_date} ~ ${sch.end_date}`}
+          </span>
         </div>
-      ) : (
-        <div className="text-sm text-gray-400 text-center p-8 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-          이번 주 등록된 나의 일정이 없습니다.
+        <div className="flex items-center gap-2 flex-none">
           <button
-            onClick={() => setActiveTab('add')}
-            className="block mx-auto mt-2 text-xs text-primary font-bold hover:underline"
+            onClick={() => handleEdit(sch)}
+            className="p-2 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/10"
+            title="수정"
           >
-            + 일정 등록하기
+            <Pencil size={14} />
+          </button>
+          <button
+            onClick={() => handleDelete(sch)}
+            className="p-2 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+            title="삭제"
+          >
+            <Trash2 size={14} />
           </button>
         </div>
-      )}
-    </div>
-  );
+      </div>
+    );
+  };
+
+  const renderViewTab = () => {
+    const thisWeekSchedules = mySchedules.filter(sch => isScheduleInCurrentWeek(sch.start_date, sch.end_date));
+    const upcomingSchedules = mySchedules.filter(sch => !isScheduleInCurrentWeek(sch.start_date, sch.end_date) && isScheduleUpcoming(sch.start_date));
+
+    return (
+      <div className="flex flex-col gap-6">
+        {/* 이번 주 일정 */}
+        <div className="flex flex-col gap-3">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-gray-800 border-b pb-2">
+            <CalendarRange size={16} className="text-primary" />
+            이번 주 나의 일정
+            <span className="text-xs font-normal text-gray-400 ml-1">({thisWeekSchedules.length})</span>
+          </h3>
+          {isLoading ? (
+            <div className="text-sm text-gray-400 animate-pulse p-3 bg-gray-50 rounded-lg">불러오는 중...</div>
+          ) : thisWeekSchedules.length > 0 ? (
+            <div className="flex flex-col gap-2.5">
+              {thisWeekSchedules.map(renderScheduleCard)}
+            </div>
+          ) : (
+            <div className="text-xs text-gray-400 text-center p-6 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+              이번 주 등록된 일정이 없습니다.
+              <button
+                onClick={() => setActiveTab('add')}
+                className="block mx-auto mt-1.5 text-xs text-primary font-bold hover:underline"
+              >
+                + 일정 등록하기
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* 예정된 일정 (이후 일정) */}
+        <div className="flex flex-col gap-3 mt-2">
+          <h3 className="flex items-center gap-2 text-sm font-bold text-gray-800 border-b pb-2">
+            <CalendarRange size={16} className="text-amber-500" />
+            예정된 일정 <span className="text-xs font-normal text-gray-500">(다음 주 이후)</span>
+            <span className="text-xs font-normal text-gray-400 ml-1">({upcomingSchedules.length})</span>
+          </h3>
+          {isLoading ? (
+            <div className="text-sm text-gray-400 animate-pulse p-3 bg-gray-50 rounded-lg">불러오는 중...</div>
+          ) : upcomingSchedules.length > 0 ? (
+            <div className="flex flex-col gap-2.5">
+              {upcomingSchedules.map(renderScheduleCard)}
+            </div>
+          ) : (
+            <div className="text-xs text-gray-400 text-center p-6 bg-gray-50/50 rounded-xl border border-dashed border-gray-200">
+              이후로 예정된 일정이 없습니다.
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
 
   const renderAddTab = () => (
     <TaskFormModal

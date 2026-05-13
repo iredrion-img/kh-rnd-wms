@@ -60,12 +60,42 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
 
   // ─── 3. 하계 휴가 달력 State ───
   const currentYear = new Date().getFullYear();
-  const [vacations, setVacations] = useState([
-    { name: '김영근', date: `${currentYear}-07-28`, type: '연차' },
-    { name: '김영근', date: `${currentYear}-07-29`, type: '연차' },
-    { name: '김진희', date: `${currentYear}-08-05`, type: '오전반차' },
-    { name: '이정선', date: `${currentYear}-08-10`, type: '오후반차' },
-  ]);
+  const VACATIONS_STORAGE_KEY = `kh_summer_vacations_${currentYear}`;
+  const [vacations, setVacations] = useState(() => {
+    const saved = localStorage.getItem(VACATIONS_STORAGE_KEY);
+    if (saved) {
+      try { return JSON.parse(saved); } catch (e) {}
+    }
+    return [
+      { name: '김영근', date: `${currentYear}-07-28`, type: '연차' },
+      { name: '김영근', date: `${currentYear}-07-29`, type: '연차' },
+      { name: '김진희', date: `${currentYear}-08-05`, type: '오전반차' },
+      { name: '이정선', date: `${currentYear}-08-10`, type: '오후반차' },
+    ];
+  });
+
+  const handleVacationClick = (userName, dateStr) => {
+    setVacations(prev => {
+      const existingIdx = prev.findIndex(v => v.name === userName && v.date === dateStr);
+      let nextVacations = [...prev];
+      if (existingIdx === -1) {
+        // 등록 안됨 -> 연차
+        nextVacations.push({ name: userName, date: dateStr, type: '연차' });
+      } else {
+        const currentType = prev[existingIdx].type;
+        if (currentType === '연차') {
+          nextVacations[existingIdx] = { ...nextVacations[existingIdx], type: '오전반차' };
+        } else if (currentType === '오전반차') {
+          nextVacations[existingIdx] = { ...nextVacations[existingIdx], type: '오후반차' };
+        } else {
+          // 삭제
+          nextVacations.splice(existingIdx, 1);
+        }
+      }
+      localStorage.setItem(VACATIONS_STORAGE_KEY, JSON.stringify(nextVacations));
+      return nextVacations;
+    });
+  };
 
   // ─── Handlers ───
   const handleSurveyToggle = (id) => {
@@ -377,10 +407,19 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
               </div>
               오후반차
             </div>
-            {!isFullscreenMode && (
+            {!isFullscreenMode ? (
               <>
                 <div className="h-4 w-px bg-slate-600 mx-1"></div>
-                <div className="text-kh-lime border border-kh-lime/30 bg-kh-lime/10 px-2 py-1 rounded text-[11px]">타임시트 자동 연동 중</div>
+                <div className="text-kh-lime border border-kh-lime/30 bg-kh-lime/10 px-2 py-1 rounded text-[11px]">
+                  표의 칸을 클릭하여 직접 수정 (연차→오전반차→오후반차→해제)
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="h-4 w-px bg-slate-600 mx-1"></div>
+                <div className="text-kh-lime border border-kh-lime/30 bg-kh-lime/10 px-2 py-1 rounded text-[11px]">
+                  클릭하여 수정 가능
+                </div>
               </>
             )}
           </div>
@@ -421,7 +460,12 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
                       {allSummerDays.map((day, i) => {
                         const vac = vacations.find(v => v.name === user.name && v.date === day.dateStr);
                         return (
-                          <td key={i} className={`border-b border-r border-gray-100 text-center relative p-0 w-[36px] min-w-[36px] max-w-[36px] ${day.isWeekend ? 'bg-red-50/30' : ''}`}>
+                          <td 
+                            key={i} 
+                            onClick={() => handleVacationClick(user.name, day.dateStr)}
+                            title={`${user.name} ${day.dateStr} 클릭하여 휴가 설정 변경`}
+                            className={`border-b border-r border-gray-100 text-center relative p-0 w-[36px] min-w-[36px] max-w-[36px] cursor-pointer hover:bg-amber-50/60 transition-colors ${day.isWeekend ? 'bg-red-50/30' : ''}`}
+                          >
                             {vac && (
                               <div 
                                 className={`absolute rounded-sm ${
