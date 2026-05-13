@@ -46,7 +46,7 @@ class SimpleMemoryVectorStore {
 
 let vectorStore = null;
 
-export const initializeVectorStore = async (csvFilePath) => {
+export const initializeVectorStore = async (jsonFilePath) => {
     console.log('[RAG] 벡터 저장소 로딩 및 임베딩 초기화 중...');
 
     try {
@@ -55,13 +55,13 @@ export const initializeVectorStore = async (csvFilePath) => {
             maxRetries: 2,
         });
 
-        if (!fs.existsSync(csvFilePath)) {
-            console.log('[RAG] 대상 CSV 파일을 찾을 수 없습니다:', csvFilePath);
+        if (!fs.existsSync(jsonFilePath)) {
+            console.log('[RAG] 대상 JSON 파일을 찾을 수 없습니다:', jsonFilePath);
             return;
         }
 
-        const content = fs.readFileSync(csvFilePath, 'utf8');
-        const records = parse(content, { columns: true, skip_empty_lines: true, trim: true });
+        const content = fs.readFileSync(jsonFilePath, 'utf8');
+        const records = JSON.parse(content);
 
         // CSV 레코드를 자연어 기반 Document로 매핑 (의미 유사도 검색 최적화)
         const docs = records.map(record => {

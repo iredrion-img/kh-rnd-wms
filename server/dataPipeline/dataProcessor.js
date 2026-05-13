@@ -1,26 +1,15 @@
-/**
- * csvProcessor.js — CSV to Natural Language Document Converter
- *
- * Converts database_2026.csv rows into:
- *   1. Row-level work log documents (one per CSV row)
- *   2. Employee weekly aggregated documents (grouped by employee+week)
- *   3. Department weekly aggregated documents (grouped by dept+week)
- *   4. Overtime summary documents
- */
-
 import fs from 'fs';
-import { parse } from 'csv-parse/sync';
 
 /**
  * Parse week_start to extract year, month, week_number
  */
 function parseDateMeta(weekStart) {
+    if (!weekStart) return { year: 2026, month: 1, weekNumber: 1 };
     const parts = weekStart.split('-');
     const year = parseInt(parts[0]) || 2026;
     const month = parseInt(parts[1]) || 1;
     const day = parseInt(parts[2]) || 1;
 
-    // ISO week number calculation
     const d = new Date(year, month - 1, day);
     const dayOfYear = Math.floor((d - new Date(year, 0, 1)) / 86400000) + 1;
     const weekNumber = Math.ceil(dayOfYear / 7);
@@ -29,7 +18,7 @@ function parseDateMeta(weekStart) {
 }
 
 /**
- * Generate row-level document from a single CSV record
+ * Generate row-level document from a single record
  */
 function createRowDocument(record, id) {
     const { year, month, weekNumber } = parseDateMeta(record.week_start);
@@ -63,7 +52,7 @@ Total weekly hours: ${record.total}`;
             week_number: weekNumber,
             total: parseFloat(record.total) || 0,
             document_type: 'row',
-            source: 'database_2026'
+            source: 'database_json'
         }
     };
 }
@@ -90,7 +79,7 @@ function createEmployeeWeeklyDocs(records, startId) {
         g.projects.push({ name: r.project_name, hours: parseFloat(r.total) || 0 });
         g.totalHours += parseFloat(r.total) || 0;
         ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].forEach(day => {
-            g.dailyTotal[day] += parseFloat(r[day]) || 0;
+            g.dailyTotal[day] += parseFloat(r[day] || 0) || 0;
         });
     });
 
@@ -129,7 +118,7 @@ Overtime: ${overtime > 0 ? `${overtime} hours (exceeds 40h standard)` : 'None'}`
                 overtime,
                 has_overtime: overtime > 0,
                 document_type: 'employee_week',
-                source: 'database_2026'
+                source: 'database_json'
             }
         };
     });
@@ -194,41 +183,35 @@ Average per employee: ${avgPerEmployee} hours`;
                 week_number: weekNumber,
                 total: Math.round(g.totalHours * 10) / 10,
                 document_type: 'department_week',
-                source: 'database_2026'
+                source: 'database_json'
             }
         };
     });
 }
 
 /**
- * Process CSV file and generate all document types
- *
- * @param {string} csvFilePath - path to database_2026.csv
- * @returns {Array<{id, text, payload}>} all documents
+ * Process JSON file and generate all document types
  */
-export function processCSV(csvFilePath) {
-    console.log(`[CSV Processor] Reading ${csvFilePath}...`);
+export function processData(jsonFilePath) {
+    console.log(`[Data Processor] Reading ${jsonFilePath}...`);
 
-    const content = fs.readFileSync(csvFilePath, 'utf8');
-    const bom = content.charCodeAt(0) === 0xFEFF ? content.slice(1) : content;
-    const records = parse(bom, { columns: true, skip_empty_lines: true, trim: true });
+    if (!fs.existsSync(jsonFilePath)) return [];
+    const content = fs.readFileSync(jsonFilePath, 'utf8');
+    const records = JSON.parse(content);
 
-    console.log(`[CSV Processor] Parsed ${records.length} rows.`);
+    console.log(`[Data Processor] Parsed ${records.length} records.`);
 
     // 1. Row-level documents
     const rowDocs = records.map((r, i) => createRowDocument(r, i + 1));
-    console.log(`[CSV Processor] Created ${rowDocs.length} row documents.`);
-
+    
     // 2. Employee weekly aggregated
     const empWeekDocs = createEmployeeWeeklyDocs(records, rowDocs.length + 1);
-    console.log(`[CSV Processor] Created ${empWeekDocs.length} employee weekly documents.`);
-
+    
     // 3. Department weekly aggregated
     const deptWeekDocs = createDepartmentWeeklyDocs(records, rowDocs.length + empWeekDocs.length + 1);
-    console.log(`[CSV Processor] Created ${deptWeekDocs.length} department weekly documents.`);
 
     const allDocs = [...rowDocs, ...empWeekDocs, ...deptWeekDocs];
-    console.log(`[CSV Processor] Total documents: ${allDocs.length}`);
+    console.log(`[Data Processor] Total documents: ${allDocs.length}`);
 
     return allDocs;
 }

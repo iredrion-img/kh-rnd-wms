@@ -1,0 +1,61 @@
+# CODEOWNERS
+# KH-WMS Repository Ownership Rules
+#
+# Format: <path pattern>  <owner1> [owner2...]
+# GitHub ID placeholders:
+#   iredrion-img     ??Replace with your actual GitHub username
+#   hooooni46-cell ??Replace with the new team member's GitHub username
+#
+# Rules are evaluated top-to-bottom. The LAST matching rule wins.
+# All PRs touching these files will automatically request review from the owner.
+
+# ?€?€?€ Default: Lead reviews everything unless overridden below ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+*                               iredrion-img
+
+# ?€?€?€ Shared Core (Lead only ??strict review) ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+server.js                       iredrion-img
+ragService.js                   iredrion-img
+package.json                    iredrion-img
+package-lock.json               iredrion-img
+vite.config.js                  iredrion-img
+tailwind.config.js              iredrion-img
+postcss.config.js               iredrion-img
+eslint.config.js                iredrion-img
+index.html                      iredrion-img
+
+# ?€?€?€ Data Files (Lead only ??changes need explicit discussion) ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+database_2026.csv               iredrion-img
+database_2025.csv               iredrion-img
+users.csv                       iredrion-img
+
+# ?€?€?€ Server / AI Pipeline (Lead primary, Team Member notified) ?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+server/                         iredrion-img
+server/ai/                      iredrion-img hooooni46-cell
+server/dataPipeline/            iredrion-img
+server/rag/                     iredrion-img
+
+# ?€?€?€ Frontend ??Shared Layout & Core Pages (Lead only) ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+src/App.jsx                     iredrion-img
+src/main.jsx                    iredrion-img
+src/index.css                   iredrion-img
+src/utils/                      iredrion-img
+src/services/                   iredrion-img
+src/components/layout/          iredrion-img
+src/components/ui/              iredrion-img
+src/components/dashboard/       iredrion-img
+src/pages/Dashboard.jsx         iredrion-img
+src/pages/Timesheet.jsx         iredrion-img
+src/pages/Login.jsx             iredrion-img
+
+# ?€?€?€ Team Member Feature Areas (Team Member primary, Lead review) ?€?€?€?€?€?€?€?€?€?€?€?€
+src/pages/WeeklyMeeting.jsx     hooooni46-cell iredrion-img
+src/components/chat/            hooooni46-cell iredrion-img
+
+# ?€?€?€ GitHub Config (Lead only) ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+.github/                        iredrion-img
+
+# ?€?€?€ Scripts (Lead preferred) ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+scripts/                        iredrion-img
+
+# ?€?€?€ Docs (Either, Lead final) ?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€?€
+*.md                            iredrion-img

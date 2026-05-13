@@ -26,7 +26,14 @@ lerna-debug.log*
 # Data Files (Protect live data)
 # ===========================
 *.csv
+*.xlsx
+database_*.json
+weekly_tasks_*.json
+weekly_schedule.json
+projects.json
+users.json
 backups/
+scratch/
 
 # ===========================
 # Local LLM / AI Runtime
