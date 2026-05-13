@@ -112,7 +112,7 @@ const MeetingOverviewPanel = ({
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       
       {/* ─── Basic Info Section ── */}
-      <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <section className="bg-white rounded-2xl shadow-sm border border-gray-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
             <CalendarCheck size={18} className="text-primary" />
@@ -251,7 +251,7 @@ const InlineAttendanceCell = ({ row, onRemove, onAdd, disabled }) => {
 
   return (
     <div className="flex items-center justify-between gap-2">
-      <div className="flex flex-wrap items-center gap-1.5 flex-1">
+      <div className="flex flex-wrap items-center justify-center gap-1.5 flex-1">
         {row.attending.map(u => (
           <button
             key={u.name}
