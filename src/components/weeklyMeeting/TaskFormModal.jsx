@@ -596,19 +596,44 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">업무코드</label>
-          <input 
-             type="text" 
-             list="task_codes_datalist"
-             name="task_code" 
-             value={formData.task_code || ''} 
-             onChange={handleChange} 
-             className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary font-mono text-sm bg-white" 
-             placeholder="선택 시 자동입력 또는 직접 수정/선택" 
-          />
-          <datalist id="task_codes_datalist">
-             {existingCodesOptions.map(code => <option key={code} value={code} />)}
-          </datalist>
+          <div className="flex items-center justify-between mb-1">
+            <label className="block text-sm font-medium text-gray-700">업무코드</label>
+            {!task && (
+              <label className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity">
+                <input
+                  type="checkbox"
+                  checked={codeMode === 'existing'}
+                  onChange={(e) => {
+                    setCodeMode(e.target.checked ? 'existing' : 'new');
+                    if (!e.target.checked) setFormData(prev => ({ ...prev, task_code: '' }));
+                  }}
+                  className="rounded border-gray-300 text-primary focus:ring-primary w-3.5 h-3.5"
+                />
+                <span className="text-xs text-gray-500 font-medium whitespace-nowrap">기존 코드 사용</span>
+              </label>
+            )}
+          </div>
+          {codeMode === 'existing' && !task ? (
+            <select name="task_code" value={formData.task_code || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
+              <option value="">기존 코드 선택</option>
+              {existingCodesOptions.map(code => <option key={code} value={code}>{code}</option>)}
+            </select>
+          ) : (
+            <>
+              <input
+                type="text"
+                list="task_codes_datalist"
+                name="task_code"
+                value={formData.task_code || ''}
+                onChange={handleChange}
+                className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary font-mono text-sm bg-white"
+                placeholder="대/중분류 선택 시 자동생성, 직접 수정 가능"
+              />
+              <datalist id="task_codes_datalist">
+                {existingCodesOptions.map(code => <option key={code} value={code} />)}
+              </datalist>
+            </>
+          )}
         </div>
       </div>
       )}
