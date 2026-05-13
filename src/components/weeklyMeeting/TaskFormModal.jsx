@@ -565,6 +565,21 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     const middleStr = MIDDLE_CATEGORIES[formData.sub_category];
     const prefix = majorStr && middleStr ? `${majorStr}-${middleStr}-` : '';
     
+    // '기존 코드 사용' 모드: 현재 팀 코드 우선, 전체 코드 목록 제공
+    const currentTeamCodes = allTasks.length > 0
+      ? Array.from(new Set(
+          allTasks
+            .filter(t => t.team === (formData.team || team))
+            .map(t => t.task_code)
+            .filter(Boolean)
+        )).sort()
+      : [];
+    const allExistingCodes = allTasks.length > 0
+      ? Array.from(new Set(allTasks.map(t => t.task_code).filter(Boolean))).sort()
+      : [];
+    const otherTeamCodes = allExistingCodes.filter(c => !currentTeamCodes.includes(c));
+    
+    // 신규 채번 모드 datalist용: prefix 필터 적용
     let existingCodesOptions = [];
     if (allTasks.length > 0) {
        const filtered = prefix 
@@ -616,7 +631,16 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           {codeMode === 'existing' ? (
             <select name="task_code" value={formData.task_code || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
               <option value="">기존 코드 선택</option>
-              {existingCodesOptions.map(code => <option key={code} value={code}>{code}</option>)}
+              {currentTeamCodes.length > 0 && (
+                <optgroup label={`현재 팀 (${formData.team || team})`}>
+                  {currentTeamCodes.map(code => <option key={`team-${code}`} value={code}>{code}</option>)}
+                </optgroup>
+              )}
+              {otherTeamCodes.length > 0 && (
+                <optgroup label="전체 코드">
+                  {otherTeamCodes.map(code => <option key={`all-${code}`} value={code}>{code}</option>)}
+                </optgroup>
+              )}
             </select>
           ) : (
             <>
