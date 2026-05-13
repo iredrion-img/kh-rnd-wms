@@ -559,9 +559,12 @@ function getWeekStartStr(dateStr) {
 function isTaskInWeek(taskStart, taskEnd, requestedWeekMonday) {
     if (!requestedWeekMonday) return false;
     
+    // 구글 시트 양식과 동일하게 지난주 데이터까지 함께 표시되도록 시작 기준일을 지난주 월요일(-7일)로 확장합니다.
     const reqStart = new Date(requestedWeekMonday);
+    reqStart.setDate(reqStart.getDate() - 7);
     reqStart.setHours(0,0,0,0);
-    const reqEnd = new Date(reqStart);
+    
+    const reqEnd = new Date(requestedWeekMonday);
     reqEnd.setDate(reqEnd.getDate() + 6);
     reqEnd.setHours(23,59,59,999);
 
@@ -589,13 +592,18 @@ app.get('/api/weekly-tasks', (req, res) => {
         tasks = tasks.map(t => ({ ...t, role: t.role || 'member' }));
 
         if (week) {
+            // 지난주 월요일 날짜 문자열 계산 (fallback용)
+            const d = new Date(week);
+            d.setDate(d.getDate() - 7);
+            const lastWeekStr = d.toISOString().slice(0, 10);
+
             tasks = tasks.filter(t => {
                 // Primary check: Range overlap (if dates exist)
                 if (t.start_date) {
                     return isTaskInWeek(t.start_date, t.end_date, week);
                 }
                 // Fallback: Exact week match for legacy data without start_date
-                return t.week_start === week;
+                return t.week_start === week || t.week_start === lastWeekStr;
             });
         }
         if (team) tasks = tasks.filter(t => t.team === team);
