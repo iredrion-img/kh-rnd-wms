@@ -52,6 +52,7 @@ const TREE_MENU = [
 const WeeklyMeeting = ({ currentUser }) => {
   const [activeMenu, setActiveMenu] = useState('회의 개요');
   const [researchTab, setResearchTab] = useState('연구과제'); // '연구과제' | '신기술'
+  const [projectTab, setProjectTab] = useState('AI'); // 'AI' | 'BIM' | 'R&D'
   const [expandedGroups, setExpandedGroups] = useState({ '팀별 현황': true });
   const [tasks, setTasks] = useState([]);
   const [currentWeek, setCurrentWeek] = useState(getThisMonday());
@@ -403,6 +404,13 @@ const WeeklyMeeting = ({ currentUser }) => {
     return researchTab === '신기술' ? isNewTech : !isNewTech;
   }) : tasks;
 
+  const filteredProjectTasks = activeMenu === '프로젝트 추진 및 수행 현황' ? tasks.filter(t => {
+    const cat = (t.category || '').trim().toUpperCase();
+    return cat === projectTab;
+  }) : tasks;
+
+  const currentTasksToDisplay = activeMenu === '연구과제' ? filteredResearchTasks : activeMenu === '프로젝트 추진 및 수행 현황' ? filteredProjectTasks : tasks;
+
   return (
     <div className="h-full flex flex-col bg-white overflow-hidden">
       {/* Top bar */}
@@ -508,6 +516,21 @@ const WeeklyMeeting = ({ currentUser }) => {
                       ))}
                     </div>
                   )}
+                  {activeMenu === '프로젝트 추진 및 수행 현황' && (
+                    <div className="flex bg-gray-100 p-1 rounded-lg gap-1">
+                      {['AI', 'BIM', 'R&D'].map(tab => (
+                        <button
+                          key={tab}
+                          onClick={() => setProjectTab(tab)}
+                          className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                            projectTab === tab ? 'bg-white text-kh-green shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                          }`}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
                 <button
                   onClick={() => handleOpenModal()}
@@ -525,7 +548,7 @@ const WeeklyMeeting = ({ currentUser }) => {
                   </div>
                 ) : (
                   <TaskTable
-                    tasks={filteredResearchTasks}
+                    tasks={currentTasksToDisplay}
                     team={activeMenu}
                     onEdit={handleOpenModal}
                     onDelete={handleDeleteTask}
@@ -634,6 +657,21 @@ const WeeklyMeeting = ({ currentUser }) => {
                             ))}
                           </div>
                         )}
+                        {activeMenu === '프로젝트 추진 및 수행 현황' && (
+                          <div className="flex bg-gray-100 p-1.5 rounded-xl gap-2">
+                            {['AI', 'BIM', 'R&D'].map(tab => (
+                              <button
+                                key={tab}
+                                onClick={() => setProjectTab(tab)}
+                                className={`px-6 py-2 rounded-lg text-base font-bold transition-all ${
+                                  projectTab === tab ? 'bg-white text-kh-green shadow-md' : 'text-gray-500 hover:text-gray-800'
+                                }`}
+                              >
+                                {tab}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       {!isFullscreenMode && (
                         <button
@@ -652,7 +690,7 @@ const WeeklyMeeting = ({ currentUser }) => {
                         </div>
                       ) : (
                         <TaskTable
-                          tasks={filteredResearchTasks}
+                          tasks={currentTasksToDisplay}
                           team={activeMenu}
                           onEdit={handleOpenModal}
                           onDelete={handleDeleteTask}
