@@ -122,11 +122,11 @@ const MeetingOverviewPanel = ({
         </div>
         
         <div className="p-0">
-          <table className="w-full border-collapse">
+          <table className="w-full border-collapse overview-table">
             <tbody>
               {/* 회의 일시 */}
               <tr className="border-b border-gray-100">
-                <td className="px-6 py-4 bg-white w-24 whitespace-nowrap font-bold text-gray-500 text-sm border-r border-gray-100">회의일시</td>
+                <td className="px-6 py-4 bg-white w-24 whitespace-nowrap font-bold text-gray-500 text-sm border-r border-gray-100 text-center align-middle">회의일시</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-4">
                     <input
@@ -145,9 +145,9 @@ const MeetingOverviewPanel = ({
               </tr>
               {/* 참석 인원 */}
               <tr>
-                <td className="px-6 py-8 bg-white w-24 whitespace-nowrap font-bold text-gray-500 text-sm align-middle border-r border-gray-100">참석인원</td>
+                <td className="px-6 py-8 bg-white w-24 whitespace-nowrap font-bold text-gray-500 text-sm border-r border-gray-100 text-center align-middle">참석인원</td>
                 <td className="px-0 py-0">
-                  <table className="w-full text-sm">
+                  <table className="w-full text-sm overview-nested-table">
                     <tbody className="divide-y divide-gray-100">
                       {teamRows.map((row) => (
                         <tr key={row.label} className="hover:bg-gray-50/30 transition-colors">
