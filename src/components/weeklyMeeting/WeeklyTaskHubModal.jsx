@@ -12,7 +12,9 @@ const WeeklyTaskHubModal = ({
   selectedDate,
 }) => {
   const [activeTab, setActiveTab] = useState('view'); // 'view' | 'add'
+  const [pastTasks, setPastTasks] = useState([]);
   const [myTasks, setMyTasks] = useState([]);
+  const [upcomingTasks, setUpcomingTasks] = useState([]);
   const [noticeTasks, setNoticeTasks] = useState([]);
   const [editingTask, setEditingTask] = useState(null); // Task being edited in separate modal
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -24,13 +26,24 @@ const WeeklyTaskHubModal = ({
     if (!currentUser) return;
     setIsLoading(true);
     try {
-      const res = await fetch(`/api/weekly-tasks?week=${currentWeek}`);
+      const res = await fetch(`/api/weekly-tasks`);
       if (res.ok) {
         const all = await res.json();
         const mine = all.filter(t => t.assignees && t.assignees.includes(currentUser.name) && t.team !== '공지사항');
-        const notices = all.filter(t => t.team === '공지사항');
+        const notices = all.filter(t => t.team === '공지사항' && t.week_start === currentWeek);
         notices.sort((a, b) => (a.end_date || '9999-12-31').localeCompare(b.end_date || '9999-12-31'));
-        setMyTasks(mine);
+
+        const past = mine.filter(t => t.week_start < currentWeek);
+        const current = mine.filter(t => t.week_start === currentWeek);
+        const upcoming = mine.filter(t => t.week_start > currentWeek);
+
+        past.sort((a, b) => (b.week_start || '').localeCompare(a.week_start || ''));
+        current.sort((a, b) => (a.task_code || '').localeCompare(b.task_code || ''));
+        upcoming.sort((a, b) => (a.week_start || '').localeCompare(b.week_start || ''));
+
+        setPastTasks(past);
+        setMyTasks(current);
+        setUpcomingTasks(upcoming);
         setNoticeTasks(notices);
       }
     } catch (e) {
@@ -87,7 +100,7 @@ const WeeklyTaskHubModal = ({
 
   // ─── TAB: VIEW ──────────────────────────────────────────────
   const renderViewTab = () => (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-6">
       {/* 📢 공지사항 */}
       <section>
         <h3 className="flex items-center gap-2 text-sm font-bold text-orange-500 mb-3">
@@ -116,21 +129,21 @@ const WeeklyTaskHubModal = ({
         )}
       </section>
 
-      {/* 👤 나의 업무 현황 */}
+      {/* 🕒 과거 업무 이력 */}
       <section>
-        <h3 className="flex items-center gap-2 text-sm font-bold text-gray-700 mb-3">
-          <CalendarDays size={15} className="text-primary" />
-          이번 주 나의 업무 현황
+        <h3 className="flex items-center gap-2 text-sm font-bold text-gray-500 mb-3">
+          <CalendarDays size={15} />
+          과거 업무 이력 <span className="text-xs font-normal text-gray-400">({pastTasks.length}건)</span>
         </h3>
         {isLoading ? (
           <div className="text-sm text-gray-400 animate-pulse p-3 bg-gray-50 rounded-lg">불러오는 중...</div>
-        ) : myTasks.length > 0 ? (
-          <div className="flex flex-col gap-2">
-            {myTasks.map(task => (
-              <div key={task.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-100 bg-gray-50/60 hover:bg-gray-50 transition-colors">
+        ) : pastTasks.length > 0 ? (
+          <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
+            {pastTasks.map(task => (
+              <div key={task.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-100/50 hover:bg-gray-100 transition-colors">
                 <div className="flex flex-col flex-1 min-w-0">
-                  <span className="text-[10px] font-bold text-primary mb-0.5">{task.task_code || task.team || '일반 업무'}</span>
-                  <span className="text-sm text-gray-800 font-medium truncate" title={task.content}>
+                  <span className="text-[10px] font-bold text-gray-500 mb-0.5">[{task.week_start}] {task.task_code || task.team || '일반 업무'}</span>
+                  <span className="text-sm text-gray-700 font-medium truncate" title={task.content}>
                     {task.content}
                   </span>
                   <span className="text-[10px] text-gray-400 mt-0.5">
@@ -143,13 +156,61 @@ const WeeklyTaskHubModal = ({
                   </span>
                   <button
                     onClick={() => handleEdit(task)}
-                    className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-primary/10"
+                    className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-white"
                   >
                     <Pencil size={14} />
                   </button>
                   <button
                     onClick={() => handleDelete(task)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-red-50"
+                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-white"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-400 text-center p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            과거 이력이 없습니다.
+          </div>
+        )}
+      </section>
+
+      {/* ▶️ 이번 주 나의 업무 현황 */}
+      <section>
+        <h3 className="flex items-center gap-2 text-sm font-bold text-primary mb-3">
+          <CalendarDays size={15} />
+          이번 주 나의 업무 현황 <span className="text-xs font-normal text-gray-400">({myTasks.length}건)</span>
+        </h3>
+        {isLoading ? (
+          <div className="text-sm text-gray-400 animate-pulse p-3 bg-gray-50 rounded-lg">불러오는 중...</div>
+        ) : myTasks.length > 0 ? (
+          <div className="flex flex-col gap-2">
+            {myTasks.map(task => (
+              <div key={task.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-primary/20 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors shadow-sm shadow-primary/5">
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="text-[10px] font-bold text-primary mb-0.5">{task.task_code || task.team || '일반 업무'}</span>
+                  <span className="text-sm text-gray-900 font-bold truncate" title={task.content}>
+                    {task.content}
+                  </span>
+                  <span className="text-[10px] text-gray-400 mt-0.5">
+                    {[task.category, task.sub_category].filter(Boolean).join(' › ')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-none">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${statusBadge(task.status)}`}>
+                    {task.status || '진행 중'}
+                  </span>
+                  <button
+                    onClick={() => handleEdit(task)}
+                    className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-white"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(task)}
+                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-white"
                   >
                     <Trash2 size={14} />
                   </button>
@@ -166,6 +227,54 @@ const WeeklyTaskHubModal = ({
             >
               + 업무 등록하기
             </button>
+          </div>
+        )}
+      </section>
+
+      {/* 📅 예정 업무 */}
+      <section>
+        <h3 className="flex items-center gap-2 text-sm font-bold text-indigo-600 mb-3">
+          <CalendarDays size={15} />
+          예정 업무 <span className="text-xs font-normal text-gray-400">({upcomingTasks.length}건)</span>
+        </h3>
+        {isLoading ? (
+          <div className="text-sm text-gray-400 animate-pulse p-3 bg-gray-50 rounded-lg">불러오는 중...</div>
+        ) : upcomingTasks.length > 0 ? (
+          <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
+            {upcomingTasks.map(task => (
+              <div key={task.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-indigo-100 bg-indigo-50/30 hover:bg-indigo-50/60 transition-colors">
+                <div className="flex flex-col flex-1 min-w-0">
+                  <span className="text-[10px] font-bold text-indigo-600 mb-0.5">[{task.week_start} 예정] {task.task_code || task.team || '일반 업무'}</span>
+                  <span className="text-sm text-gray-800 font-medium truncate" title={task.content}>
+                    {task.content}
+                  </span>
+                  <span className="text-[10px] text-gray-400 mt-0.5">
+                    {[task.category, task.sub_category].filter(Boolean).join(' › ')}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 flex-none">
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${statusBadge(task.status)}`}>
+                    {task.status || '진행 중'}
+                  </span>
+                  <button
+                    onClick={() => handleEdit(task)}
+                    className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-white"
+                  >
+                    <Pencil size={14} />
+                  </button>
+                  <button
+                    onClick={() => handleDelete(task)}
+                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-white"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-sm text-gray-400 text-center p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+            예정된 업무가 없습니다.
           </div>
         )}
       </section>
