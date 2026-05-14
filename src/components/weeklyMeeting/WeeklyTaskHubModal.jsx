@@ -34,9 +34,40 @@ const WeeklyTaskHubModal = ({
         const notices = all.filter(t => t.team === '공지사항' && t.week_start === currentWeek);
         notices.sort((a, b) => (a.end_date || '9999-12-31').localeCompare(b.end_date || '9999-12-31'));
 
-        const past = mine.filter(t => t.week_start < currentWeek);
-        const current = mine.filter(t => t.week_start === currentWeek);
-        const upcoming = mine.filter(t => t.week_start > currentWeek);
+        const curMon = new Date(currentWeek);
+        curMon.setHours(0, 0, 0, 0);
+
+        const curSun = new Date(currentWeek);
+        curSun.setDate(curSun.getDate() + 6);
+        curSun.setHours(23, 59, 59, 999);
+
+        // 주간공정회의 기준과 동일하게 지난주 월요일부터 이번 주 일요일까지를 '이번 주 업무' 활성 영역으로 산정
+        const activeStart = new Date(currentWeek);
+        activeStart.setDate(activeStart.getDate() - 7);
+        activeStart.setHours(0, 0, 0, 0);
+
+        const past = [];
+        const current = [];
+        const upcoming = [];
+
+        mine.forEach(t => {
+          const tStartStr = t.start_date || t.week_start;
+          const tEndStr = t.end_date || tStartStr;
+
+          const tStart = new Date(tStartStr);
+          tStart.setHours(0, 0, 0, 0);
+
+          const tEnd = new Date(tEndStr);
+          tEnd.setHours(23, 59, 59, 999);
+
+          if (tStart <= curSun && tEnd >= activeStart) {
+            current.push(t);
+          } else if (tStart > curSun) {
+            upcoming.push(t);
+          } else {
+            past.push(t);
+          }
+        });
 
         past.sort((a, b) => (b.week_start || '').localeCompare(a.week_start || ''));
         current.sort((a, b) => (a.task_code || '').localeCompare(b.task_code || ''));
