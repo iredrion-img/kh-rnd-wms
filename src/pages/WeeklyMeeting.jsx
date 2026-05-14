@@ -43,7 +43,7 @@ const TREE_MENU = [
       { id: 'AI 응용팀', label: 'AI 응용팀', type: 'team' },
     ],
   },
-  { id: '연구과제', label: '연구과제', icon: FlaskConical, type: 'team' },
+  { id: '연구과제', label: '연구과제/신기술', icon: FlaskConical, type: 'team' },
   { id: '프로젝트 추진 및 수행 현황', label: '프로젝트 추진 및 수행 현황', icon: FolderKanban, type: 'team' },
   { id: '주간일정', label: '주간일정', icon: CalendarRange, type: 'team' },
   { id: '회람', label: '회람', icon: ClipboardList, type: 'circulation' },
@@ -51,6 +51,7 @@ const TREE_MENU = [
 
 const WeeklyMeeting = ({ currentUser }) => {
   const [activeMenu, setActiveMenu] = useState('회의 개요');
+  const [researchTab, setResearchTab] = useState('연구과제'); // '연구과제' | '신기술'
   const [expandedGroups, setExpandedGroups] = useState({ '팀별 현황': true });
   const [tasks, setTasks] = useState([]);
   const [currentWeek, setCurrentWeek] = useState(getThisMonday());
@@ -397,6 +398,11 @@ const WeeklyMeeting = ({ currentUser }) => {
   };
 
   // ── Main ────────────────────────────────────────────────────────
+  const filteredResearchTasks = activeMenu === '연구과제' ? tasks.filter(t => {
+    const isNewTech = (t.task_code && t.task_code.includes('-N-')) || t.sub_category === '신기술' || (t.content && t.content.startsWith('[신기술]'));
+    return researchTab === '신기술' ? isNewTech : !isNewTech;
+  }) : tasks;
+
   return (
     <div className="h-full flex flex-col bg-white overflow-hidden">
       {/* Top bar */}
@@ -483,9 +489,26 @@ const WeeklyMeeting = ({ currentUser }) => {
           ) : (
             <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
               <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
-                <h2 className="text-base font-bold text-gray-800">
-                  {activeMenu}
-                </h2>
+                <div className="flex items-center gap-6">
+                  <h2 className="text-base font-bold text-gray-800">
+                    {activeMenu === '연구과제' ? '연구과제/신기술' : activeMenu}
+                  </h2>
+                  {activeMenu === '연구과제' && (
+                    <div className="flex bg-gray-100 p-1 rounded-lg gap-1">
+                      {['연구과제', '신기술'].map(tab => (
+                        <button
+                          key={tab}
+                          onClick={() => setResearchTab(tab)}
+                          className={`px-4 py-1.5 rounded-md text-xs font-bold transition-all ${
+                            researchTab === tab ? 'bg-white text-kh-green shadow-sm' : 'text-gray-500 hover:text-gray-800'
+                          }`}
+                        >
+                          {tab}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
                 <button
                   onClick={() => handleOpenModal()}
                   className="flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-kh-green to-kh-green/80 text-white rounded-lg hover:shadow-lg transition-all text-sm font-bold"
@@ -502,7 +525,7 @@ const WeeklyMeeting = ({ currentUser }) => {
                   </div>
                 ) : (
                   <TaskTable
-                    tasks={tasks}
+                    tasks={filteredResearchTasks}
                     team={activeMenu}
                     onEdit={handleOpenModal}
                     onDelete={handleDeleteTask}
@@ -592,9 +615,26 @@ const WeeklyMeeting = ({ currentUser }) => {
                ) : (
                   <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-200 flex flex-col overflow-hidden">
                     <div className="flex justify-between items-center px-10 py-6 border-b border-gray-100">
-                      <h2 className="text-2xl font-black text-gray-800">
-                        {activeMenu}
-                      </h2>
+                      <div className="flex items-center gap-8">
+                        <h2 className="text-2xl font-black text-gray-800">
+                          {activeMenu === '연구과제' ? '연구과제/신기술' : activeMenu}
+                        </h2>
+                        {activeMenu === '연구과제' && (
+                          <div className="flex bg-gray-100 p-1.5 rounded-xl gap-2">
+                            {['연구과제', '신기술'].map(tab => (
+                              <button
+                                key={tab}
+                                onClick={() => setResearchTab(tab)}
+                                className={`px-6 py-2 rounded-lg text-base font-bold transition-all ${
+                                  researchTab === tab ? 'bg-white text-kh-green shadow-md' : 'text-gray-500 hover:text-gray-800'
+                                }`}
+                              >
+                                {tab}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                       {!isFullscreenMode && (
                         <button
                           onClick={() => handleOpenModal()}
@@ -612,7 +652,7 @@ const WeeklyMeeting = ({ currentUser }) => {
                         </div>
                       ) : (
                         <TaskTable
-                          tasks={tasks}
+                          tasks={filteredResearchTasks}
                           team={activeMenu}
                           onEdit={handleOpenModal}
                           onDelete={handleDeleteTask}
