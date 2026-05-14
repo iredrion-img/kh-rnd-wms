@@ -156,14 +156,12 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
         };
 
         const renderTeamTable = (teamName, teamTasks) => (
-          <div key={teamName} className="mb-6 border border-gray-400">
-            <div className="bg-gray-100 text-[11px] font-bold p-1.5 border-b border-gray-400 text-center tracking-wider text-black">
-               [ {teamName} ]
-            </div>
+          <div key={teamName} className="mb-6 break-inside-avoid">
+            <h2 className="text-[12px] font-bold mb-1 pl-1 border-l-4 border-black">{teamName}</h2>
             {teamTasks.length === 0 ? (
-               <p className="text-[10px] text-gray-500 italic p-3 text-center bg-white">등록된 주간 업무가 없습니다.</p>
+               <p className="text-[10px] text-gray-500 italic p-2 border border-gray-400 text-center bg-gray-50">등록된 주간 업무가 없습니다.</p>
             ) : (
-              <table className="w-full border-collapse table-fixed bg-white">
+              <table className="w-full border-collapse table-fixed bg-white border border-gray-400">
                 <colgroup>
                   <col width="8%" />
                   <col width="15%" />
@@ -204,14 +202,11 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
 
         return (
           <>
-            <div className="text-center font-bold text-sm mb-3 mt-8">【 팀 별 주 간 업 무 】</div>
             {renderTeamTable('공통업무&행정', commonTasks)}
             {renderTeamTable('스마트 기술 개발팀', smartTasks)}
             {renderTeamTable('디지털 기술 연구팀', digitalTasks)}
             {renderTeamTable('인프라 BIM팀', infraTasks)}
             {renderTeamTable('AI 응용팀', aiTasks)}
-            
-            <div className="text-center font-bold text-sm mb-3 mt-8">【 연 구 과 제 】</div>
             {renderTeamTable('연구과제', researchTasks)}
           </>
         );
@@ -220,14 +215,12 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
       <div className="page-break"></div>
 
       {/* ── 3. 프로젝트 추진 현황 ── */}
-      <div className="mb-6 mt-8">
-        <div className="bg-gray-100 text-[11px] font-bold p-1.5 border border-gray-400 text-center tracking-wider text-black">
-           [ 프로젝트 추진 및 수행 현황 ]
-        </div>
+      <div className="mb-6 mt-8 break-inside-avoid">
+        <h2 className="text-[12px] font-bold mb-1 pl-1 border-l-4 border-black">프로젝트 추진 및 수행 현황</h2>
         {validProjects.length === 0 ? (
-          <p className="text-[10px] text-gray-500 italic p-3 text-center border border-t-0 border-gray-400">등록된 프로젝트가 없습니다.</p>
+          <p className="text-[10px] text-gray-500 italic p-2 border border-gray-400 text-center bg-gray-50">등록된 프로젝트가 없습니다.</p>
         ) : (
-          <table className="w-full border-collapse table-fixed">
+          <table className="w-full border-collapse table-fixed border border-gray-400">
             <colgroup>
               <col width="8%" />
               <col width="26%" />
@@ -270,12 +263,12 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
       </div>
 
       {/* ── 4. 주간일정 ── */}
-      <div className="mb-6 mt-8">
-        <h2 className="text-[12px] font-bold mb-2 pl-1 border-l-4 border-black">주간일정</h2>
+      <div className="mb-6 mt-8 break-inside-avoid">
+        <h2 className="text-[12px] font-bold mb-1 pl-1 border-l-4 border-black">주간일정</h2>
         {validSchedules.length === 0 ? (
-          <p className="text-[10px] text-gray-500 italic p-3 text-center border border-gray-400">등록된 일정이 없습니다.</p>
+          <p className="text-[10px] text-gray-500 italic p-2 border border-gray-400 text-center bg-gray-50">등록된 일정이 없습니다.</p>
         ) : (
-          <table className="w-full border-collapse table-fixed">
+          <table className="w-full border-collapse table-fixed border border-gray-400">
             <colgroup>
               <col width="12%" />
               <col width="15%" />
