@@ -12,6 +12,7 @@ const WeeklyTaskHubModal = ({
   selectedDate,
 }) => {
   const [activeTab, setActiveTab] = useState('view'); // 'view' | 'add'
+  const [isPastExpanded, setIsPastExpanded] = useState(false);
   const [pastTasks, setPastTasks] = useState([]);
   const [myTasks, setMyTasks] = useState([]);
   const [upcomingTasks, setUpcomingTasks] = useState([]);
@@ -129,54 +130,6 @@ const WeeklyTaskHubModal = ({
         )}
       </section>
 
-      {/* 🕒 과거 업무 이력 */}
-      <section>
-        <h3 className="flex items-center gap-2 text-sm font-bold text-gray-500 mb-3">
-          <CalendarDays size={15} />
-          과거 업무 이력 <span className="text-xs font-normal text-gray-400">({pastTasks.length}건)</span>
-        </h3>
-        {isLoading ? (
-          <div className="text-sm text-gray-400 animate-pulse p-3 bg-gray-50 rounded-lg">불러오는 중...</div>
-        ) : pastTasks.length > 0 ? (
-          <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1">
-            {pastTasks.map(task => (
-              <div key={task.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-100/50 hover:bg-gray-100 transition-colors">
-                <div className="flex flex-col flex-1 min-w-0">
-                  <span className="text-[10px] font-bold text-gray-500 mb-0.5">[{task.week_start}] {task.task_code || task.team || '일반 업무'}</span>
-                  <span className="text-sm text-gray-700 font-medium truncate" title={task.content}>
-                    {task.content}
-                  </span>
-                  <span className="text-[10px] text-gray-400 mt-0.5">
-                    {[task.category, task.sub_category].filter(Boolean).join(' › ')}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2 flex-none">
-                  <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${statusBadge(task.status)}`}>
-                    {task.status || '진행 중'}
-                  </span>
-                  <button
-                    onClick={() => handleEdit(task)}
-                    className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-white"
-                  >
-                    <Pencil size={14} />
-                  </button>
-                  <button
-                    onClick={() => handleDelete(task)}
-                    className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-white"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-sm text-gray-400 text-center p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-            과거 이력이 없습니다.
-          </div>
-        )}
-      </section>
-
       {/* ▶️ 이번 주 나의 업무 현황 */}
       <section>
         <h3 className="flex items-center gap-2 text-sm font-bold text-primary mb-3">
@@ -275,6 +228,68 @@ const WeeklyTaskHubModal = ({
         ) : (
           <div className="text-sm text-gray-400 text-center p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
             예정된 업무가 없습니다.
+          </div>
+        )}
+      </section>
+
+      {/* 🕒 과거 업무 이력 (접이식 UI, 맨 하단) */}
+      <section className="border-t border-gray-100 pt-4 mt-2">
+        <button
+          type="button"
+          onClick={() => setIsPastExpanded(!isPastExpanded)}
+          className="flex items-center justify-between w-full p-3 bg-gray-50 hover:bg-gray-100 rounded-xl transition-all text-gray-600 font-bold text-sm border border-gray-200/60"
+        >
+          <div className="flex items-center gap-2">
+            <CalendarDays size={15} />
+            과거 업무 이력 <span className="text-xs font-normal text-gray-400">({pastTasks.length}건)</span>
+          </div>
+          <span className="text-xs font-bold text-primary bg-white px-2.5 py-1 rounded-md border border-gray-200 shadow-sm">
+            {isPastExpanded ? '접기 ▲' : '펼쳐보기 ▼'}
+          </span>
+        </button>
+
+        {isPastExpanded && (
+          <div className="mt-3">
+            {isLoading ? (
+              <div className="text-sm text-gray-400 animate-pulse p-3 bg-gray-50 rounded-lg">불러오는 중...</div>
+            ) : pastTasks.length > 0 ? (
+              <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1 animate-in fade-in slide-in-from-top-1 duration-200">
+                {pastTasks.map(task => (
+                  <div key={task.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-100/50 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col flex-1 min-w-0">
+                      <span className="text-[10px] font-bold text-gray-500 mb-0.5">[{task.week_start}] {task.task_code || task.team || '일반 업무'}</span>
+                      <span className="text-sm text-gray-700 font-medium truncate" title={task.content}>
+                        {task.content}
+                      </span>
+                      <span className="text-[10px] text-gray-400 mt-0.5">
+                        {[task.category, task.sub_category].filter(Boolean).join(' › ')}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 flex-none">
+                      <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${statusBadge(task.status)}`}>
+                        {task.status || '진행 중'}
+                      </span>
+                      <button
+                        onClick={() => handleEdit(task)}
+                        className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-white"
+                      >
+                        <Pencil size={14} />
+                      </button>
+                      <button
+                        onClick={() => handleDelete(task)}
+                        className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-white"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-sm text-gray-400 text-center p-3 bg-gray-50 rounded-xl border border-dashed border-gray-200">
+                과거 이력이 없습니다.
+              </div>
+            )}
           </div>
         )}
       </section>
