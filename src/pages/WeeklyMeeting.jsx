@@ -123,7 +123,17 @@ const WeeklyMeeting = ({ currentUser }) => {
           if (valA !== valB) return valA - valB;
           return (a.start_date || '').localeCompare(b.start_date || '');
         });
-      } else if (!isProject) {
+      } else if (isProject) {
+        const catOrder = { 'AI': 1, 'BIM': 2, 'R&D': 3 };
+        finalData.sort((a, b) => {
+          const catA = catOrder[a.category || '기타'] || 99;
+          const catB = catOrder[b.category || '기타'] || 99;
+          if (catA !== catB) return catA - catB;
+          const codeA = a.project_code || a.sub_no || '';
+          const codeB = b.project_code || b.sub_no || '';
+          return codeA.localeCompare(codeB, 'ko', { numeric: true });
+        });
+      } else {
         // 일반 팀별 업무 정렬: 1순위 업무코드 오름차순, 2순위 진행 상태 (진행 중 우선)
         const statusOrder = { '진행 중': 1, '완료': 2, '보류': 3 };
         finalData.sort((a, b) => {
