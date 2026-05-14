@@ -141,7 +141,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
           {tasks.map(t => (
             <tr key={t.id} className="hover:bg-gray-50/50 transition-colors divide-x divide-gray-200">
               <td className="px-4 py-3 text-gray-500 font-mono text-xs font-bold bg-gray-50/30 text-center">{t.project_code || t.sub_no}</td>
-              <td className="px-4 py-3 font-bold text-primary whitespace-pre-wrap">{t.project_name}</td>
+              <td className={`px-4 py-3 font-bold whitespace-pre-wrap ${hideActions ? 'text-gray-900' : 'text-primary'}`}>{t.project_name}</td>
               <td className="px-4 py-3 text-center">{formatMethod(t.method)}</td>
               <td className="px-4 py-3 whitespace-nowrap text-center">{t.bim_cost}</td>
               <td className="px-4 py-3 text-center">{t.dept}</td>
