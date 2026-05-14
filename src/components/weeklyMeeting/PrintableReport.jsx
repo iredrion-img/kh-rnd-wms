@@ -9,6 +9,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
   const filterByTeam = (teamName) => tasks.filter(t => t.team === teamName && (t.content || t.task_code));
 
   const noticeTasks = filterByTeam('공지사항');
+  const commonTasks = filterByTeam('공통업무&행정');
   const smartTasks = filterByTeam('스마트 기술 개발팀');
   const digitalTasks = filterByTeam('디지털 기술 연구팀');
   const infraTasks = filterByTeam('인프라 BIM팀');
@@ -204,6 +205,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
         return (
           <>
             <div className="text-center font-bold text-sm mb-3 mt-8">【 팀 별 주 간 업 무 】</div>
+            {renderTeamTable('공통업무&행정', commonTasks)}
             {renderTeamTable('스마트 기술 개발팀', smartTasks)}
             {renderTeamTable('디지털 기술 연구팀', digitalTasks)}
             {renderTeamTable('인프라 BIM팀', infraTasks)}
