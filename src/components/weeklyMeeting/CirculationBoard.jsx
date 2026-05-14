@@ -27,36 +27,55 @@ const USERS = [
 ];
 
 const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
+  // ─── 로컬 스토리지 키 정의 ───
+  const SURVEY_INFO_KEY = 'kh_circulation_survey_info_v1';
+  const SURVEY_DATA_KEY = 'kh_circulation_survey_data_v1';
+  const CUSTOM_FORM_KEY = 'kh_circulation_custom_form_v1';
+  const CUSTOM_DATA_KEY = 'kh_circulation_custom_data_v1';
+
   // ─── 1. 교육/설문 취합 State ───
-  const [surveyInfo, setSurveyInfo] = useState({
-    title: '2026년 상반기 산업보안교육 참석/이수 조사',
-    deadline: '2026-05-31',
-    statusColName: '이수여부',
-    trueLabel: '이수',
-    falseLabel: '미이수',
-    isEditing: false
+  const [surveyInfo, setSurveyInfo] = useState(() => {
+    const saved = localStorage.getItem(SURVEY_INFO_KEY);
+    if (saved) { try { return JSON.parse(saved); } catch (e) {} }
+    return {
+      title: '2026년 상반기 산업보안교육 참석/이수 조사',
+      deadline: '2026-05-31',
+      statusColName: '이수여부',
+      trueLabel: '이수',
+      falseLabel: '미이수',
+      isEditing: false
+    };
   });
   
-  const [surveyData, setSurveyData] = useState(
-    USERS.map((u, i) => ({ id: i, ...u, status: i % 3 === 0, note: '' }))
-  );
+  const [surveyData, setSurveyData] = useState(() => {
+    const saved = localStorage.getItem(SURVEY_DATA_KEY);
+    if (saved) { try { return JSON.parse(saved); } catch (e) {} }
+    return USERS.map((u, i) => ({ id: i, ...u, status: i % 3 === 0, note: '' }));
+  });
 
   // ─── 2. 자산/IP 등 자유 폼 State ───
-  const [customForm, setCustomForm] = useState({
-    title: '휴대전화 및 노트북/아이패드 IP 주소 등록',
-    columns: ['휴대전화', '노트북/아이패드 IP', '비고'],
-    isEditingConfig: false
+  const [customForm, setCustomForm] = useState(() => {
+    const saved = localStorage.getItem(CUSTOM_FORM_KEY);
+    if (saved) { try { return JSON.parse(saved); } catch (e) {} }
+    return {
+      title: '휴대전화 및 노트북/아이패드 IP 주소 등록',
+      columns: ['휴대전화', '노트북/아이패드 IP', '비고'],
+      isEditingConfig: false
+    };
   });
-  const [customData, setCustomData] = useState(
-    USERS.map((u, i) => ({
+
+  const [customData, setCustomData] = useState(() => {
+    const saved = localStorage.getItem(CUSTOM_DATA_KEY);
+    if (saved) { try { return JSON.parse(saved); } catch (e) {} }
+    return USERS.map((u, i) => ({
       id: i, ...u, 
       values: {
         '휴대전화': i === 0 ? '010-1234-5678' : '',
         '노트북/아이패드 IP': i === 1 ? '107.191.17.151' : '',
         '비고': ''
       }
-    }))
-  );
+    }));
+  });
 
   // ─── 3. 하계 휴가 달력 State ───
   const currentYear = new Date().getFullYear();
@@ -98,23 +117,43 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   };
 
   // ─── Handlers ───
+  const updateSurveyInfo = (newInfo) => {
+    setSurveyInfo(newInfo);
+    localStorage.setItem(SURVEY_INFO_KEY, JSON.stringify(newInfo));
+  };
+
+  const updateCustomForm = (newForm) => {
+    setCustomForm(newForm);
+    localStorage.setItem(CUSTOM_FORM_KEY, JSON.stringify(newForm));
+  };
+
   const handleSurveyToggle = (id) => {
-    setSurveyData(prev => prev.map(item => 
-      item.id === id ? { ...item, status: !item.status } : item
-    ));
+    setSurveyData(prev => {
+      const next = prev.map(item => item.id === id ? { ...item, status: !item.status } : item);
+      localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(next));
+      return next;
+    });
   };
   
   const handleSurveyNoteChange = (id, val) => {
-    setSurveyData(prev => prev.map(item => item.id === id ? { ...item, note: val } : item));
+    setSurveyData(prev => {
+      const next = prev.map(item => item.id === id ? { ...item, note: val } : item);
+      localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(next));
+      return next;
+    });
   };
 
   const handleCustomDataChange = (id, col, val) => {
-    setCustomData(prev => prev.map(item => {
-      if (item.id === id) {
-        return { ...item, values: { ...item.values, [col]: val } };
-      }
-      return item;
-    }));
+    setCustomData(prev => {
+      const next = prev.map(item => {
+        if (item.id === id) {
+          return { ...item, values: { ...item.values, [col]: val } };
+        }
+        return item;
+      });
+      localStorage.setItem(CUSTOM_DATA_KEY, JSON.stringify(next));
+      return next;
+    });
   };
 
   const completedCount = surveyData.filter(d => d.status).length;
@@ -176,19 +215,19 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
               <div className="flex-1 flex items-center gap-4">
                 <input 
                   type="text" value={surveyInfo.title}
-                  onChange={(e) => setSurveyInfo({...surveyInfo, title: e.target.value})}
+                  onChange={(e) => updateSurveyInfo({...surveyInfo, title: e.target.value})}
                   className="px-3 py-1.5 rounded bg-white/10 border border-white/30 text-white placeholder-white/50 w-full max-w-sm focus:outline-none focus:ring-2 focus:ring-kh-green font-bold text-lg"
                   placeholder="조사 제목 입력"
                 />
                 <input 
                   type="date" value={surveyInfo.deadline}
-                  onChange={(e) => setSurveyInfo({...surveyInfo, deadline: e.target.value})}
+                  onChange={(e) => updateSurveyInfo({...surveyInfo, deadline: e.target.value})}
                   className="px-3 py-1.5 rounded bg-white/10 border border-white/30 text-white focus:outline-none"
                 />
                 <div className="flex items-center gap-2 bg-black/20 px-3 py-1.5 rounded border border-white/10">
                   <input 
                     type="text" value={surveyInfo.statusColName || '이수여부'}
-                    onChange={(e) => setSurveyInfo({...surveyInfo, statusColName: e.target.value})}
+                    onChange={(e) => updateSurveyInfo({...surveyInfo, statusColName: e.target.value})}
                     className="px-3 py-1 rounded bg-white/10 border border-white/30 text-white placeholder-white/50 w-24 focus:outline-none focus:ring-2 focus:ring-kh-green font-bold text-xs"
                     placeholder="상태 열 이름"
                   />
@@ -196,17 +235,17 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
                   <span className="text-xs text-white/70">O 값:</span>
                   <input 
                     type="text" value={surveyInfo.trueLabel || '이수'}
-                    onChange={(e) => setSurveyInfo({...surveyInfo, trueLabel: e.target.value})}
+                    onChange={(e) => updateSurveyInfo({...surveyInfo, trueLabel: e.target.value})}
                     className="px-2 py-1 rounded bg-white/10 border border-white/30 text-white placeholder-white/50 w-16 focus:outline-none focus:ring-2 focus:ring-kh-green font-bold text-xs text-center"
                   />
                   <span className="text-xs text-white/70 ml-2">X 값:</span>
                   <input 
                     type="text" value={surveyInfo.falseLabel || '미이수'}
-                    onChange={(e) => setSurveyInfo({...surveyInfo, falseLabel: e.target.value})}
+                    onChange={(e) => updateSurveyInfo({...surveyInfo, falseLabel: e.target.value})}
                     className="px-2 py-1 rounded bg-white/10 border border-white/30 text-white placeholder-white/50 w-16 focus:outline-none focus:ring-2 focus:ring-kh-green font-bold text-xs text-center"
                   />
                 </div>
-                <button onClick={() => setSurveyInfo({...surveyInfo, isEditing: false})} className="px-3 py-1.5 bg-kh-green text-white rounded hover:bg-kh-green/80 font-bold text-sm">
+                <button onClick={() => updateSurveyInfo({...surveyInfo, isEditing: false})} className="px-3 py-1.5 bg-kh-green text-white rounded hover:bg-kh-green/80 font-bold text-sm">
                   저장
                 </button>
               </div>
@@ -220,7 +259,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
             )}
           </div>
           {!surveyInfo.isEditing && (
-            <button onClick={() => setSurveyInfo({...surveyInfo, isEditing: true})} className="p-2 text-slate-300 hover:text-white transition-colors">
+            <button onClick={() => updateSurveyInfo({...surveyInfo, isEditing: true})} className="p-2 text-slate-300 hover:text-white transition-colors">
               <Edit2 size={18} />
             </button>
           )}
@@ -298,10 +337,10 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
             <div className="flex-1 flex items-center gap-4">
               <input 
                 type="text" value={customForm.title}
-                onChange={(e) => setCustomForm({...customForm, title: e.target.value})}
-                className="px-3 py-1.5 rounded border border-gray-300 font-bold w-1/2"
+                onChange={(e) => updateCustomForm({...customForm, title: e.target.value})}
+                className="px-3 py-1.5 rounded border border-gray-300 font-bold w-1/2 text-gray-800"
               />
-              <button onClick={() => setCustomForm({...customForm, isEditingConfig: false})} className="px-3 py-1.5 bg-gray-800 text-white rounded text-sm font-bold">
+              <button onClick={() => updateCustomForm({...customForm, isEditingConfig: false})} className="px-3 py-1.5 bg-gray-800 text-white rounded text-sm font-bold">
                 설정 완료
               </button>
             </div>
@@ -313,7 +352,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
                 </div>
                 {customForm.title}
               </h3>
-              <button onClick={() => setCustomForm({...customForm, isEditingConfig: true})} className="p-2 text-slate-300 hover:text-white transition-colors">
+              <button onClick={() => updateCustomForm({...customForm, isEditingConfig: true})} className="p-2 text-slate-300 hover:text-white transition-colors">
                 <Edit2 size={18} />
               </button>
             </>
@@ -324,17 +363,17 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
           <div className="px-6 py-3 bg-yellow-50 border-b border-yellow-100 flex items-center gap-4">
             <span className="text-sm font-bold text-yellow-800">컬럼 관리:</span>
             {customForm.columns.map((col, idx) => (
-              <div key={idx} className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-yellow-200 text-sm">
+              <div key={idx} className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-yellow-200 text-sm text-gray-800">
                 <span>{col}</span>
                 <button 
-                  onClick={() => setCustomForm({...customForm, columns: customForm.columns.filter((_, i) => i !== idx)})}
+                  onClick={() => updateCustomForm({...customForm, columns: customForm.columns.filter((_, i) => i !== idx)})}
                   className="text-red-400 hover:text-red-600 ml-1"><Trash2 size={12} /></button>
               </div>
             ))}
             <button 
               onClick={() => {
                 const newCol = prompt("새 컬럼 이름");
-                if (newCol) setCustomForm({...customForm, columns: [...customForm.columns, newCol]});
+                if (newCol) updateCustomForm({...customForm, columns: [...customForm.columns, newCol]});
               }}
               className="text-sm text-blue-600 font-bold flex items-center gap-1 ml-2"><Plus size={14}/> 추가</button>
           </div>
