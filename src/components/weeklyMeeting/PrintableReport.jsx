@@ -121,20 +121,18 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
 
       {/* ── 2. 공지사항 ── */}
       <div className="mb-6 break-inside-avoid">
-        <h2 className="text-[12px] font-bold mb-1 pl-1 border-l-4 border-black">전사 공지사항</h2>
+        <h2 className="text-[12px] font-bold mb-1 pl-1 border-l-4 border-black">공지사항</h2>
         {noticeTasks.length === 0 ? (
           <p className="text-[10px] text-gray-500 italic p-2 border border-gray-400 text-center bg-gray-50">등록된 공지사항이 없습니다.</p>
         ) : (
           <table className="w-full border-collapse table-fixed">
-            <colgroup><col width="8%" /><col width="15%" /><col width="20%" /><col width="57%" /></colgroup>
+            <colgroup><col width="22%" /><col width="78%" /></colgroup>
             <thead>
-              <tr><Th>부서</Th><Th>담당자</Th><Th>기간</Th><Th>공지 내용</Th></tr>
+              <tr><Th>기간</Th><Th>공지 내용</Th></tr>
             </thead>
             <tbody>
               {noticeTasks.map((t, i) => (
                 <tr key={i}>
-                  <Td className="text-center">{t.category || '-'}</Td>
-                  <Td className="text-center">{t.assignees || t.author || '-'}</Td>
                   <Td className="text-center text-[9px]">{t.start_date} ~ {t.end_date}</Td>
                   <Td className="whitespace-pre-wrap">{t.content}</Td>
                 </tr>
@@ -146,6 +144,16 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
 
       {/* ── 팀별 렌더링 헬퍼 ── */}
       {(() => {
+        const formatAssignees = (assigneesStr) => {
+          if (!assigneesStr) return '-';
+          const list = assigneesStr.split(',').map(s => s.trim()).filter(Boolean);
+          if (list.length <= 2) {
+            return list.join(', ');
+          } else {
+            return list.join('\n');
+          }
+        };
+
         const renderTeamTable = (teamName, teamTasks) => (
           <div key={teamName} className="mb-6 border border-gray-400">
             <div className="bg-gray-100 text-[11px] font-bold p-1.5 border-b border-gray-400 text-center tracking-wider text-black">
@@ -156,13 +164,13 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
             ) : (
               <table className="w-full border-collapse table-fixed bg-white">
                 <colgroup>
+                  <col width="8%" />
+                  <col width="15%" />
+                  <col width="6%" />
                   <col width="10%" />
                   <col width="10%" />
-                  <col width="7%" />
-                  <col width="9%" />
-                  <col width="9%" />
-                  <col width="20%" />
-                  <col width="35%" />
+                  <col width="11%" />
+                  <col width="40%" />
                 </colgroup>
                 <thead>
                   <tr>
@@ -179,7 +187,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                   {teamTasks.map((t, i) => (
                     <tr key={i} className="break-inside-avoid">
                       <Td className="text-center font-mono text-[9px] border-l-0">{t.task_code || '-'}</Td>
-                      <Td className="text-center">{t.assignees || t.author || '-'}</Td>
+                      <Td className="text-center whitespace-pre-wrap leading-tight">{formatAssignees(t.assignees || t.author)}</Td>
                       <Td className="text-center text-[9px]">{t.status || '-'}</Td>
                       <Td className="text-center text-[9px]">{t.start_date || '-'}</Td>
                       <Td className="text-center text-[9px]">{t.end_date || '-'}</Td>
@@ -195,7 +203,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
 
         return (
           <>
-            <div className="text-center font-bold text-sm mb-3 mt-8">【 부 서 별 주 간 업 무 】</div>
+            <div className="text-center font-bold text-sm mb-3 mt-8">【 팀 별 주 간 업 무 】</div>
             {renderTeamTable('스마트 기술 개발팀', smartTasks)}
             {renderTeamTable('디지털 기술 연구팀', digitalTasks)}
             {renderTeamTable('인프라 BIM팀', infraTasks)}
@@ -219,9 +227,8 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
         ) : (
           <table className="w-full border-collapse table-fixed">
             <colgroup>
-              <col width="6%" />
               <col width="8%" />
-              <col width="20%" />
+              <col width="26%" />
               <col width="12%" />
               <col width="8%" />
               <col width="10%" />
@@ -230,14 +237,13 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
             </colgroup>
             <thead>
               <tr>
-                 <Th className="border-t-0">분류</Th>
-                 <Th className="border-t-0">분류코드</Th>
+                 <Th className="border-t-0 border-l-0">분류코드</Th>
                  <Th className="border-t-0">프로젝트명</Th>
                  <Th className="border-t-0">수행방식</Th>
                  <Th className="border-t-0">BIM용역비</Th>
                  <Th className="border-t-0">설계부서</Th>
                  <Th className="border-t-0">담당자</Th>
-                 <Th className="border-t-0">수행현황</Th>
+                 <Th className="border-t-0 border-r-0">수행현황</Th>
               </tr>
             </thead>
             <tbody>
@@ -246,14 +252,13 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                 if(methodStr.includes(',')) methodStr = methodStr.split(',').map(s=>s.trim()).filter(Boolean).join('\n');
                 return (
                  <tr key={i} className="break-inside-avoid">
-                  <Td className="text-center font-bold text-[9px] break-all">{p.category || '-'}</Td>
-                  <Td className="text-center font-mono text-[9px]">{p.project_code || '-'}</Td>
+                  <Td className="text-center font-mono text-[9px] border-l-0">{p.project_code || '-'}</Td>
                   <Td className="text-[9px] font-bold text-primary break-all">{p.project_name}</Td>
                   <Td className="text-center text-[9px] whitespace-pre-wrap leading-tight">{methodStr || '-'}</Td>
                   <Td className="text-center text-[9px]">{p.bim_cost || '-'}</Td>
                   <Td className="text-center text-[9px]">{p.dept || '-'}</Td>
                   <Td className="text-center text-[9px]">{p.manager || '-'}</Td>
-                  <Td className="whitespace-pre-wrap text-[9px]">{p.status_detail || '-'}</Td>
+                  <Td className="whitespace-pre-wrap text-[9px] border-r-0">{p.status_detail || '-'}</Td>
                  </tr>
                 )
               })}

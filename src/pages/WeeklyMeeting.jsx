@@ -229,14 +229,16 @@ const WeeklyMeeting = ({ currentUser }) => {
   const handlePrintClick = async () => {
     setIsPrinting(true);
     try {
-      const [tasksRes, projRes, scRes] = await Promise.all([
+      const [tasksRes, projRes, scRes, usersRes] = await Promise.all([
         fetch(`/api/weekly-tasks?week=${currentWeek}`),
         fetch(`/api/projects`),
-        fetch(`/api/weekly-schedule?week=${currentWeek}`)
+        fetch(`/api/weekly-schedule?week=${currentWeek}`),
+        fetch(`/api/users`)
       ]);
       const allTasks = await tasksRes.json();
       const projects = await projRes.json();
       const schedules = await scRes.json();
+      const usersList = await usersRes.json();
 
       const storedMeetingDate = localStorage.getItem(`kh_meeting_date_${currentWeek}`);
       let finalMeetingDate = currentWeek;
@@ -248,10 +250,32 @@ const WeeklyMeeting = ({ currentUser }) => {
         finalMeetingDate = d.toISOString().slice(0, 10);
       }
 
+      const storedAbsStr = localStorage.getItem(`kh_attendance_${currentWeek}`);
+      let absentees = new Set();
+      if (storedAbsStr) {
+        try { absentees = new Set(JSON.parse(storedAbsStr)); } catch {}
+      }
+
+      const normalizeKey = (str) => (str || '').replace(/\s+/g, '');
+      const allUsers = Array.isArray(usersList) ? usersList : [];
+
+      const calcAttending = (keys) => {
+        const normKeys = keys.map(normalizeKey);
+        const members = allUsers.filter(u => normKeys.includes(normalizeKey(u.department || u.team || '')));
+        return members.filter(u => !absentees.has(u.name)).length;
+      };
+
+      const rndCnt = calcAttending(['R&D센터', '기술연구소']);
+      const smartCnt = calcAttending(['스마트기술개발팀', '스마트 기술 개발팀']);
+      const digitalCnt = calcAttending(['디지털기술연구팀', '디지털 기술 연구팀']);
+      const infraCnt = calcAttending(['인프라BIM팀', '인프라 BIM팀']);
+      const aiCnt = calcAttending(['AI응용팀', 'AI 응용팀']);
+      const totalCnt = rndCnt + smartCnt + digitalCnt + infraCnt + aiCnt;
+
       setPrintData({
         weekLabel: currentWeek,
         meetingDate: finalMeetingDate,
-        attendanceCounts: { total: 1, rnd: 1, smart: 0, digital: 0, infra: 0, ai: 0 },
+        attendanceCounts: { total: totalCnt, rnd: rndCnt, smart: smartCnt, digital: digitalCnt, infra: infraCnt, ai: aiCnt },
         tasks: Array.isArray(allTasks) ? allTasks : [],
         projects: Array.isArray(projects) ? projects : [],
         schedules: Array.isArray(schedules) ? schedules : []
