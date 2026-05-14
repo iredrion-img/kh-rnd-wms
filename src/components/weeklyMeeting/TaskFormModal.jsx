@@ -83,17 +83,18 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       let detail = '';
       if (task.method) {
          const methods = ["직접수행(합사)", "직접수행", "외주", "미정", "수행예정", "추진중"];
-         const parts = task.method.split(',').map(s=>s.trim()).filter(Boolean);
+         let tempStr = task.method;
          const extractedBases = [];
-         const remainingDetails = [];
-         
-         parts.forEach(p => {
-             if (methods.includes(p)) extractedBases.push(p);
-             else remainingDetails.push(p);
+         methods.forEach(b => {
+           const idx = task.method.indexOf(b);
+           if (idx !== -1) {
+             extractedBases.push({ base: b, idx });
+             tempStr = tempStr.replace(b, '').trim();
+           }
          });
-         
-         base = extractedBases.join(', ');
-         detail = remainingDetails.join(', ');
+         extractedBases.sort((a, b) => a.idx - b.idx);
+         base = extractedBases.map(item => item.base).join(', ');
+         detail = tempStr.replace(/^[, ]+/, '').replace(/[, ]+$/, '').trim();
       }
       setFormData({ ...task, method_base: base, method_detail: detail });
     } else if (!initialized.current) {
