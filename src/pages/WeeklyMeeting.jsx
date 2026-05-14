@@ -123,6 +123,20 @@ const WeeklyMeeting = ({ currentUser }) => {
           if (valA !== valB) return valA - valB;
           return (a.start_date || '').localeCompare(b.start_date || '');
         });
+      } else if (!isProject) {
+        // 일반 팀별 업무 정렬: 1순위 업무코드 오름차순, 2순위 진행 상태 (진행 중 우선)
+        const statusOrder = { '진행 중': 1, '완료': 2, '보류': 3 };
+        finalData.sort((a, b) => {
+          const codeA = a.task_code || 'ZZZ';
+          const codeB = b.task_code || 'ZZZ';
+          if (codeA !== codeB) {
+            return codeA.localeCompare(codeB, 'ko', { numeric: true });
+          }
+          const stA = statusOrder[a.status] || 99;
+          const stB = statusOrder[b.status] || 99;
+          if (stA !== stB) return stA - stB;
+          return (a.start_date || '').localeCompare(b.start_date || '');
+        });
       }
       
       setTasks(finalData);
