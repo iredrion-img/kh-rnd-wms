@@ -132,12 +132,19 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
               <tr><Th>기간</Th><Th>공지 내용</Th></tr>
             </thead>
             <tbody>
-              {noticeTasks.map((t, i) => (
-                <tr key={i}>
-                  <Td className="text-center text-[9px]">{t.start_date} ~ {t.end_date}</Td>
-                  <Td className="whitespace-pre-wrap">{t.content}</Td>
-                </tr>
-              ))}
+              {noticeTasks.map((t, i) => {
+                const formatDateShort = (dStr) => {
+                  if (!dStr || dStr === '-') return '-';
+                  const p = dStr.split('-');
+                  return p.length === 3 ? `${p[0].slice(-2)}.${p[1]}.${p[2]}` : dStr;
+                };
+                return (
+                  <tr key={i}>
+                    <Td className="text-center text-[9px]">{formatDateShort(t.start_date)} ~ {formatDateShort(t.end_date)}</Td>
+                    <Td className="whitespace-pre-wrap">{t.content}</Td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
@@ -148,11 +155,25 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
         const formatAssignees = (assigneesStr) => {
           if (!assigneesStr) return '-';
           const list = assigneesStr.split(',').map(s => s.trim()).filter(Boolean);
-          if (list.length <= 2) {
-            return list.join(', ');
-          } else {
-            return list.join('\n');
+          const chunks = [];
+          for (let i = 0; i < list.length; i += 2) {
+            chunks.push(list.slice(i, i + 2).join(', '));
           }
+          return chunks.join('\n');
+        };
+
+        const formatDateShort = (dateStr) => {
+          if (!dateStr || dateStr === '-') return '-';
+          const parts = dateStr.split('-');
+          if (parts.length === 3) {
+            return `${parts[0].slice(-2)}.${parts[1]}.${parts[2]}`;
+          }
+          return dateStr;
+        };
+
+        const formatMeetingResult = (resStr) => {
+          if (!resStr || resStr === '-') return '-';
+          return resStr.replace(/\b(20\d\d)-(\d\d)-(\d\d)\b/g, (match, y, m, d) => `${y.slice(-2)}.${m}.${d}`);
         };
 
         const renderTeamTable = (teamName, teamTasks) => (
@@ -178,7 +199,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                     <Th className="border-t-0">상태</Th>
                     <Th className="border-t-0">시작일</Th>
                     <Th className="border-t-0">마감일</Th>
-                    <Th className="border-t-0">공유회의/결과</Th>
+                    <Th className="border-t-0">공유회의/<br/>결과보고</Th>
                     <Th className="border-t-0 border-r-0">주요내용</Th>
                   </tr>
                 </thead>
@@ -188,9 +209,9 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                       <Td className="text-center font-mono text-[9px] border-l-0">{t.task_code || '-'}</Td>
                       <Td className="text-center whitespace-pre-wrap leading-tight">{formatAssignees(t.assignees || t.author)}</Td>
                       <Td className="text-center text-[9px]">{t.status || '-'}</Td>
-                      <Td className="text-center text-[9px]">{t.start_date || '-'}</Td>
-                      <Td className="text-center text-[9px]">{t.end_date || '-'}</Td>
-                      <Td className="whitespace-pre-wrap text-[9px] text-center">{t.meeting_result || '-'}</Td>
+                      <Td className="text-center text-[9px]">{formatDateShort(t.start_date)}</Td>
+                      <Td className="text-center text-[9px]">{formatDateShort(t.end_date)}</Td>
+                      <Td className="whitespace-pre-wrap text-[9px] text-center">{formatMeetingResult(t.meeting_result)}</Td>
                       <Td className="whitespace-pre-wrap text-[10px] border-r-0">{t.content}</Td>
                     </tr>
                   ))}
@@ -280,15 +301,31 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
               <tr><Th>업무분야</Th><Th>수행인원</Th><Th>시작일정</Th><Th>종료일정</Th><Th>상세업무</Th></tr>
             </thead>
             <tbody>
-              {validSchedules.map((s, i) => (
-                <tr key={i} className="break-inside-avoid">
-                  <Td className="text-center font-bold text-[10px]">{s.schedule_type || '-'}</Td>
-                  <Td className="text-center">{s.assignees || '-'}</Td>
-                  <Td className="text-center text-[9px]">{s.start_date || '-'}</Td>
-                  <Td className="text-center text-[9px]">{s.end_date || '-'}</Td>
-                  <Td className="whitespace-pre-wrap text-[10px]">{s.content || '-'}</Td>
-                </tr>
-              ))}
+              {validSchedules.map((s, i) => {
+                const formatAssignees = (assigneesStr) => {
+                  if (!assigneesStr) return '-';
+                  const list = assigneesStr.split(',').map(str => str.trim()).filter(Boolean);
+                  const chunks = [];
+                  for (let idx = 0; idx < list.length; idx += 2) {
+                    chunks.push(list.slice(idx, idx + 2).join(', '));
+                  }
+                  return chunks.join('\n');
+                };
+                const formatDateShort = (dStr) => {
+                  if (!dStr || dStr === '-') return '-';
+                  const p = dStr.split('-');
+                  return p.length === 3 ? `${p[0].slice(-2)}.${p[1]}.${p[2]}` : dStr;
+                };
+                return (
+                  <tr key={i} className="break-inside-avoid">
+                    <Td className="text-center font-bold text-[10px]">{s.schedule_type || '-'}</Td>
+                    <Td className="text-center whitespace-pre-wrap leading-tight">{formatAssignees(s.assignees)}</Td>
+                    <Td className="text-center text-[9px]">{formatDateShort(s.start_date)}</Td>
+                    <Td className="text-center text-[9px]">{formatDateShort(s.end_date)}</Td>
+                    <Td className="whitespace-pre-wrap text-[10px]">{s.content || '-'}</Td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         )}
