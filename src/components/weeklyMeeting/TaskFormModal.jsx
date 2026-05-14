@@ -175,7 +175,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                 }
             });
             const nextSubNo = String(maxNum + 1).padStart(3, '0');
-            const nextCode = `${formData.category} - ${nextSubNo}`;
+            const nextCode = `${formData.category}-${nextSubNo}`;
             setFormData(prev => prev.project_code !== nextCode ? { ...prev, sub_no: nextSubNo, project_code: nextCode } : prev);
         } else {
             setFormData(prev => prev.project_code ? { ...prev, project_code: '', sub_no: '' } : prev);
