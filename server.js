@@ -807,6 +807,33 @@ app.get('/api/projects', (req, res) => {
     }
 });
 
+// =============================================
+// --- CIRCULATION BOARD API ---
+// =============================================
+const CIRCULATION_FILE = path.join(__dirname, 'circulation_data.json');
+
+app.get('/api/circulation', (req, res) => {
+    try {
+        if (!fs.existsSync(CIRCULATION_FILE)) {
+            return res.json({});
+        }
+        const data = JSON.parse(fs.readFileSync(CIRCULATION_FILE, 'utf8'));
+        res.json(data);
+    } catch (e) {
+        res.status(500).json({ error: '회람 데이터 조회 실패' });
+    }
+});
+
+app.post('/api/circulation', async (req, res) => {
+    try {
+        const payload = req.body;
+        await writeAtomic(CIRCULATION_FILE, JSON.stringify(payload, null, 2));
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ error: '회람 데이터 저장 실패' });
+    }
+});
+
 // POST /api/projects
 app.post('/api/projects', async (req, res) => {
     try {

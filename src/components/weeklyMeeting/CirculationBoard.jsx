@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Edit2, Save, Plus, Trash2, Calendar as CalIcon, CheckCircle2, Circle, Settings2 } from 'lucide-react';
 import { format, addDays, startOfMonth, getDaysInMonth } from 'date-fns';
 
@@ -93,6 +93,37 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
     ];
   });
 
+  // ─── 백엔드 동기화 로직 ───
+  useEffect(() => {
+    fetch('/api/circulation')
+      .then(res => res.json())
+      .then(data => {
+        if (data && Object.keys(data).length > 0) {
+          if (data.surveyInfo) setSurveyInfo(data.surveyInfo);
+          if (data.surveyData) setSurveyData(data.surveyData);
+          if (data.customForm) setCustomForm(data.customForm);
+          if (data.customData) setCustomData(data.customData);
+          if (data.vacations) setVacations(data.vacations);
+        }
+      })
+      .catch(err => console.error('Failed to load circulation data:', err));
+  }, []);
+
+  const saveToBackend = (updates) => {
+    const payload = {
+      surveyInfo: updates.surveyInfo !== undefined ? updates.surveyInfo : surveyInfo,
+      surveyData: updates.surveyData !== undefined ? updates.surveyData : surveyData,
+      customForm: updates.customForm !== undefined ? updates.customForm : customForm,
+      customData: updates.customData !== undefined ? updates.customData : customData,
+      vacations: updates.vacations !== undefined ? updates.vacations : vacations,
+    };
+    fetch('/api/circulation', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    }).catch(err => console.error('Failed to save circulation data:', err));
+  };
+
   const handleVacationClick = (userName, dateStr) => {
     setVacations(prev => {
       const existingIdx = prev.findIndex(v => v.name === userName && v.date === dateStr);
@@ -112,6 +143,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
         }
       }
       localStorage.setItem(VACATIONS_STORAGE_KEY, JSON.stringify(nextVacations));
+      saveToBackend({ vacations: nextVacations });
       return nextVacations;
     });
   };
@@ -120,17 +152,20 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   const updateSurveyInfo = (newInfo) => {
     setSurveyInfo(newInfo);
     localStorage.setItem(SURVEY_INFO_KEY, JSON.stringify(newInfo));
+    saveToBackend({ surveyInfo: newInfo });
   };
 
   const updateCustomForm = (newForm) => {
     setCustomForm(newForm);
     localStorage.setItem(CUSTOM_FORM_KEY, JSON.stringify(newForm));
+    saveToBackend({ customForm: newForm });
   };
 
   const handleSurveyToggle = (id) => {
     setSurveyData(prev => {
       const next = prev.map(item => item.id === id ? { ...item, status: !item.status } : item);
       localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(next));
+      saveToBackend({ surveyData: next });
       return next;
     });
   };
@@ -139,6 +174,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
     setSurveyData(prev => {
       const next = prev.map(item => item.id === id ? { ...item, note: val } : item);
       localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(next));
+      saveToBackend({ surveyData: next });
       return next;
     });
   };
@@ -152,6 +188,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
         return item;
       });
       localStorage.setItem(CUSTOM_DATA_KEY, JSON.stringify(next));
+      saveToBackend({ customData: next });
       return next;
     });
   };
