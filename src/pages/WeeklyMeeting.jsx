@@ -627,8 +627,11 @@ const WeeklyMeeting = ({ currentUser }) => {
             .is-fullscreen-mode .weekly-tasks-table th:nth-child(3), .is-fullscreen-mode .weekly-tasks-table td:nth-child(3) { width: 8rem !important; } /* 진행상태 */
             .is-fullscreen-mode .weekly-tasks-table th:nth-child(4), .is-fullscreen-mode .weekly-tasks-table td:nth-child(4) { width: 8rem !important; } /* 시작일 */
             .is-fullscreen-mode .weekly-tasks-table th:nth-child(5), .is-fullscreen-mode .weekly-tasks-table td:nth-child(5) { width: 8rem !important; } /* 마감일 */
-            .is-fullscreen-mode .weekly-tasks-table th:nth-child(6), .is-fullscreen-mode .weekly-tasks-table td:nth-child(6) { width: 12rem !important; } /* 공유회의/결과보고 */
-            .is-fullscreen-mode .weekly-tasks-table th:nth-child(7), .is-fullscreen-mode .weekly-tasks-table td:nth-child(7) { width: auto !important; } /* 주요내용 (Flex) */
+            .is-fullscreen-mode .weekly-tasks-table:not(.has-no-meeting-result) th:nth-child(6), .is-fullscreen-mode .weekly-tasks-table:not(.has-no-meeting-result) td:nth-child(6) { width: 8rem !important; } /* 공유회의/결과보고 */
+            .is-fullscreen-mode .weekly-tasks-table:not(.has-no-meeting-result) th:nth-child(7), .is-fullscreen-mode .weekly-tasks-table:not(.has-no-meeting-result) td:nth-child(7) { width: auto !important; } /* 주요내용 (Flex) */
+
+            /* 공통업무&행정 등 공유회의 열이 없는 테이블 전용 규칙 */
+            .is-fullscreen-mode .weekly-tasks-table.has-no-meeting-result th:nth-child(6), .is-fullscreen-mode .weekly-tasks-table.has-no-meeting-result td:nth-child(6) { width: auto !important; } /* 주요내용 (Flex) */
 
             /* Project Table Column Widths */
             .is-fullscreen-mode .project-table { table-layout: fixed !important; width: 100% !important; }

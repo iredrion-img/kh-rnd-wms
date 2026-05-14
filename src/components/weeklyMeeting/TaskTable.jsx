@@ -149,7 +149,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
   };
 
   return (
-    <table className="w-full text-sm text-left weekly-tasks-table">
+    <table className={`w-full text-sm text-left weekly-tasks-table ${!showMeetingResult ? 'has-no-meeting-result' : ''}`}>
       <thead className="text-xs text-gray-500 uppercase">
         <tr>
           {!isNotice && <th className="px-3 py-3 w-28 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">업무코드</th>}
