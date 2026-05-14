@@ -36,23 +36,44 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
     // Handle cases where comma exists before or inside parentheses
     const parentheticalMatch = method.match(/^(.*?)\s*,?\s*\((.*)\)\s*$/);
     if (parentheticalMatch) {
-      const b = parentheticalMatch[1].trim().replace(/,$/, '').trim();
-      const d = parentheticalMatch[2].trim();
-      return b && d ? `${b} (${d})` : (b || d);
+      let bStr = parentheticalMatch[1].trim().replace(/,$/, '').trim();
+      const dStr = parentheticalMatch[2].trim();
+      
+      const foundBases = [];
+      let tempBStr = bStr;
+      bases.forEach(base => {
+        const idx = bStr.indexOf(base);
+        if (idx !== -1) {
+          foundBases.push({ base, idx });
+          tempBStr = tempBStr.replace(base, '').trim();
+        }
+      });
+      foundBases.sort((a, b) => a.idx - b.idx);
+      const remainingB = tempBStr.replace(/[, ]+/g, ' ').trim();
+      
+      const parsedBases = foundBases.map(item => item.base);
+      if (remainingB) parsedBases.push(remainingB);
+      
+      const b = parsedBases.join(', ');
+      return b && dStr ? `${b} (${dStr})` : (b || dStr);
     }
 
-    const parts = method.split(',').map(s => s.trim()).filter(Boolean);
+    let tempStr = method;
     const selectedBases = [];
-    const details = [];
-    parts.forEach(p => {
-      if (bases.includes(p)) selectedBases.push(p);
-      else details.push(p);
+    bases.forEach(base => {
+      const idx = method.indexOf(base);
+      if (idx !== -1) {
+        selectedBases.push({ base, idx });
+        tempStr = tempStr.replace(base, '').trim();
+      }
     });
-    
-    const baseStr = selectedBases.join(', ');
+    selectedBases.sort((a, b) => a.idx - b.idx);
+
+    const details = tempStr.split(',').map(s => s.trim()).filter(Boolean);
+    const baseStr = selectedBases.map(item => item.base).join(', ');
     const detailStr = details.join(', ');
     if (baseStr && detailStr) return `${baseStr} (${detailStr})`;
-    return method;
+    return baseStr || method;
   };
 
   const formatAssignees = (assignees) => {
