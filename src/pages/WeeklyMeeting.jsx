@@ -125,6 +125,9 @@ const WeeklyMeeting = ({ currentUser }) => {
         });
       } else if (isProject) {
         const catOrder = { 'AI': 1, 'BIM': 2, 'R&D': 3 };
+        finalData.forEach(t => {
+          if (t.project_code) t.project_code = t.project_code.replace(/\s*-\s*/g, '-');
+        });
         finalData.sort((a, b) => {
           const catA = catOrder[a.category || '기타'] || 99;
           const catB = catOrder[b.category || '기타'] || 99;
