@@ -650,7 +650,14 @@ const WeeklyMeeting = ({ currentUser }) => {
             .is-fullscreen-mode table thead th { white-space: nowrap !important; text-align: center !important; }
             .is-fullscreen-mode table td:not(.whitespace-pre-wrap):not(.whitespace-nowrap) { white-space: normal !important; word-break: keep-all; overflow-wrap: break-word; text-align: center !important; }
             .is-fullscreen-mode table td.whitespace-pre-wrap { text-align: left !important; padding-left: 1rem !important; }
-            .is-fullscreen-mode table.circulation-table tr td.team-cell { text-align: left !important; padding-left: 1.5rem !important; }
+            .is-fullscreen-mode table.circulation-table tr.bg-blue-50\/50 { background-color: #eff6ff !important; }
+            .is-fullscreen-mode table.circulation-table tr td.team-cell { 
+              text-align: left !important; 
+              padding-left: 1.5rem !important; 
+              color: #1e40af !important; 
+              background-color: #eff6ff !important; 
+              border-bottom-color: #dbeafe !important;
+            }
             .is-fullscreen-mode table.circulation-table tr td.name-cell { text-align: left !important; padding-left: 1.5rem !important; }
             
             /* Override colors for Circulation Board dark headers */
