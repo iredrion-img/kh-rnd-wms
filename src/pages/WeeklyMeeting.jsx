@@ -278,6 +278,24 @@ const WeeklyMeeting = ({ currentUser }) => {
       const aiData = calcAttending(['AI응용팀', 'AI 응용팀']);
       const totalCount = rndData.count + smartData.count + digitalData.count + infraData.count + aiData.count;
 
+      let filteredSchedules = Array.isArray(schedules) ? schedules : [];
+      filteredSchedules = filteredSchedules.filter(s => {
+        const type = s.schedule_type || '';
+        const cnt = s.content || '';
+        return !cnt.includes('외출') && type !== '합사';
+      });
+      const scheduleOrder = {
+        '업무협의': 1, '프로젝트': 2, '부서지원': 3, 'TFT': 4, '대외활동': 5,
+        '세미나': 6, '교육': 7, '연구과제': 8, '매뉴얼작성': 9, '행정': 10,
+        '기타': 11, '휴가': 12
+      };
+      filteredSchedules.sort((a, b) => {
+        const valA = scheduleOrder[a.schedule_type || '기타'] || 99;
+        const valB = scheduleOrder[b.schedule_type || '기타'] || 99;
+        if (valA !== valB) return valA - valB;
+        return (a.start_date || '').localeCompare(b.start_date || '');
+      });
+
       setPrintData({
         weekLabel: currentWeek,
         meetingDate: finalMeetingDate,
@@ -293,7 +311,7 @@ const WeeklyMeeting = ({ currentUser }) => {
         },
         tasks: Array.isArray(allTasks) ? allTasks : [],
         projects: Array.isArray(projects) ? projects : [],
-        schedules: Array.isArray(schedules) ? schedules : []
+        schedules: filteredSchedules
       });
 
       setTimeout(() => {
