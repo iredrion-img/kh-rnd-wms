@@ -634,12 +634,17 @@ app.get('/api/weekly-tasks', (req, res) => {
             d.setDate(d.getDate() - 7);
             const lastWeekStr = d.toISOString().slice(0, 10);
 
+            const isStrict = req.query.strict === 'true';
             tasks = tasks.filter(t => {
                 // Primary check: Range overlap (if dates exist)
                 if (t.start_date) {
-                    return isTaskInWeek(t.start_date, t.end_date, week);
+                    return isTaskInWeek(t.start_date, t.end_date, week, isStrict);
                 }
                 // Fallback: Exact week match for legacy data without start_date
+                // Strict 모드인 경우 이번 주 데이터만, 아닌 경우 지난주 데이터까지 허용
+                if (isStrict) {
+                    return t.week_start === week;
+                }
                 return t.week_start === week || t.week_start === lastWeekStr;
             });
         }
