@@ -231,18 +231,26 @@ const WeeklyMeeting = ({ currentUser }) => {
   const handlePrintClick = async () => {
     setIsPrinting(true);
     try {
-      const [tasksRes, projRes, scRes, usersRes, ovRes] = await Promise.all([
+      const [tasksRes, noticeRes, projRes, scRes, usersRes, ovRes] = await Promise.all([
         fetch(`/api/weekly-tasks?week=${currentWeek}`),
+        fetch(`/api/weekly-tasks?week=${currentWeek}&team=${encodeURIComponent('공지사항')}&strict=true`),
         fetch(`/api/projects`),
         fetch(`/api/weekly-schedule?week=${currentWeek}&strict=true`),
         fetch(`/api/users`),
         fetch(`/api/meeting-overview?week=${currentWeek}`)
       ]);
-      const allTasks = await tasksRes.json();
+      const rawTasks = await tasksRes.json();
+      const notices = await noticeRes.json();
       const projects = await projRes.json();
       const schedules = await scRes.json();
       const usersList = await usersRes.json();
       const overviewData = await ovRes.json();
+
+      // 팀별 업무에서 공지사항 제외하고, 별도로 불러온 strict 공지사항 합치기
+      const allTasks = [
+        ...(Array.isArray(rawTasks) ? rawTasks.filter(t => t.team !== '공지사항') : []),
+        ...(Array.isArray(notices) ? notices : [])
+      ];
 
       let finalMeetingDate = overviewData.meeting_date;
       if (!finalMeetingDate && currentWeek) {
