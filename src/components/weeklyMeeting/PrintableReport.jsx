@@ -3,7 +3,7 @@ import React, { forwardRef } from 'react';
 const PrintableReport = forwardRef(({ reportData }, ref) => {
   if (!reportData) return <div ref={ref} className="hidden print:block">출력 데이터가 없습니다.</div>;
 
-  const { weekLabel, meetingDate, attendanceCounts, tasks, projects, schedules } = reportData;
+  const { weekLabel, meetingDate, attendanceData, tasks, projects, schedules } = reportData;
 
   // 필터링 유틸 (내용이나 과업명이 없는 빈 줄 데이터 방어)
   const filterByTeam = (teamName) => tasks.filter(t => t.team === teamName && (t.content || t.task_code));
@@ -20,8 +20,8 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
   const validSchedules = schedules?.filter(s => s.content && s.content.trim().length > 0) || [];
 
   // 공통 테이블 헤더/셀 스타일 (인쇄 최적화)
-  const Th = ({ children, className = '' }) => (
-    <th className={`border border-gray-400 bg-gray-100 text-center py-1.5 px-2 text-[10px] font-bold text-gray-800 break-keep ${className}`}>
+  const Th = ({ children, className = '', rowSpan = 1 }) => (
+    <th rowSpan={rowSpan} className={`border border-gray-400 bg-gray-100 text-center py-1.5 px-2 text-[10px] font-bold text-gray-800 break-keep ${className}`}>
       {children}
     </th>
   );
@@ -79,43 +79,40 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
         );
       })()}
 
-      {/* ── 1. 기본 정보 & 참석자 정보 ── */}
+      {/* ── 1. 기본 정보 & 참석자 정보 (Excel 포맷) ── */}
       <div className="mb-6 break-inside-avoid">
-        <table className="w-full border-collapse table-fixed">
-          <colgroup><col width="15%" /><col width="30%" /><col width="15%" /><col width="40%" /></colgroup>
+        <table className="w-full border-collapse">
+          <colgroup>
+            <col width="15%" />
+            <col width="25%" />
+            <col width="15%" />
+            <col width="45%" />
+          </colgroup>
           <tbody>
             <tr>
-              <Th>회의일시</Th>
-              <Td className="text-center font-bold">{meetingDate}</Td>
-              <Th>참석인원</Th>
-              <Td className="text-center font-bold text-blue-600">총 {attendanceCounts?.total || 0}인 참석</Td>
+              <Th className="bg-gray-200">회의일시</Th>
+              <Td className="text-center font-bold">{meetingDate?.replace(/-/g, '. ')}</Td>
+              <Td className="text-center font-bold">{attendanceData?.total || 0} 인</Td>
+              <Td></Td>
             </tr>
-            {/* 부서별 참석인원 행들 */}
-            <tr>
-              <Td colSpan={4} className="p-0 border-0">
-                <table className="w-full border-collapse border-transparent">
-                   <colgroup><col width="20%"/><col width="20%"/><col width="20%"/><col width="20%"/><col width="20%"/></colgroup>
-                   <thead>
-                     <tr>
-                       <Th className="border-t-0 border-l-0">기술연구소</Th>
-                       <Th className="border-t-0">스마트 기술 개발팀</Th>
-                       <Th className="border-t-0">디지털 기술 연구팀</Th>
-                       <Th className="border-t-0">인프라 BIM팀</Th>
-                       <Th className="border-t-0 border-r-0">AI 응용팀</Th>
-                     </tr>
-                   </thead>
-                   <tbody>
-                     <tr>
-                       <Td className="text-center border-b-0 border-l-0">{attendanceCounts?.rnd || 0} 인</Td>
-                       <Td className="text-center border-b-0">{attendanceCounts?.smart || 0} 인</Td>
-                       <Td className="text-center border-b-0">{attendanceCounts?.digital || 0} 인</Td>
-                       <Td className="text-center border-b-0">{attendanceCounts?.infra || 0} 인</Td>
-                       <Td className="text-center border-b-0 border-r-0">{attendanceCounts?.ai || 0} 인</Td>
-                     </tr>
-                   </tbody>
-                </table>
-              </Td>
-            </tr>
+            {attendanceData?.teams?.map((team, idx) => (
+              <tr key={team.label}>
+                {idx === 0 && (
+                  <Th rowSpan={attendanceData.teams.length} className="bg-gray-200">
+                    참석인원
+                  </Th>
+                )}
+                <Td className="text-center bg-gray-50/30">{team.label}</Td>
+                <Td className="text-center">{team.count} 인</Td>
+                <Td>
+                  <div className="flex flex-wrap gap-x-3 gap-y-1">
+                    {team.names?.map(name => (
+                      <span key={name} className="px-1.5 py-0.5 bg-gray-100 rounded text-[9px] font-medium text-gray-700">{name}</span>
+                    ))}
+                  </div>
+                </Td>
+              </tr>
+            ))}
           </tbody>
         </table>
       </div>

@@ -264,20 +264,33 @@ const WeeklyMeeting = ({ currentUser }) => {
       const calcAttending = (keys) => {
         const normKeys = keys.map(normalizeKey);
         const members = allUsers.filter(u => normKeys.includes(normalizeKey(u.department || u.team || '')));
-        return members.filter(u => !absentees.has(u.name)).length;
+        const attending = members.filter(u => !absentees.has(u.name));
+        return {
+          count: attending.length,
+          names: attending.map(u => u.name)
+        };
       };
 
-      const rndCnt = calcAttending(['R&D센터', '기술연구소']);
-      const smartCnt = calcAttending(['스마트기술개발팀', '스마트 기술 개발팀']);
-      const digitalCnt = calcAttending(['디지털기술연구팀', '디지털 기술 연구팀']);
-      const infraCnt = calcAttending(['인프라BIM팀', '인프라 BIM팀']);
-      const aiCnt = calcAttending(['AI응용팀', 'AI 응용팀']);
-      const totalCnt = rndCnt + smartCnt + digitalCnt + infraCnt + aiCnt;
+      const rndData = calcAttending(['R&D센터', '기술연구소']);
+      const smartData = calcAttending(['스마트기술개발팀', '스마트 기술 개발팀']);
+      const digitalData = calcAttending(['디지털기술연구팀', '디지털 기술 연구팀']);
+      const infraData = calcAttending(['인프라BIM팀', '인프라 BIM팀']);
+      const aiData = calcAttending(['AI응용팀', 'AI 응용팀']);
+      const totalCount = rndData.count + smartData.count + digitalData.count + infraData.count + aiData.count;
 
       setPrintData({
         weekLabel: currentWeek,
         meetingDate: finalMeetingDate,
-        attendanceCounts: { total: totalCnt, rnd: rndCnt, smart: smartCnt, digital: digitalCnt, infra: infraCnt, ai: aiCnt },
+        attendanceData: {
+          total: totalCount,
+          teams: [
+            { label: 'R&D센터, 기술연구소', count: rndData.count, names: rndData.names },
+            { label: '스마트 기술 개발팀', count: smartData.count, names: smartData.names },
+            { label: '디지털 기술 연구팀', count: digitalData.count, names: digitalData.names },
+            { label: '인프라 BIM팀', count: infraData.count, names: infraData.names },
+            { label: 'AI 응용팀', count: aiData.count, names: aiData.names },
+          ]
+        },
         tasks: Array.isArray(allTasks) ? allTasks : [],
         projects: Array.isArray(projects) ? projects : [],
         schedules: Array.isArray(schedules) ? schedules : []
