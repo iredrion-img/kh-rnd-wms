@@ -184,20 +184,21 @@ const WeeklyTaskHubModal = ({
                   <span className="text-sm text-gray-900 font-bold truncate group-hover/content:text-primary transition-colors" title={task.content}>
                     {task.content}
                   </span>
-                  <span className="text-[10px] text-gray-400 mt-0.5">
-                    {[task.category, task.sub_category].filter(Boolean).join(' › ')}
-                  </span>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-[10px] text-gray-400">
+                      {[task.category, task.sub_category].filter(Boolean).join(' › ')}
+                    </span>
+                    {(task.start_date || task.end_date || task.week_start) && (
+                      <span className="text-[10px] text-gray-400 border-l border-gray-300 pl-2">
+                        {task.start_date || task.week_start} ~ {task.end_date || task.start_date || task.week_start}
+                      </span>
+                    )}
+                  </div>
                 </div>
                 <div className="flex items-center gap-2 flex-none">
                   <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${statusBadge(task.status)}`}>
                     {task.status || '진행 중'}
                   </span>
-                  <button
-                    onClick={() => handleEdit(task)}
-                    className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-white"
-                  >
-                    <Pencil size={14} />
-                  </button>
                   <button
                     onClick={() => handleDelete(task)}
                     className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-white"
@@ -254,20 +255,21 @@ const WeeklyTaskHubModal = ({
                       <span className="text-sm text-gray-700 font-medium truncate group-hover/content:text-primary transition-colors" title={task.content}>
                         {task.content}
                       </span>
-                      <span className="text-[10px] text-gray-400 mt-0.5">
-                        {[task.category, task.sub_category].filter(Boolean).join(' › ')}
-                      </span>
+                      <div className="flex items-center gap-2 mt-0.5">
+                        <span className="text-[10px] text-gray-400">
+                          {[task.category, task.sub_category].filter(Boolean).join(' › ')}
+                        </span>
+                        {(task.start_date || task.end_date || task.week_start) && (
+                          <span className="text-[10px] text-gray-400 border-l border-gray-300 pl-2">
+                            {task.start_date || task.week_start} ~ {task.end_date || task.start_date || task.week_start}
+                          </span>
+                        )}
+                      </div>
                     </div>
                     <div className="flex items-center gap-2 flex-none">
                       <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${statusBadge(task.status)}`}>
                         {task.status || '진행 중'}
                       </span>
-                      <button
-                        onClick={() => handleEdit(task)}
-                        className="p-1.5 text-gray-400 hover:text-primary transition-colors rounded-lg hover:bg-white"
-                      >
-                        <Pencil size={14} />
-                      </button>
                       <button
                         onClick={() => handleDelete(task)}
                         className="p-1.5 text-gray-400 hover:text-red-500 transition-colors rounded-lg hover:bg-white"
