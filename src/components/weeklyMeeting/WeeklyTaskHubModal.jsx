@@ -75,7 +75,12 @@ const WeeklyTaskHubModal = ({
         });
 
         past.sort((a, b) => (b.week_start || '').localeCompare(a.week_start || ''));
-        current.sort((a, b) => (a.task_code || '').localeCompare(b.task_code || ''));
+        current.sort((a, b) => {
+          const dateA = a.end_date || a.start_date || a.week_start || '9999-12-31';
+          const dateB = b.end_date || b.start_date || b.week_start || '9999-12-31';
+          if (dateA !== dateB) return dateA.localeCompare(dateB);
+          return (a.task_code || '').localeCompare(b.task_code || '');
+        });
 
         setPastTasks(past);
         setMyTasks(current);
