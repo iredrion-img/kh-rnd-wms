@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { Edit2, Save, Plus, Trash2, Calendar as CalIcon, CheckCircle2, Circle, Settings2 } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Edit2, Save, Plus, Trash2, Calendar as CalIcon, CheckCircle2, Circle, Settings2, Printer } from 'lucide-react';
 import { format, addDays, startOfMonth, getDaysInMonth } from 'date-fns';
+import { useReactToPrint } from 'react-to-print';
 
 const TEAMS = ['R&D센터, 기술연구소', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'];
 const USERS = [
@@ -81,11 +82,14 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   const currentYear = new Date().getFullYear();
   const VACATIONS_STORAGE_KEY = `kh_summer_vacations_${currentYear}`;
   const [vacations, setVacations] = useState(() => {
-    const saved = localStorage.getItem(VACATIONS_STORAGE_KEY);
-    if (saved) {
-      try { return JSON.parse(saved); } catch (e) {}
-    }
-    return [];
+    const saved = localStorage.getItem('kh_circulation_vacations_v1');
+    return saved ? JSON.parse(saved) : [];
+  });
+
+  const printRef = useRef(null);
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `${currentYear}년_하계휴가일정`,
   });
 
   // ─── 백엔드 동기화 로직 ───
@@ -121,12 +125,12 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
       })
       .catch(err => {
         console.error('Failed to load circulation data:', err);
-        setIsInitialized(true); // 에러 발생 시에도 초기화 완료로 간주하여 이후 저장 허용
+        setIsInitialized(true);
       });
   }, []);
 
   const saveToBackend = (updates) => {
-    if (!isInitialized) return; // 초기 로딩 전에는 저장 방지
+    if (!isInitialized) return;
 
     const payload = {
       surveyInfo: updates.surveyInfo !== undefined ? updates.surveyInfo : surveyInfo,
@@ -144,7 +148,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
 
   const updateVacations = (nextVacations) => {
     setVacations(nextVacations);
-    localStorage.setItem(VACATIONS_STORAGE_KEY, JSON.stringify(nextVacations));
+    localStorage.setItem('kh_circulation_vacations_v1', JSON.stringify(nextVacations));
     saveToBackend({ vacations: nextVacations });
   };
 
@@ -152,7 +156,6 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
     const existingIdx = vacations.findIndex(v => v.name === userName && v.date === dateStr);
     let nextVacations = [...vacations];
     if (existingIdx === -1) {
-      // 등록 안됨 -> 연차
       nextVacations.push({ name: userName, date: dateStr, type: '연차' });
     } else {
       const currentType = vacations[existingIdx].type;
@@ -161,14 +164,12 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
       } else if (currentType === '오전반차') {
         nextVacations[existingIdx] = { ...nextVacations[existingIdx], type: '오후반차' };
       } else {
-        // 삭제
         nextVacations.splice(existingIdx, 1);
       }
     }
     updateVacations(nextVacations);
   };
 
-  // ─── Handlers ───
   const updateSurveyInfo = (newInfo) => {
     setSurveyInfo(newInfo);
     localStorage.setItem(SURVEY_INFO_KEY, JSON.stringify(newInfo));
@@ -211,7 +212,6 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   const totalCount = surveyData.length;
   const progressPercent = Math.round((completedCount / totalCount) * 100);
 
-  // 달력 렌더링용 함수
   const generateDaysForMonth = (month) => {
     const start = new Date(currentYear, month - 1, 1);
     const daysInMonth = getDaysInMonth(start);
@@ -221,7 +221,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
       days.push({
         dateStr: format(d, 'yyyy-MM-dd'),
         dayNum: format(d, 'd'),
-        dayOfWeek: format(d, 'E'), // Mon, Tue...
+        dayOfWeek: format(d, 'E'),
         isWeekend: d.getDay() === 0 || d.getDay() === 6
       });
     }
@@ -232,14 +232,12 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   const augustDays = generateDaysForMonth(8);
   const allSummerDays = [...julyDays, ...augustDays];
 
-  // ─── 4. 탭 State ───
   const TABS = ['교육/설문 취합', '기타 조사', '하계 휴가 일정'];
   const [activeTab, setActiveTab] = useState(TABS[0]);
 
   return (
     <div className={`flex flex-col gap-6 pb-10 animate-in fade-in duration-300 ${isFullscreenMode ? 'px-4' : ''}`}>
       
-      {/* ─── 상단 탭 네비게이션 ─── */}
       <div className="flex border-b border-gray-200">
         {TABS.map(tab => (
           <button
@@ -254,7 +252,6 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
         ))}
       </div>
 
-      {/* ─── 섹션 1: 교육/설문 취합 ─── */}
       {activeTab === TABS[0] && (
       <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="bg-slate-800 px-6 py-4 flex justify-between items-center text-white circulation-dark-header">
@@ -316,7 +313,6 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
           )}
         </div>
 
-        {/* Progress */}
         <div className="px-6 py-4 bg-gray-50 border-b border-gray-100 flex items-center gap-6">
           <div className="flex-1">
             <div className="flex justify-between text-sm font-bold text-gray-600 mb-1">
@@ -380,7 +376,6 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
       </section>
       )}
 
-      {/* ─── 섹션 2: 자산/IP 등 자유 폼 ─── */}
       {activeTab === TABS[1] && (
       <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="bg-slate-800 px-6 py-4 flex justify-between items-center text-white circulation-dark-header">
@@ -473,9 +468,8 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
       </section>
       )}
 
-      {/* ─── 섹션 3: 하계 휴가 달력 ─── */}
       {activeTab === TABS[2] && (
-      <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <section ref={printRef} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden print-section">
         <div className="bg-slate-800 px-6 py-4 flex justify-between items-center text-white circulation-dark-header">
           <h3 className="text-xl font-bold !text-white flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -483,48 +477,63 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
             </div>
             {currentYear}년 임직원 하계 휴가 일정
           </h3>
-          <div className="flex items-center gap-4 text-xs font-bold text-slate-300">
-            <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-blue-400"></div>연차</div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 relative bg-white/10 rounded overflow-hidden">
-                <div className="absolute top-0 left-0 right-0 bottom-1/2 bg-orange-400"></div>
-              </div>
-              오전반차
-            </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 relative bg-white/10 rounded overflow-hidden">
-                <div className="absolute top-1/2 left-0 right-0 bottom-0 bg-orange-400"></div>
-              </div>
-              오후반차
-            </div>
-            {!isFullscreenMode ? (
-              <>
-                <div className="h-4 w-px bg-slate-600 mx-1"></div>
-                <div className="text-kh-lime border border-kh-lime/30 bg-kh-lime/10 px-2 py-1 rounded text-[11px]">
-                  표의 칸을 클릭하여 직접 수정 (연차→오전반차→오후반차→해제)
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 text-xs font-bold text-slate-300">
+              <div className="flex items-center gap-1.5"><div className="w-3 h-3 rounded bg-blue-400"></div>연차</div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 relative bg-white/10 rounded overflow-hidden">
+                  <div className="absolute top-0 left-0 right-0 bottom-1/2 bg-orange-400"></div>
                 </div>
-              </>
-            ) : (
-              <>
-                <div className="h-4 w-px bg-slate-600 mx-1"></div>
-                <div className="text-kh-lime border border-kh-lime/30 bg-kh-lime/10 px-2 py-1 rounded text-[11px]">
-                  클릭하여 수정 가능
+                오전반차
+              </div>
+              <div className="flex items-center gap-1.5">
+                <div className="w-3 h-3 relative bg-white/10 rounded overflow-hidden">
+                  <div className="absolute top-1/2 left-0 right-0 bottom-0 bg-orange-400"></div>
                 </div>
-              </>
-            )}
+                오후반차
+              </div>
+              {!isFullscreenMode && (
+                <>
+                  <div className="h-4 w-px bg-slate-600 mx-1"></div>
+                  <div className="text-kh-lime border border-kh-lime/30 bg-kh-lime/10 px-2 py-1 rounded text-[11px]">
+                    표의 칸을 클릭하여 수정
+                  </div>
+                </>
+              )}
+            </div>
+            <button 
+              onClick={handlePrint}
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all text-xs font-bold border border-white/20"
+            >
+              <Printer size={14} />
+              인쇄/PDF
+            </button>
           </div>
         </div>
+
+        <style>{`
+          @media print {
+            @page { size: A3 landscape; margin: 10mm; }
+            .print-section { border: none !important; border-radius: 0 !important; box-shadow: none !important; width: 100% !important; }
+            .circulation-dark-header { background-color: #1e293b !important; color: white !important; -webkit-print-color-adjust: exact; }
+            .vacation-table { border-collapse: collapse !important; width: 100% !important; }
+            .vacation-table th, .vacation-table td { border: 1px solid #e2e8f0 !important; -webkit-print-color-adjust: exact; }
+            .vacation-table thead, .vacation-table .sticky { position: static !important; }
+            .vacation-table .name-cell { position: static !important; background: white !important; width: 80px !important; }
+            .team-cell { background-color: #eff6ff !important; -webkit-print-color-adjust: exact; }
+            .vacation-table td div[className*="bg-blue-400"] { background-color: #60a5fa !important; -webkit-print-color-adjust: exact; }
+            .vacation-table td div[className*="bg-orange-400"] { background-color: #fb923c !important; -webkit-print-color-adjust: exact; }
+          }
+        `}</style>
 
         <div className="overflow-auto max-h-[70vh] border-t border-gray-100 relative">
           <table className="w-max min-w-full text-sm border-separate border-spacing-0 circulation-table vacation-table">
             <thead className="sticky top-0 z-40 bg-white">
-              {/* 월 헤더 */}
               <tr className="z-50">
                 <th className="sticky left-0 top-0 z-[60] bg-white border-b border-r border-gray-200 p-2 w-[120px] min-w-[120px] max-w-[120px]"></th>
                 <th colSpan={julyDays.length} className="sticky top-0 bg-blue-50 border-b border-r border-gray-200 p-2 text-center text-blue-800 font-black tracking-widest z-40">7월</th>
                 <th colSpan={augustDays.length} className="sticky top-0 bg-orange-50 border-b border-gray-200 p-2 text-center text-orange-800 font-black tracking-widest z-40">8월</th>
               </tr>
-              {/* 일/요일 헤더 */}
               <tr className="z-50">
                 <th className="sticky left-0 top-[41px] z-[60] bg-white border-b border-r border-gray-200 px-4 py-2 w-[120px] min-w-[120px] max-w-[120px] font-bold text-gray-500">성명</th>
                 {allSummerDays.map((day, i) => (
@@ -539,10 +548,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
               {TEAMS.map(team => (
                 <React.Fragment key={team}>
                   <tr className="sticky left-0 z-30">
-                    <td 
-                      colSpan={allSummerDays.length + 1} 
-                      className="bg-blue-50/90 backdrop-blur-sm border-b border-r border-gray-200 px-4 py-2 font-black text-blue-800 text-xs tracking-tight text-left team-cell sticky left-0"
-                    >
+                    <td colSpan={allSummerDays.length + 1} className="bg-blue-50/90 backdrop-blur-sm border-b border-r border-gray-200 px-4 py-2 font-black text-blue-800 text-xs tracking-tight text-left team-cell sticky left-0">
                       <div className="sticky left-4 w-fit">{team}</div>
                     </td>
                   </tr>
