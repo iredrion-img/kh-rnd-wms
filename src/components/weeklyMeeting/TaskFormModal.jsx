@@ -291,7 +291,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                                    onClick={(e) => { e.stopPropagation(); toggleUser(u.name); }}
                                    className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-100'}`}
                                  >
-                                   {u.name} {u.role === 'admin' && <span className="ml-1 opacity-70 text-[10px]">⭐</span>}
+                                   {u.name}
                                  </button>
                                );
                             })}
