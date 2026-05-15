@@ -558,12 +558,15 @@ function getWeekStartStr(dateStr) {
 }
 
 // Helper: Check if a task date range overlaps with a requested week
-function isTaskInWeek(taskStart, taskEnd, requestedWeekMonday) {
+function isTaskInWeek(taskStart, taskEnd, requestedWeekMonday, strict = false) {
     if (!requestedWeekMonday) return false;
     
-    // 구글 시트 양식과 동일하게 지난주 데이터까지 함께 표시되도록 시작 기준일을 지난주 월요일(-7일)로 확장합니다.
     const reqStart = new Date(requestedWeekMonday);
-    reqStart.setDate(reqStart.getDate() - 7);
+    // 일반 팀별 업무는 구글 시트 양식과 동일하게 지난주 데이터까지 함께 표시되도록 시작 기준일을 -7일 확장하지만,
+    // 주간일정 등 엄격한 필터링이 필요한 경우 확장하지 않습니다.
+    if (!strict) {
+        reqStart.setDate(reqStart.getDate() - 7);
+    }
     reqStart.setHours(0,0,0,0);
     
     const reqEnd = new Date(requestedWeekMonday);
@@ -749,7 +752,7 @@ app.get('/api/weekly-schedule', (req, res) => {
         if (week) {
             records = records.filter(r => {
                 if (r.start_date) {
-                    return isTaskInWeek(r.start_date, r.end_date, week);
+                    return isTaskInWeek(r.start_date, r.end_date, week, req.query.strict === 'true');
                 }
                 return r.week_start === week;
             });
