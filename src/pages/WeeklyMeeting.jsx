@@ -99,7 +99,7 @@ const WeeklyMeeting = ({ currentUser }) => {
     try {
       let url = '';
       if (isProject) url = `/api/projects`;
-      else if (isSchedule) url = `/api/weekly-schedule?week=${currentWeek}`;
+      else if (isSchedule) url = `/api/weekly-schedule?week=${currentWeek}&strict=true`;
       else url = `/api/weekly-tasks?week=${currentWeek}&team=${encodeURIComponent(activeMenu)}`;
       const res = await fetch(url);
       const data = await res.json();
@@ -234,7 +234,7 @@ const WeeklyMeeting = ({ currentUser }) => {
       const [tasksRes, projRes, scRes, usersRes, ovRes] = await Promise.all([
         fetch(`/api/weekly-tasks?week=${currentWeek}`),
         fetch(`/api/projects`),
-        fetch(`/api/weekly-schedule?week=${currentWeek}`),
+        fetch(`/api/weekly-schedule?week=${currentWeek}&strict=true`),
         fetch(`/api/users`),
         fetch(`/api/meeting-overview?week=${currentWeek}`)
       ]);
