@@ -495,7 +495,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
               {!isFullscreenMode && (
                 <>
                   <div className="h-4 w-px bg-slate-600 mx-1"></div>
-                  <div className="text-kh-lime border border-kh-lime/30 bg-kh-lime/10 px-2 py-1 rounded text-[11px]">
+                  <div className="text-kh-lime border border-kh-lime/30 bg-kh-lime/10 px-2 py-1 rounded text-[11px] no-print">
                     표의 칸을 클릭하여 수정
                   </div>
                 </>
@@ -503,7 +503,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
             </div>
             <button 
               onClick={handlePrint}
-              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all text-xs font-bold border border-white/20"
+              className="flex items-center gap-2 px-3 py-1.5 bg-white/10 hover:bg-white/20 text-white rounded-lg transition-all text-xs font-bold border border-white/20 no-print"
             >
               <Printer size={14} />
               인쇄/PDF
@@ -516,6 +516,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
             @page { size: A3 landscape; margin: 0; }
             body { -webkit-print-color-adjust: exact; print-color-adjust: exact; margin: 0; padding: 10mm; }
             .print-section { border: none !important; border-radius: 0 !important; box-shadow: none !important; width: 100% !important; }
+            .no-print { display: none !important; }
             .circulation-dark-header { background-color: #1e293b !important; color: white !important; padding: 15px 20px !important; margin-bottom: 5mm; }
             .vacation-table { border-collapse: collapse !important; width: 100% !important; table-layout: fixed !important; }
             .vacation-table th, .vacation-table td { border: 1px solid #e2e8f0 !important; padding: 4px 2px !important; font-size: 10px !important; line-height: 1.2 !important; }
