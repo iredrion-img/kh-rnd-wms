@@ -39,7 +39,7 @@ const MeetingOverviewPanel = ({
       setNoticeLoading(true);
       const [uRes, nRes] = await Promise.all([
         fetch('/api/users'),
-        fetch(`/api/weekly-tasks?week=${currentWeek}&team=${encodeURIComponent('공지사항')}`)
+        fetch(`/api/weekly-tasks?week=${currentWeek}&team=${encodeURIComponent('공지사항')}&strict=true`)
       ]);
       const uData = await uRes.json();
       const nData = await nRes.json();
