@@ -31,6 +31,7 @@ const getDbFile = (year) => {
 const getWeeklyTasksFile = (year) => path.join(__dirname, `weekly_tasks_${year || new Date().getFullYear()}.json`);
 const PROJECTS_FILE = path.join(__dirname, 'projects.json');
 const SCHEDULE_FILE = path.join(__dirname, 'weekly_schedule.json');
+const MEETING_OVERVIEW_FILE = path.join(__dirname, 'meeting_overview.json');
 
 // --- HELPERS ---
 const readJsonResilient = (filePath) => {
@@ -76,6 +77,7 @@ const currentWeeklyFile = getWeeklyTasksFile(currentYear);
 if (!fs.existsSync(currentWeeklyFile)) fs.writeFileSync(currentWeeklyFile, '[]');
 if (!fs.existsSync(PROJECTS_FILE)) fs.writeFileSync(PROJECTS_FILE, '[]');
 if (!fs.existsSync(SCHEDULE_FILE)) fs.writeFileSync(SCHEDULE_FILE, '[]');
+if (!fs.existsSync(MEETING_OVERVIEW_FILE)) fs.writeFileSync(MEETING_OVERVIEW_FILE, '[]');
 
 if (!fs.existsSync(BACKUP_DIR)) fs.mkdirSync(BACKUP_DIR);
 
@@ -579,6 +581,38 @@ function isTaskInWeek(taskStart, taskEnd, requestedWeekMonday) {
     // Overlap condition: (StartA <= EndB) and (EndA >= StartB)
     return tStart <= reqEnd && tEnd >= reqStart;
 }
+
+// ── 회의 개요 (참석자/일시) API ──
+app.get('/api/meeting-overview', (req, res) => {
+    try {
+        const { week } = req.query;
+        if (!week) return res.status(400).json({ error: 'Week is required' });
+        const allData = readJsonResilient(MEETING_OVERVIEW_FILE);
+        const item = allData.find(d => d.week === week) || { week, absentees: [], meeting_date: '' };
+        res.json(item);
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
+
+app.post('/api/meeting-overview', async (req, res) => {
+    try {
+        const { week, absentees, meeting_date } = req.body;
+        if (!week) return res.status(400).json({ error: 'Week is required' });
+        
+        let allData = readJsonResilient(MEETING_OVERVIEW_FILE);
+        const idx = allData.findIndex(d => d.week === week);
+        
+        const newItem = { week, absentees: absentees || [], meeting_date: meeting_date || '' };
+        if (idx > -1) allData[idx] = newItem;
+        else allData.push(newItem);
+        
+        await writeAtomic(MEETING_OVERVIEW_FILE, allData);
+        res.json({ success: true, data: newItem });
+    } catch (e) {
+        res.status(500).json({ error: e.message });
+    }
+});
 
 // GET /api/weekly-tasks — 주차·팀 필터 조회
 app.get('/api/weekly-tasks', (req, res) => {
