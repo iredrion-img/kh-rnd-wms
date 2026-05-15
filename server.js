@@ -607,7 +607,7 @@ app.post('/api/meeting-overview', async (req, res) => {
         if (idx > -1) allData[idx] = newItem;
         else allData.push(newItem);
         
-        await writeAtomic(MEETING_OVERVIEW_FILE, allData);
+        await writeAtomic(MEETING_OVERVIEW_FILE, JSON.stringify(allData, null, 2));
         res.json({ success: true, data: newItem });
     } catch (e) {
         res.status(500).json({ error: e.message });
