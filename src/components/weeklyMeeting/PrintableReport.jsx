@@ -174,7 +174,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
         };
 
         const renderTeamTable = (teamName, teamTasks) => (
-          <div key={teamName} className="mb-6 break-inside-avoid">
+          <div key={teamName} className="mb-6">
             <h2 className="text-[12px] font-bold mb-1 pl-1 border-l-4 border-black">{teamName}</h2>
             {teamTasks.length === 0 ? (
                <p className="text-[10px] text-gray-500 italic p-2 border border-gray-400 text-center bg-gray-50">등록된 주간 업무가 없습니다.</p>
@@ -202,7 +202,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                 </thead>
                 <tbody>
                   {teamTasks.map((t, i) => (
-                    <tr key={i} className="break-inside-avoid">
+                    <tr key={i}>
                       <Td className="text-center font-mono text-[9px] border-l-0">{t.task_code || '-'}</Td>
                       <Td className="text-center whitespace-pre-wrap leading-tight">{formatAssignees(t.assignees || t.author)}</Td>
                       <Td className="text-center text-[9px]">{t.status || '-'}</Td>
@@ -233,7 +233,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
       <div className="page-break"></div>
 
       {/* ── 3. 프로젝트 추진 현황 ── */}
-      <div className="mb-6 mt-8 break-inside-avoid">
+      <div className="mb-6 mt-8">
         <h2 className="text-[12px] font-bold mb-1 pl-1 border-l-4 border-black">프로젝트 추진 및 수행 현황</h2>
         {validProjects.length === 0 ? (
           <p className="text-[10px] text-gray-500 italic p-2 border border-gray-400 text-center bg-gray-50">등록된 프로젝트가 없습니다.</p>
@@ -264,7 +264,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                 let methodStr = p.method || '';
                 if(methodStr.includes(',')) methodStr = methodStr.split(',').map(s=>s.trim()).filter(Boolean).join('\n');
                 return (
-                 <tr key={i} className="break-inside-avoid">
+                 <tr key={i}>
                   <Td className="text-center font-mono text-[9px] border-l-0">{p.project_code || '-'}</Td>
                   <Td className="text-[9px] font-bold text-primary break-all">{p.project_name}</Td>
                   <Td className="text-center text-[9px] whitespace-pre-wrap leading-tight">{methodStr || '-'}</Td>
@@ -281,7 +281,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
       </div>
 
       {/* ── 4. 주간일정 ── */}
-      <div className="mb-6 mt-8 break-inside-avoid">
+      <div className="mb-6 mt-8">
         <h2 className="text-[12px] font-bold mb-1 pl-1 border-l-4 border-black">주간일정</h2>
         {validSchedules.length === 0 ? (
           <p className="text-[10px] text-gray-500 italic p-2 border border-gray-400 text-center bg-gray-50">등록된 일정이 없습니다.</p>
@@ -314,7 +314,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                   return p.length === 3 ? `${p[0].slice(-2)}.${p[1]}.${p[2]}` : dStr;
                 };
                 return (
-                  <tr key={i} className="break-inside-avoid">
+                  <tr key={i}>
                     <Td className="text-center font-bold text-[10px]">{s.schedule_type || '-'}</Td>
                     <Td className="text-center whitespace-pre-wrap leading-tight">{formatAssignees(s.assignees)}</Td>
                     <Td className="text-center text-[9px]">{formatDateShort(s.start_date)}</Td>
