@@ -513,16 +513,19 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
 
         <style>{`
           @media print {
-            @page { size: A3 landscape; margin: 10mm; }
-            .print-section { border: none !important; border-radius: 0 !important; box-shadow: none !important; width: 100% !important; }
-            .circulation-dark-header { background-color: #1e293b !important; color: white !important; -webkit-print-color-adjust: exact; }
-            .vacation-table { border-collapse: collapse !important; width: 100% !important; }
-            .vacation-table th, .vacation-table td { border: 1px solid #e2e8f0 !important; -webkit-print-color-adjust: exact; }
+            @page { size: A3 landscape; margin: 5mm; }
+            body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            .print-section { border: none !important; border-radius: 0 !important; box-shadow: none !important; width: 100% !important; transform: scale(0.95); transform-origin: top left; }
+            .circulation-dark-header { background-color: #1e293b !important; color: white !important; padding: 10px !important; }
+            .vacation-table { border-collapse: collapse !important; width: 100% !important; table-layout: fixed !important; }
+            .vacation-table th, .vacation-table td { border: 1px solid #e2e8f0 !important; padding: 2px !important; font-size: 8px !important; line-height: 1 !important; }
             .vacation-table thead, .vacation-table .sticky { position: static !important; }
-            .vacation-table .name-cell { position: static !important; background: white !important; width: 80px !important; }
-            .team-cell { background-color: #eff6ff !important; -webkit-print-color-adjust: exact; }
-            .vacation-table td div[className*="bg-blue-400"] { background-color: #60a5fa !important; -webkit-print-color-adjust: exact; }
-            .vacation-table td div[className*="bg-orange-400"] { background-color: #fb923c !important; -webkit-print-color-adjust: exact; }
+            .vacation-table .name-cell { position: static !important; background: white !important; width: 70px !important; min-width: 70px !important; max-width: 70px !important; font-size: 9px !important; }
+            .vacation-table th[class*="w-[36px]"], .vacation-table td[class*="w-[36px]"] { width: 18px !important; min-width: 18px !important; max-width: 18px !important; }
+            .team-cell { background-color: #eff6ff !important; font-size: 10px !important; padding: 4px !important; }
+            .vacation-table td div { border-radius: 0 !important; }
+            .vacation-table td div[title="연차"] { background-color: #60a5fa !important; }
+            .vacation-table td div[title*="반차"] { background-color: #fb923c !important; }
           }
         `}</style>
 
