@@ -85,31 +85,49 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
     if (saved) {
       try { return JSON.parse(saved); } catch (e) {}
     }
-    return [
-      { name: '김영근', date: `${currentYear}-07-28`, type: '연차' },
-      { name: '김영근', date: `${currentYear}-07-29`, type: '연차' },
-      { name: '김진희', date: `${currentYear}-08-05`, type: '오전반차' },
-      { name: '이정선', date: `${currentYear}-08-10`, type: '오후반차' },
-    ];
+    return [];
   });
 
   // ─── 백엔드 동기화 로직 ───
+  const [isInitialized, setIsInitialized] = useState(false);
+
   useEffect(() => {
     fetch('/api/circulation')
       .then(res => res.json())
       .then(data => {
         if (data && Object.keys(data).length > 0) {
-          if (data.surveyInfo) setSurveyInfo(data.surveyInfo);
-          if (data.surveyData) setSurveyData(data.surveyData);
-          if (data.customForm) setCustomForm(data.customForm);
-          if (data.customData) setCustomData(data.customData);
-          if (data.vacations) setVacations(data.vacations);
+          if (data.surveyInfo) {
+            setSurveyInfo(data.surveyInfo);
+            localStorage.setItem(SURVEY_INFO_KEY, JSON.stringify(data.surveyInfo));
+          }
+          if (data.surveyData) {
+            setSurveyData(data.surveyData);
+            localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(data.surveyData));
+          }
+          if (data.customForm) {
+            setCustomForm(data.customForm);
+            localStorage.setItem(CUSTOM_FORM_KEY, JSON.stringify(data.customForm));
+          }
+          if (data.customData) {
+            setCustomData(data.customData);
+            localStorage.setItem(CUSTOM_DATA_KEY, JSON.stringify(data.customData));
+          }
+          if (data.vacations) {
+            setVacations(data.vacations);
+            localStorage.setItem(VACATIONS_STORAGE_KEY, JSON.stringify(data.vacations));
+          }
         }
+        setIsInitialized(true);
       })
-      .catch(err => console.error('Failed to load circulation data:', err));
+      .catch(err => {
+        console.error('Failed to load circulation data:', err);
+        setIsInitialized(true); // 에러 발생 시에도 초기화 완료로 간주하여 이후 저장 허용
+      });
   }, []);
 
   const saveToBackend = (updates) => {
+    if (!isInitialized) return; // 초기 로딩 전에는 저장 방지
+
     const payload = {
       surveyInfo: updates.surveyInfo !== undefined ? updates.surveyInfo : surveyInfo,
       surveyData: updates.surveyData !== undefined ? updates.surveyData : surveyData,
@@ -124,28 +142,30 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
     }).catch(err => console.error('Failed to save circulation data:', err));
   };
 
+  const updateVacations = (nextVacations) => {
+    setVacations(nextVacations);
+    localStorage.setItem(VACATIONS_STORAGE_KEY, JSON.stringify(nextVacations));
+    saveToBackend({ vacations: nextVacations });
+  };
+
   const handleVacationClick = (userName, dateStr) => {
-    setVacations(prev => {
-      const existingIdx = prev.findIndex(v => v.name === userName && v.date === dateStr);
-      let nextVacations = [...prev];
-      if (existingIdx === -1) {
-        // 등록 안됨 -> 연차
-        nextVacations.push({ name: userName, date: dateStr, type: '연차' });
+    const existingIdx = vacations.findIndex(v => v.name === userName && v.date === dateStr);
+    let nextVacations = [...vacations];
+    if (existingIdx === -1) {
+      // 등록 안됨 -> 연차
+      nextVacations.push({ name: userName, date: dateStr, type: '연차' });
+    } else {
+      const currentType = vacations[existingIdx].type;
+      if (currentType === '연차') {
+        nextVacations[existingIdx] = { ...nextVacations[existingIdx], type: '오전반차' };
+      } else if (currentType === '오전반차') {
+        nextVacations[existingIdx] = { ...nextVacations[existingIdx], type: '오후반차' };
       } else {
-        const currentType = prev[existingIdx].type;
-        if (currentType === '연차') {
-          nextVacations[existingIdx] = { ...nextVacations[existingIdx], type: '오전반차' };
-        } else if (currentType === '오전반차') {
-          nextVacations[existingIdx] = { ...nextVacations[existingIdx], type: '오후반차' };
-        } else {
-          // 삭제
-          nextVacations.splice(existingIdx, 1);
-        }
+        // 삭제
+        nextVacations.splice(existingIdx, 1);
       }
-      localStorage.setItem(VACATIONS_STORAGE_KEY, JSON.stringify(nextVacations));
-      saveToBackend({ vacations: nextVacations });
-      return nextVacations;
-    });
+    }
+    updateVacations(nextVacations);
   };
 
   // ─── Handlers ───
@@ -162,35 +182,29 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   };
 
   const handleSurveyToggle = (id) => {
-    setSurveyData(prev => {
-      const next = prev.map(item => item.id === id ? { ...item, status: !item.status } : item);
-      localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(next));
-      saveToBackend({ surveyData: next });
-      return next;
-    });
+    const next = surveyData.map(item => item.id === id ? { ...item, status: !item.status } : item);
+    setSurveyData(next);
+    localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(next));
+    saveToBackend({ surveyData: next });
   };
   
   const handleSurveyNoteChange = (id, val) => {
-    setSurveyData(prev => {
-      const next = prev.map(item => item.id === id ? { ...item, note: val } : item);
-      localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(next));
-      saveToBackend({ surveyData: next });
-      return next;
-    });
+    const next = surveyData.map(item => item.id === id ? { ...item, note: val } : item);
+    setSurveyData(next);
+    localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(next));
+    saveToBackend({ surveyData: next });
   };
 
   const handleCustomDataChange = (id, col, val) => {
-    setCustomData(prev => {
-      const next = prev.map(item => {
-        if (item.id === id) {
-          return { ...item, values: { ...item.values, [col]: val } };
-        }
-        return item;
-      });
-      localStorage.setItem(CUSTOM_DATA_KEY, JSON.stringify(next));
-      saveToBackend({ customData: next });
-      return next;
+    const next = customData.map(item => {
+      if (item.id === id) {
+        return { ...item, values: { ...item.values, [col]: val } };
+      }
+      return item;
     });
+    setCustomData(next);
+    localStorage.setItem(CUSTOM_DATA_KEY, JSON.stringify(next));
+    saveToBackend({ customData: next });
   };
 
   const completedCount = surveyData.filter(d => d.status).length;
@@ -501,35 +515,40 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
           </div>
         </div>
 
-        <div className="overflow-x-auto pb-4">
-          <table className="w-max min-w-full text-sm border-collapse table-fixed circulation-table vacation-table">
-            <thead>
+        <div className="overflow-auto max-h-[70vh] border-t border-gray-100 relative">
+          <table className="w-max min-w-full text-sm border-separate border-spacing-0 circulation-table vacation-table">
+            <thead className="sticky top-0 z-40 bg-white">
               {/* 월 헤더 */}
-              <tr>
-                <th className="bg-white border-b border-r border-gray-200 p-2"></th>
-                <th colSpan={julyDays.length} className="bg-blue-50/50 border-b border-r border-gray-200 p-2 text-center text-blue-800 font-black tracking-widest">7월</th>
-                <th colSpan={augustDays.length} className="bg-orange-50/50 border-b border-gray-200 p-2 text-center text-orange-800 font-black tracking-widest">8월</th>
+              <tr className="z-50">
+                <th className="sticky left-0 top-0 z-[60] bg-white border-b border-r border-gray-200 p-2 w-[120px] min-w-[120px] max-w-[120px]"></th>
+                <th colSpan={julyDays.length} className="sticky top-0 bg-blue-50 border-b border-r border-gray-200 p-2 text-center text-blue-800 font-black tracking-widest z-40">7월</th>
+                <th colSpan={augustDays.length} className="sticky top-0 bg-orange-50 border-b border-gray-200 p-2 text-center text-orange-800 font-black tracking-widest z-40">8월</th>
               </tr>
               {/* 일/요일 헤더 */}
-              <tr>
-                <th className="bg-white border-b border-r border-gray-200 px-4 py-2 w-[100px] min-w-[100px] max-w-[100px] font-bold text-gray-500"></th>
+              <tr className="z-50">
+                <th className="sticky left-0 top-[41px] z-[60] bg-white border-b border-r border-gray-200 px-4 py-2 w-[120px] min-w-[120px] max-w-[120px] font-bold text-gray-500">성명</th>
                 {allSummerDays.map((day, i) => (
-                  <th key={i} className={`border-b border-r border-gray-200 w-[36px] min-w-[36px] max-w-[36px] text-center p-1 overflow-hidden ${day.isWeekend ? 'bg-red-50' : 'bg-gray-50'}`}>
+                  <th key={i} className={`sticky top-[41px] border-b border-r border-gray-200 w-[36px] min-w-[36px] max-w-[36px] text-center p-1 overflow-hidden z-40 ${day.isWeekend ? 'bg-red-50' : 'bg-gray-50'}`}>
                     <div className={`text-[10px] ${day.isWeekend ? 'text-red-400' : 'text-gray-400'}`}>{day.dayOfWeek}</div>
                     <div className={`text-xs font-bold ${day.isWeekend ? 'text-red-600' : 'text-gray-800'}`}>{day.dayNum}</div>
                   </th>
                 ))}
               </tr>
             </thead>
-            <tbody>
+            <tbody className="bg-white">
               {TEAMS.map(team => (
                 <React.Fragment key={team}>
-                  <tr>
-                    <td colSpan={allSummerDays.length + 1} className="bg-blue-50/50 border-b border-r border-gray-200 px-4 py-2 font-black text-blue-800 text-xs tracking-tight text-left team-cell">{team}</td>
+                  <tr className="sticky left-0 z-30">
+                    <td 
+                      colSpan={allSummerDays.length + 1} 
+                      className="bg-blue-50/90 backdrop-blur-sm border-b border-r border-gray-200 px-4 py-2 font-black text-blue-800 text-xs tracking-tight text-left team-cell sticky left-0"
+                    >
+                      <div className="sticky left-4 w-fit">{team}</div>
+                    </td>
                   </tr>
                   {USERS.filter(u => u.team === team).map((user) => (
-                    <tr key={user.name} className="hover:bg-gray-50/50">
-                      <td className="border-b border-r border-gray-200 px-4 py-2 text-sm text-gray-800 font-bold whitespace-nowrap pl-6 flex items-center gap-2 text-left name-cell">
+                    <tr key={user.name} className="hover:bg-gray-50/50 group">
+                      <td className="sticky left-0 z-20 bg-white border-b border-r border-gray-200 px-4 py-2 text-sm text-gray-800 font-bold whitespace-nowrap pl-6 flex items-center gap-2 text-left name-cell shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
                         <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0"></div>
                         {user.name}
                       </td>
