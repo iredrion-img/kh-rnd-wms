@@ -30,15 +30,24 @@ const WeeklyTaskHubModal = ({
       if (res.ok) {
         const all = await res.json();
         const mine = all.filter(t => t.assignees && t.assignees.includes(currentUser.name) && t.team !== '공지사항');
-        const notices = all.filter(t => t.team === '공지사항' && t.week_start === currentWeek);
-        notices.sort((a, b) => (a.end_date || '9999-12-31').localeCompare(b.end_date || '9999-12-31'));
-
         const curMon = new Date(currentWeek);
         curMon.setHours(0, 0, 0, 0);
 
         const curSun = new Date(currentWeek);
         curSun.setDate(curSun.getDate() + 6);
         curSun.setHours(23, 59, 59, 999);
+
+        const notices = all.filter(t => {
+          if (t.team !== '공지사항') return false;
+          const tStartStr = t.start_date || t.week_start;
+          const tEndStr = t.end_date || tStartStr;
+          const tStart = new Date(tStartStr);
+          tStart.setHours(0,0,0,0);
+          const tEnd = new Date(tEndStr);
+          tEnd.setHours(23,59,59,999);
+          return tStart <= curSun && tEnd >= curMon; // 주간공정회의와 동일한 엄격한 필터링
+        });
+        notices.sort((a, b) => (a.end_date || '9999-12-31').localeCompare(b.end_date || '9999-12-31'));
 
         // 주간공정회의 기준과 동일하게 지난주 월요일부터 이번 주 일요일까지를 '이번 주 업무' 활성 영역으로 산정
         const activeStart = new Date(currentWeek);
@@ -167,9 +176,12 @@ const WeeklyTaskHubModal = ({
           <div className="flex flex-col gap-2">
             {myTasks.map(task => (
               <div key={task.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-primary/20 bg-primary/[0.03] hover:bg-primary/[0.06] transition-colors shadow-sm shadow-primary/5">
-                <div className="flex flex-col flex-1 min-w-0">
-                  <span className="text-[10px] font-bold text-primary mb-0.5">{task.task_code || task.team || '일반 업무'}</span>
-                  <span className="text-sm text-gray-900 font-bold truncate" title={task.content}>
+                <div 
+                  className="flex flex-col flex-1 min-w-0 cursor-pointer group/content"
+                  onClick={() => handleEdit(task)}
+                >
+                  <span className="text-[10px] font-bold text-primary mb-0.5 group-hover/content:underline">{task.task_code || task.team || '일반 업무'}</span>
+                  <span className="text-sm text-gray-900 font-bold truncate group-hover/content:text-primary transition-colors" title={task.content}>
                     {task.content}
                   </span>
                   <span className="text-[10px] text-gray-400 mt-0.5">
@@ -234,9 +246,12 @@ const WeeklyTaskHubModal = ({
               <div className="flex flex-col gap-2 max-h-60 overflow-y-auto pr-1 animate-in fade-in slide-in-from-top-1 duration-200">
                 {pastTasks.map(task => (
                   <div key={task.id} className="flex items-center justify-between gap-3 p-3 rounded-xl border border-gray-200 bg-gray-100/50 hover:bg-gray-100 transition-colors">
-                    <div className="flex flex-col flex-1 min-w-0">
-                      <span className="text-[10px] font-bold text-gray-500 mb-0.5">[{task.week_start}] {task.task_code || task.team || '일반 업무'}</span>
-                      <span className="text-sm text-gray-700 font-medium truncate" title={task.content}>
+                    <div 
+                      className="flex flex-col flex-1 min-w-0 cursor-pointer group/content"
+                      onClick={() => handleEdit(task)}
+                    >
+                      <span className="text-[10px] font-bold text-gray-500 mb-0.5 group-hover/content:underline">[{task.week_start}] {task.task_code || task.team || '일반 업무'}</span>
+                      <span className="text-sm text-gray-700 font-medium truncate group-hover/content:text-primary transition-colors" title={task.content}>
                         {task.content}
                       </span>
                       <span className="text-[10px] text-gray-400 mt-0.5">
