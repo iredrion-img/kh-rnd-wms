@@ -60,6 +60,10 @@ const MeetingOverviewPanel = ({
   // 2. 서버 설정 로드 (참석자, 회의일시)
   useEffect(() => {
     const loadOverview = async () => {
+      setIsInitialized(false);
+      setAbsentees(new Set());
+      setMeetingDateStr('');
+      
       try {
         const res = await fetch(`/api/meeting-overview?week=${currentWeek}`);
         const data = await res.json();
@@ -79,7 +83,6 @@ const MeetingOverviewPanel = ({
         }
       } catch (e) {
         console.error(e);
-        // Fallback to default date
         const d = new Date(currentWeek);
         d.setDate(d.getDate() + 1);
         setMeetingDateStr(d.toISOString().slice(0, 10));
@@ -88,7 +91,6 @@ const MeetingOverviewPanel = ({
       }
     };
 
-    setIsInitialized(false);
     loadOverview();
   }, [currentWeek]);
 
