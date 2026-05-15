@@ -231,32 +231,27 @@ const WeeklyMeeting = ({ currentUser }) => {
   const handlePrintClick = async () => {
     setIsPrinting(true);
     try {
-      const [tasksRes, projRes, scRes, usersRes] = await Promise.all([
+      const [tasksRes, projRes, scRes, usersRes, ovRes] = await Promise.all([
         fetch(`/api/weekly-tasks?week=${currentWeek}`),
         fetch(`/api/projects`),
         fetch(`/api/weekly-schedule?week=${currentWeek}`),
-        fetch(`/api/users`)
+        fetch(`/api/users`),
+        fetch(`/api/meeting-overview?week=${currentWeek}`)
       ]);
       const allTasks = await tasksRes.json();
       const projects = await projRes.json();
       const schedules = await scRes.json();
       const usersList = await usersRes.json();
+      const overviewData = await ovRes.json();
 
-      const storedMeetingDate = localStorage.getItem(`kh_meeting_date_${currentWeek}`);
-      let finalMeetingDate = currentWeek;
-      if (storedMeetingDate) {
-        finalMeetingDate = storedMeetingDate;
-      } else if (currentWeek) {
+      let finalMeetingDate = overviewData.meeting_date;
+      if (!finalMeetingDate && currentWeek) {
         const d = new Date(currentWeek);
         d.setDate(d.getDate() + 1);
         finalMeetingDate = d.toISOString().slice(0, 10);
       }
 
-      const storedAbsStr = localStorage.getItem(`kh_attendance_${currentWeek}`);
-      let absentees = new Set();
-      if (storedAbsStr) {
-        try { absentees = new Set(JSON.parse(storedAbsStr)); } catch {}
-      }
+      const absentees = new Set(overviewData.absentees || []);
 
       const normalizeKey = (str) => (str || '').replace(/\s+/g, '');
       const allUsers = Array.isArray(usersList) ? usersList : [];

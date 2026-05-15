@@ -31,6 +31,8 @@ const MeetingOverviewPanel = ({
   const [absentees, setAbsentees] = useState(new Set());
   const [meetingDateStr, setMeetingDateStr] = useState('');
 
+  const [isInitialized, setIsInitialized] = useState(false);
+
   // 1. 기초 데이터 로드 (인원, 공지사항)
   const fetchData = useCallback(async () => {
     try {
@@ -55,44 +57,79 @@ const MeetingOverviewPanel = ({
     fetchData();
   }, [fetchData, refreshTrigger]);
 
-  // 2. 로컬 설정 로드 (참석자, 회의일시)
+  // 2. 서버 설정 로드 (참석자, 회의일시)
   useEffect(() => {
-    const storedAbs = localStorage.getItem(ATTENDANCE_STORAGE_KEY(currentWeek));
-    if (storedAbs) {
-      try { setAbsentees(new Set(JSON.parse(storedAbs))); } catch { setAbsentees(new Set()); }
-    } else {
-      setAbsentees(new Set());
-    }
+    const loadOverview = async () => {
+      try {
+        const res = await fetch(`/api/meeting-overview?week=${currentWeek}`);
+        const data = await res.json();
+        
+        if (data.absentees) {
+          setAbsentees(new Set(data.absentees));
+        } else {
+          setAbsentees(new Set());
+        }
+        
+        if (data.meeting_date) {
+          setMeetingDateStr(data.meeting_date);
+        } else {
+          const d = new Date(currentWeek);
+          d.setDate(d.getDate() + 1);
+          setMeetingDateStr(d.toISOString().slice(0, 10));
+        }
+      } catch (e) {
+        console.error(e);
+        // Fallback to default date
+        const d = new Date(currentWeek);
+        d.setDate(d.getDate() + 1);
+        setMeetingDateStr(d.toISOString().slice(0, 10));
+      } finally {
+        setIsInitialized(true);
+      }
+    };
 
-    const storedDate = localStorage.getItem(MEETING_DATE_STORAGE_KEY(currentWeek));
-    if (storedDate) {
-      setMeetingDateStr(storedDate);
-    } else {
-      const d = new Date(currentWeek);
-      d.setDate(d.getDate() + 1);
-      setMeetingDateStr(d.toISOString().slice(0, 10));
-    }
+    setIsInitialized(false);
+    loadOverview();
   }, [currentWeek]);
 
-  // 3. 참석자 변경 핸들러
+  // 3. 서버 저장 핸들러
+  const saveToBackend = async (newAbs, newDate) => {
+    try {
+      await fetch('/api/meeting-overview', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          week: currentWeek,
+          absentees: Array.from(newAbs),
+          meeting_date: newDate
+        })
+      });
+    } catch (e) {
+      console.error('Failed to save overview:', e);
+    }
+  };
+
   const handleRemove = (name) => {
+    if (!isInitialized) return;
     const newSet = new Set(absentees);
     newSet.add(name);
     setAbsentees(newSet);
-    localStorage.setItem(ATTENDANCE_STORAGE_KEY(currentWeek), JSON.stringify([...newSet]));
+    saveToBackend(newSet, meetingDateStr);
   };
 
   const handleAdd = (name) => {
+    if (!isInitialized) return;
     const newSet = new Set(absentees);
     newSet.delete(name);
     setAbsentees(newSet);
-    localStorage.setItem(ATTENDANCE_STORAGE_KEY(currentWeek), JSON.stringify([...newSet]));
+    saveToBackend(newSet, meetingDateStr);
   };
 
   const handleDateChange = (e) => {
+    if (!isInitialized) return;
     const val = e.target.value;
     setMeetingDateStr(val);
-    localStorage.setItem(MEETING_DATE_STORAGE_KEY(currentWeek), val);
+    saveToBackend(absentees, val);
   };
 
   // 4. 데이터 가공 (공백 정규화로 DB 저장값과 표시값 모두 매칭)
