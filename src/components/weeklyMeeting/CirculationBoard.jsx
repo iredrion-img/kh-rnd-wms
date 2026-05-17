@@ -235,21 +235,58 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   const TABS = ['교육/설문 취합', '기타 조사', '하계 휴가 일정'];
   const [activeTab, setActiveTab] = useState(TABS[0]);
 
+  const handleResetTab = () => {
+    if (!window.confirm(`현재 선택된 '${activeTab}'의 내용을 모두 초기화하시겠습니까?\n(입력된 정보가 모두 삭제되며 이 작업은 되돌릴 수 없습니다.)`)) return;
+
+    if (activeTab === TABS[0]) {
+      const resetSurveyInfo = { ...surveyInfo, title: '새 조사 제목', deadline: format(new Date(), 'yyyy-MM-dd') };
+      const resetSurveyData = USERS.map((u, i) => ({ id: i, ...u, status: false, note: '' }));
+      updateSurveyInfo(resetSurveyInfo);
+      setSurveyData(resetSurveyData);
+      localStorage.setItem(SURVEY_DATA_KEY, JSON.stringify(resetSurveyData));
+      saveToBackend({ surveyData: resetSurveyData });
+    } else if (activeTab === TABS[1]) {
+      const resetCustomForm = { ...customForm, title: '새 기타 조사' };
+      const resetCustomData = USERS.map((u, i) => {
+        const resetValues = {};
+        customForm.columns.forEach(col => resetValues[col] = '');
+        return { id: i, ...u, values: resetValues };
+      });
+      updateCustomForm(resetCustomForm);
+      setCustomData(resetCustomData);
+      localStorage.setItem(CUSTOM_DATA_KEY, JSON.stringify(resetCustomData));
+      saveToBackend({ customData: resetCustomData });
+    } else if (activeTab === TABS[2]) {
+      updateVacations([]);
+    }
+  };
+
   return (
     <div className={`flex flex-col gap-6 pb-10 animate-in fade-in duration-300 ${isFullscreenMode ? 'px-4' : ''}`}>
       
-      <div className="flex border-b border-gray-200">
-        {TABS.map(tab => (
+      <div className="flex justify-between items-end border-b border-gray-200">
+        <div className="flex">
+          {TABS.map(tab => (
+            <button
+              key={tab}
+              onClick={() => setActiveTab(tab)}
+              className={`px-8 py-4 font-bold text-sm border-b-2 transition-all ${
+                activeTab === tab ? 'border-kh-green text-kh-green bg-kh-green/5' : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'
+              }`}
+            >
+              {tab}
+            </button>
+          ))}
+        </div>
+        {!isFullscreenMode && (
           <button
-            key={tab}
-            onClick={() => setActiveTab(tab)}
-            className={`px-8 py-4 font-bold text-sm border-b-2 transition-all ${
-              activeTab === tab ? 'border-kh-green text-kh-green bg-kh-green/5' : 'border-transparent text-gray-500 hover:text-gray-800 hover:border-gray-300'
-            }`}
+            onClick={handleResetTab}
+            className="mb-3 mr-4 flex items-center gap-2 px-3 py-1.5 border border-red-200 bg-red-50 text-red-500 rounded-lg hover:bg-red-100 transition-colors text-xs font-bold shadow-sm"
           >
-            {tab}
+            <Trash2 size={14} />
+            초기화
           </button>
-        ))}
+        )}
       </div>
 
       {activeTab === TABS[0] && (
