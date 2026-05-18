@@ -139,7 +139,7 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
       assignees.forEach(name => {
         const entry = { name, ...sch };
         
-        if (content.includes('외출')) {
+        if (type === '외출' || content.includes('외출')) {
            results['외출'].push(entry);
         } 
         else if (type === '합사') {
