@@ -221,12 +221,15 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         setFormData(prev => ({ ...prev, [fieldName]: newUsers.join(', ') }));
     };
 
+    const normalizeDept = (dept) => (dept || '').replace(/\s+/g, '');
+
     const toggleGroup = (groupName) => {
         let usersToAdd = [];
         if (groupName === 'All') {
             usersToAdd = (usersInfo || []).map(u => u.name);
         } else {
-            usersToAdd = (usersInfo || []).filter(u => u.department === groupName).map(u => u.name);
+            const targetDept = normalizeDept(groupName);
+            usersToAdd = (usersInfo || []).filter(u => normalizeDept(u.department) === targetDept).map(u => u.name);
         }
 
         const newUsers = new Set(selected);
@@ -285,7 +288,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                                {['All', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'].map(group => {
                                   const usersInGroup = group === 'All' 
                                       ? (usersInfo || []) 
-                                      : (usersInfo || []).filter(u => u.department === group);
+                                      : (usersInfo || []).filter(u => normalizeDept(u.department) === normalizeDept(group));
                                   const isSelected = usersInGroup.length > 0 && usersInGroup.every(u => selected.includes(u.name));
                                   return (
                                     <button 
