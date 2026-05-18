@@ -218,11 +218,12 @@ const Timesheet = ({ currentUser }) => {
 
         const fetchData = async () => {
             try {
-                // Fetch timesheets and weekly tasks concurrently
+                // Fetch timesheets, weekly tasks, and weekly schedules concurrently
                 const weekStr = format(startOfWeek(selectedDate, { weekStartsOn: 1 }), 'yyyy-MM-dd');
-                const [tsResponse, wtResponse] = await Promise.all([
+                const [tsResponse, wtResponse, wsResponse] = await Promise.all([
                     fetch('/api/timesheets'),
-                    fetch(`/api/weekly-tasks?week=${weekStr}`)
+                    fetch(`/api/weekly-tasks?week=${weekStr}`),
+                    fetch(`/api/weekly-schedule`) // Fetch all to cover cross-week leaves
                 ]);
 
                 if (wtResponse.ok) {
@@ -277,6 +278,43 @@ const Timesheet = ({ currentUser }) => {
                             }
                         });
                     });
+
+                    // --- Weekly Schedule Leave Integration ---
+                    if (wsResponse.ok) {
+                        const allSchedules = await wsResponse.json();
+                        const myLeaves = allSchedules.filter(s => 
+                            s.schedule_type === '휴가' && 
+                            s.assignees && s.assignees.includes(currentUser.name)
+                        );
+
+                        myLeaves.forEach(leave => {
+                            const isHalf = leave.content && (leave.content.includes('오전반차') || leave.content.includes('오후반차') || leave.content.includes('반차'));
+                            const start = new Date(leave.start_date);
+                            const end = leave.end_date ? new Date(leave.end_date) : new Date(start);
+                            
+                            // Iterate through dates from start to end
+                            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                                const dStr = format(d, 'yyyy-MM-dd');
+                                if (!newDailyData[dStr]) newDailyData[dStr] = {};
+                                
+                                // Reset existing leaves to avoid duplicates/conflicts
+                                delete newDailyData[dStr]['연차'];
+                                delete newDailyData[dStr]['반차'];
+                                
+                                if (isHalf) {
+                                    newDailyData[dStr]['반차'] = 4;
+                                    // If half-day is active, cap other work hours to 4
+                                    const workLabels = Object.keys(newDailyData[dStr]).filter(k => !['연차', '반차'].includes(k));
+                                    const workTotal = workLabels.reduce((sum, k) => sum + (newDailyData[dStr][k] || 0), 0);
+                                    if (workTotal > 4) {
+                                        workLabels.forEach(k => delete newDailyData[dStr][k]);
+                                    }
+                                } else {
+                                    newDailyData[dStr] = { '연차': 8 }; // Full day wipes all other works
+                                }
+                            }
+                        });
+                    }
 
                     // Merge with existing dailyData
                     setDailyData(prev => {
