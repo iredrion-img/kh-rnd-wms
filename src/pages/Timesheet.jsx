@@ -388,8 +388,31 @@ const Timesheet = ({ currentUser }) => {
                 }),
             });
 
-            if (response.ok) {
+            // ─── Two-Way Sync for Leaves to Weekly Schedule ───
+            const leaveDataToSync = [];
+            days.forEach((day, i) => {
+                const date = addDays(weekStart, i);
+                const dateKey = format(date, 'yyyy-MM-dd');
+                const fullLeave = dailyData[dateKey]?.['연차'] || 0;
+                const halfLeave = dailyData[dateKey]?.['반차'] || 0;
+                
+                if (fullLeave > 0) leaveDataToSync.push({ date: dateKey, type: '연차' });
+                else if (halfLeave > 0) leaveDataToSync.push({ date: dateKey, type: '반차' });
+            });
+
+            const syncResponse = await fetch('/api/weekly-schedule/sync-timesheet-leaves', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    employee: currentUser.name,
+                    weekStart: format(weekStart, 'yyyy-MM-dd'),
+                    leaves: leaveDataToSync
+                })
+            });
+
+            if (response.ok && syncResponse.ok) {
                 alert('저장되었습니다.');
+                setRefreshTrigger(prev => prev + 1);
             } else {
                 alert('저장에 실패했습니다.');
             }

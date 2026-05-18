@@ -794,6 +794,83 @@ app.post('/api/weekly-schedule', async (req, res) => {
     }
 });
 
+// POST /api/weekly-schedule/sync-timesheet-leaves — 타임시트 연차/반차 -> 주간일정 양방향 동기화
+app.post('/api/weekly-schedule/sync-timesheet-leaves', async (req, res) => {
+    try {
+        const { employee, weekStart, leaves } = req.body;
+        let records = readJsonResilient(SCHEDULE_FILE);
+        
+        const start = new Date(weekStart);
+        const weekDates = [];
+        for(let i=0; i<7; i++) {
+            const d = new Date(start);
+            d.setDate(d.getDate() + i);
+            weekDates.push(d.toISOString().slice(0, 10));
+        }
+
+        const isEmployeeLeaveInWeek = (r) => {
+            if (r.schedule_type !== '휴가') return false;
+            if (!r.assignees || !r.assignees.includes(employee)) return false;
+            const rStart = new Date(r.start_date);
+            const rEnd = r.end_date ? new Date(r.end_date) : rStart;
+            const wStart = new Date(weekStart);
+            const wEnd = new Date(weekDates[6]);
+            return (rStart <= wEnd && rEnd >= wStart);
+        };
+
+        const intersectingLeaves = records.filter(isEmployeeLeaveInWeek);
+        records = records.filter(r => !isEmployeeLeaveInWeek(r));
+
+        const leftoverLeaves = [];
+        intersectingLeaves.forEach(r => {
+            const rStart = new Date(r.start_date);
+            const rEnd = r.end_date ? new Date(r.end_date) : rStart;
+            for(let d = new Date(rStart); d <= rEnd; d.setDate(d.getDate() + 1)) {
+                const dStr = d.toISOString().slice(0, 10);
+                if (!weekDates.includes(dStr)) {
+                    leftoverLeaves.push({
+                        ...r,
+                        id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                        start_date: dStr,
+                        end_date: dStr,
+                        week_start: getWeekStartStr(dStr),
+                        year: dStr.slice(0, 4)
+                    });
+                }
+            }
+        });
+        
+        records = [...records, ...leftoverLeaves];
+
+        const newLeaves = leaves.map(l => {
+            return {
+                id: Date.now().toString() + Math.random().toString(36).substr(2, 5),
+                schedule_type: '휴가',
+                content: l.type,
+                start_date: l.date,
+                end_date: l.date,
+                location: '',
+                assignees: employee,
+                week_start: weekStart,
+                year: l.date.slice(0, 4),
+                created_at: new Date().toISOString().slice(0, 10)
+            };
+        });
+
+        records = [...records, ...newLeaves];
+
+        await writeAtomic(SCHEDULE_FILE, JSON.stringify(records, null, 2));
+        
+        newLeaves.forEach(l => weeksCache.add(l.week_start));
+        leftoverLeaves.forEach(l => weeksCache.add(l.week_start));
+
+        res.json({ success: true });
+    } catch (e) {
+        console.error('[API] /api/weekly-schedule/sync-timesheet-leaves Error:', e);
+        res.status(500).json({ error: '일정 동기화 실패' });
+    }
+});
+
 // PUT /api/weekly-schedule/:id — 일정 수정
 app.put('/api/weekly-schedule/:id', async (req, res) => {
     try {
