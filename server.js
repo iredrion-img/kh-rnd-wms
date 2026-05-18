@@ -900,14 +900,53 @@ app.delete('/api/weekly-schedule/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const records = readJsonResilient(SCHEDULE_FILE);
-        const filtered = records.filter(r => r.id && String(r.id).trim() !== String(id).trim());
-
-        if (filtered.length === records.length) {
+        const recordToDelete = records.find(r => r.id && String(r.id).trim() === String(id).trim());
+        if (!recordToDelete) {
             console.log(`[API] Schedule Delete Failed: ID ${id} not found.`);
             return res.status(404).json({ error: '일정을 찾을 수 없습니다.' });
         }
 
+        const filtered = records.filter(r => r.id && String(r.id).trim() !== String(id).trim());
         await writeAtomic(SCHEDULE_FILE, JSON.stringify(filtered, null, 2));
+        
+        // --- 2-Way Sync: Remove from timesheets.json if it's a leave ---
+        if (recordToDelete.schedule_type === '휴가' && recordToDelete.assignees) {
+            try {
+                const timesheets = readJsonResilient(TIMESHEET_FILE);
+                const start = new Date(recordToDelete.start_date);
+                const end = recordToDelete.end_date ? new Date(recordToDelete.end_date) : new Date(start);
+                let updated = false;
+
+                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                    const dayOfDate = d.getDay();
+                    const diffToMon = dayOfDate === 0 ? -6 : 1 - dayOfDate;
+                    const weekStartObj = new Date(d);
+                    weekStartObj.setDate(d.getDate() + diffToMon);
+                    const weekStartStr = weekStartObj.toISOString().slice(0, 10);
+                    
+                    const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                    const dayCol = dayNames[d.getDay()];
+
+                    timesheets.forEach(ts => {
+                        if (ts.employee === recordToDelete.assignees && 
+                            ts.week_start === weekStartStr && 
+                            ['연차', '반차', '오전반차', '오후반차'].includes(ts.project_name)) {
+                            if (ts[dayCol] > 0) {
+                                ts[dayCol] = 0;
+                                updated = true;
+                            }
+                        }
+                    });
+                }
+                
+                if (updated) {
+                    await writeAtomic(TIMESHEET_FILE, JSON.stringify(timesheets, null, 2));
+                    console.log(`[API] Synced Leave Deletion to Timesheet for ${recordToDelete.assignees}`);
+                }
+            } catch (err) {
+                console.error('[API] Failed to sync leave deletion to timesheet:', err);
+            }
+        }
         console.log(`[API] Schedule Delete Success: ${id}`);
         res.json({ success: true });
     } catch (e) {
