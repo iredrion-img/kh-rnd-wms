@@ -759,10 +759,10 @@ const syncLeaveToTimesheet = async (oldRecord, newRecord) => {
             let leaveType = '연차';
             let hours = 8;
             const content = record.content || '';
-            if (content.includes('오전반차')) { leaveType = '오전반차'; hours = 4; }
-            else if (content.includes('오후반차')) { leaveType = '오후반차'; hours = 4; }
+            if (content.includes('오전반차') || content === '오전' || content.includes('오전')) { leaveType = '오전반차'; hours = 4; }
+            else if (content.includes('오후반차') || content === '오후' || content.includes('오후')) { leaveType = '오후반차'; hours = 4; }
             else if (content.includes('반차')) { leaveType = '반차'; hours = 4; }
-            else if (content.includes('연차')) { leaveType = '연차'; hours = 8; }
+            else if (content.includes('연차') || content.includes('휴가')) { leaveType = '연차'; hours = 8; }
 
             const assigneeArray = record.assignees.split(',').map(s => s.trim()).filter(Boolean);
 

@@ -147,7 +147,7 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
         }
         else if (type === '휴가') {
            // 오전반차/오후반차 키워드 먼저 체크 (완전 매칭 우선)
-           if (content === '오전반차' || content === '오후반차' || content.includes('반차')) {
+           if (content === '오전반차' || content === '오후반차' || content.includes('반차') || content.includes('오전') || content.includes('오후')) {
               // 오후 포함 여부로 구분 (기본값: 오전반차)
               entry.period = (content.includes('오후') || content === '오후반차') ? '오후' : '오전';
               results['반차'].push(entry);
