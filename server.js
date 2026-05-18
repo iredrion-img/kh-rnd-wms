@@ -869,7 +869,16 @@ app.get('/api/circulation', (req, res) => {
 app.post('/api/circulation', async (req, res) => {
     try {
         const payload = req.body;
-        await writeAtomic(CIRCULATION_FILE, JSON.stringify(payload, null, 2));
+        let existing = {};
+        if (fs.existsSync(CIRCULATION_FILE)) {
+            try {
+                existing = JSON.parse(fs.readFileSync(CIRCULATION_FILE, 'utf8'));
+            } catch(e) {
+                console.error('[API] Failed to parse circulation file, resetting.');
+            }
+        }
+        const updated = { ...existing, ...payload };
+        await writeAtomic(CIRCULATION_FILE, JSON.stringify(updated, null, 2));
         res.json({ success: true });
     } catch (e) {
         res.status(500).json({ error: '회람 데이터 저장 실패' });

@@ -82,7 +82,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   const currentYear = new Date().getFullYear();
   const VACATIONS_STORAGE_KEY = `kh_summer_vacations_${currentYear}`;
   const [vacations, setVacations] = useState(() => {
-    const saved = localStorage.getItem('kh_circulation_vacations_v1');
+    const saved = localStorage.getItem(VACATIONS_STORAGE_KEY);
     return saved ? JSON.parse(saved) : [];
   });
 
@@ -132,23 +132,16 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   const saveToBackend = (updates) => {
     if (!isInitialized) return;
 
-    const payload = {
-      surveyInfo: updates.surveyInfo !== undefined ? updates.surveyInfo : surveyInfo,
-      surveyData: updates.surveyData !== undefined ? updates.surveyData : surveyData,
-      customForm: updates.customForm !== undefined ? updates.customForm : customForm,
-      customData: updates.customData !== undefined ? updates.customData : customData,
-      vacations: updates.vacations !== undefined ? updates.vacations : vacations,
-    };
     fetch('/api/circulation', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
+      body: JSON.stringify(updates)
     }).catch(err => console.error('Failed to save circulation data:', err));
   };
 
   const updateVacations = (nextVacations) => {
     setVacations(nextVacations);
-    localStorage.setItem('kh_circulation_vacations_v1', JSON.stringify(nextVacations));
+    localStorage.setItem(VACATIONS_STORAGE_KEY, JSON.stringify(nextVacations));
     saveToBackend({ vacations: nextVacations });
   };
 
