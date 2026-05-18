@@ -260,7 +260,7 @@ const WeeklyScheduleHubModal = ({
           {/* Header */}
           <div className="px-6 pt-5 pb-0 border-b border-gray-100 bg-gray-50/50">
             <div className="flex items-center justify-between mb-4">
-              <h2 className="text-xl font-bold text-gray-900">주간 일정</h2>
+              <h2 className="text-xl font-bold text-gray-900">일정</h2>
               <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
                 <X size={20} />
               </button>

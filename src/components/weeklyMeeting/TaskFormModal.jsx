@@ -362,6 +362,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
             <option value="세미나">세미나</option>
             <option value="교육">교육</option>
             <option value="대외활동">대외활동</option>
+            <option value="외출">외출</option>
             <option value="기타">기타</option>
           </select>
         </div>

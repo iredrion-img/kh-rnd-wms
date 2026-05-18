@@ -699,7 +699,7 @@ const Timesheet = ({ currentUser }) => {
                             onClick={() => setIsScheduleHubModalOpen(true)}
                             className="py-2 w-[100px] bg-gradient-to-r from-kh-green to-kh-green/80 text-white rounded-lg hover:shadow-lg transition-all text-sm font-bold flex items-center justify-center gap-1 shadow-sm shrink-0"
                         >
-                            주간 일정
+                            일정
                         </button>
 
                         <div className="flex items-center gap-3">
