@@ -59,7 +59,7 @@ const Timesheet = ({ currentUser }) => {
     const leaveCategories = [
         { id: 'vacation', label: '연차', icon: Palmtree, color: 'bg-emerald-500', hex: '#10b981ad' },
         { id: 'half_am', label: '오전반차', icon: Sun, color: 'bg-amber-400', hex: '#fbbf24ad' },
-        { id: 'half_pm', label: '오후반차', icon: Sunset, color: 'bg-amber-600', hex: '#d97706ad' },
+        { id: 'half_pm', label: '오후반차', icon: Sunset, color: 'bg-amber-400', hex: '#fbbf24ad' },
         { id: 'half', label: '반차', icon: Sun, color: 'bg-amber-500', hex: '#f59e0bad', hideFromUI: true }
     ];
 

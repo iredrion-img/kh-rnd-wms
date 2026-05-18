@@ -9,7 +9,9 @@ import { Trash2 } from 'lucide-react';
 
 
 function App() {
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem('kh_active_tab') || 'dashboard';
+  });
   const [isChatModalOpen, setChatModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
@@ -161,6 +163,7 @@ function App() {
     } else {
       setChatModalOpen(false);
       setActiveTab(tab);
+      localStorage.setItem('kh_active_tab', tab);
     }
   };
 
