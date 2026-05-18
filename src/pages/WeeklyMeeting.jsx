@@ -524,6 +524,7 @@ const WeeklyMeeting = ({ currentUser }) => {
                   handleDeleteTask(task);
                 }}
                 refreshTrigger={refreshTrigger}
+                isFullscreenMode={false}
               />
             </div>
           ) : isCirculation ? (
@@ -665,6 +666,7 @@ const WeeklyMeeting = ({ currentUser }) => {
                       refreshTrigger={refreshTrigger}
                       hideNoticeActions={isFullscreenMode}
                       hideOverviewActions={false}
+                      isFullscreenMode={isFullscreenMode}
                     />
                   </div>
                ) : isCirculation ? (

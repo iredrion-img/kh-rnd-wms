@@ -23,7 +23,8 @@ const MEETING_DATE_STORAGE_KEY = (week) => `kh_meeting_date_${week}`;
 const MeetingOverviewPanel = ({ 
   currentWeek, currentUser, isAdmin, onAddNotice, onEditNotice, onDeleteNotice, refreshTrigger, 
   hideNoticeActions = false, // Full screen hides notices but allows overview edits
-  hideOverviewActions = false 
+  hideOverviewActions = false,
+  isFullscreenMode = false
 }) => {
   const [users, setUsers] = useState([]);
   const [noticeTasks, setNoticeTasks] = useState([]);
@@ -168,12 +169,18 @@ const MeetingOverviewPanel = ({
                 <td className="px-6 py-4 bg-white w-24 whitespace-nowrap font-bold text-gray-500 text-sm border-r border-gray-100 text-center align-middle">회의일시</td>
                 <td className="px-6 py-4">
                   <div className="flex items-center gap-4">
-                    <input
-                      type="date"
-                      value={meetingDateStr}
-                      onChange={handleDateChange}
-                      className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
-                    />
+                    {isFullscreenMode ? (
+                      <span className="text-xl font-black text-gray-900 tracking-tight">
+                        {meetingDateStr}
+                      </span>
+                    ) : (
+                      <input
+                        type="date"
+                        value={meetingDateStr}
+                        onChange={handleDateChange}
+                        className="px-3 py-1.5 border border-gray-300 rounded-lg text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                      />
+                    )}
                     <div className="h-4 w-px bg-gray-200"></div>
                     <span className="text-xl font-black text-gray-900 whitespace-nowrap inline-flex items-center min-w-[4rem] justify-end">
                       {totalAttending}
