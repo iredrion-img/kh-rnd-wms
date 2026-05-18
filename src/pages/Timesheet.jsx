@@ -44,6 +44,7 @@ const Timesheet = ({ currentUser }) => {
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [myWeeklyTasks, setMyWeeklyTasks] = useState([]);
     const [noticeTasks, setNoticeTasks] = useState([]);
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const openTaskModal = (task = null) => {
         setEditingTask(task);
@@ -328,10 +329,7 @@ const Timesheet = ({ currentUser }) => {
         };
 
         fetchData();
-    }, [currentUser, selectedDate]); // Dependency on selectedDate implies refetch on week change? 
-    // Wait, selectedDate changes daily. fetching every day change is spammy but safe.
-    // Optimization: Only fetch when week changes? 
-    // For now, simple is better. Fetching is cheap.
+    }, [currentUser, selectedDate, refreshTrigger]); 
 
     // Save Logic (Converts daily map to weekly rows for backend compatibility)
     const handleSave = async () => {
@@ -478,7 +476,11 @@ const Timesheet = ({ currentUser }) => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(payload)
             });
-            if (!res.ok) alert('일정 저장에 실패했습니다.');
+            if (!res.ok) {
+                alert('일정 저장에 실패했습니다.');
+            } else {
+                setRefreshTrigger(prev => prev + 1);
+            }
         } catch (e) {
             console.error(e);
             alert('일정 저장 중 오류가 발생했습니다.');
@@ -489,6 +491,7 @@ const Timesheet = ({ currentUser }) => {
         try {
             const res = await fetch(`/api/weekly-schedule/${sch.id}`, { method: 'DELETE' });
             if (!res.ok) alert('일정 삭제에 실패했습니다.');
+            else setRefreshTrigger(prev => prev + 1);
         } catch (e) {
             console.error(e);
             alert('일정 삭제 중 오류가 발생했습니다.');
