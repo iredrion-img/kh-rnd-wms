@@ -111,7 +111,7 @@ const WeeklyMeeting = ({ currentUser }) => {
         finalData = finalData.filter(s => {
           const type = s.schedule_type || '';
           const cnt = s.content || '';
-          return !cnt.includes('외출') && type !== '합사';
+          return !cnt.includes('외출') && type !== '합사' && type !== '외출';
         });
 
         const orderMap = {
@@ -285,7 +285,7 @@ const WeeklyMeeting = ({ currentUser }) => {
       filteredSchedules = filteredSchedules.filter(s => {
         const type = s.schedule_type || '';
         const cnt = s.content || '';
-        return !cnt.includes('외출') && type !== '합사';
+        return !cnt.includes('외출') && type !== '합사' && type !== '외출';
       });
       const scheduleOrder = {
         '업무협의': 1, '프로젝트': 2, '부서지원': 3, 'TFT': 4, '대외활동': 5,
