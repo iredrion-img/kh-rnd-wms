@@ -146,6 +146,11 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                 updated.end_date = todayStr;
             }
         }
+        
+        if (name === 'schedule_type' && value === '휴가') {
+            updated.content = '';
+            updated.location = '';
+        }
 
         if (name === 'method_base' || name === 'method_detail') {
              const b = updated.method_base || '';
@@ -360,15 +365,31 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
             <option value="기타">기타</option>
           </select>
         </div>
+        
+        {formData.schedule_type === '휴가' ? (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">휴가 종류 *</label>
+            <select name="content" value={formData.content || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
+              <option value="">선택</option>
+              <option value="연차">연차</option>
+              <option value="오전반차">오전반차</option>
+              <option value="오후반차">오후반차</option>
+            </select>
+          </div>
+        ) : (
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">장소</label>
+            <input type="text" name="location" value={formData.location || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+          </div>
+        )}
+      </div>
+      
+      {formData.schedule_type !== '휴가' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">장소</label>
-          <input type="text" name="location" value={formData.location || ''} onChange={handleChange} className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
+          <label className="block text-sm font-medium text-gray-700 mb-1">상세업무 *</label>
+          <input type="text" name="content" value={formData.content || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
         </div>
-      </div>
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">상세업무 *</label>
-        <input type="text" name="content" value={formData.content || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
-      </div>
+      )}
       <div className="grid grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-1">시작일</label>
