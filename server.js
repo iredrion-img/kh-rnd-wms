@@ -748,6 +748,86 @@ app.delete('/api/weekly-tasks/:id', async (req, res) => {
     }
 });
 
+// Helper for Two-Way Sync: Weekly Schedule -> Timesheet
+const syncLeaveToTimesheet = async (oldRecord, newRecord) => {
+    try {
+        const processRecord = async (record, action) => {
+            if (record.schedule_type !== '휴가' || !record.assignees) return;
+            const start = new Date(record.start_date);
+            const end = record.end_date ? new Date(record.end_date) : new Date(start);
+            
+            let leaveType = '연차';
+            let hours = 8;
+            const content = record.content || '';
+            if (content.includes('오전반차')) { leaveType = '오전반차'; hours = 4; }
+            else if (content.includes('오후반차')) { leaveType = '오후반차'; hours = 4; }
+            else if (content.includes('반차')) { leaveType = '반차'; hours = 4; }
+            else if (content.includes('연차')) { leaveType = '연차'; hours = 8; }
+
+            const assigneeArray = record.assignees.split(',').map(s => s.trim()).filter(Boolean);
+
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const yearStr = String(d.getFullYear());
+                const dbFile = getDbFile(yearStr);
+                const timesheets = readJsonResilient(dbFile);
+                let updated = false;
+
+                const dayOfDate = d.getDay();
+                const diffToMon = dayOfDate === 0 ? -6 : 1 - dayOfDate;
+                const weekStartObj = new Date(d);
+                weekStartObj.setDate(d.getDate() + diffToMon);
+                const weekStartStr = weekStartObj.toISOString().slice(0, 10);
+                
+                const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+                const dayCol = dayNames[d.getDay()];
+
+                assigneeArray.forEach(empName => {
+                    // Always clear existing leave for this day first
+                    timesheets.forEach(ts => {
+                        if (ts.employee === empName && ts.week_start === weekStartStr && ['연차', '반차', '오전반차', '오후반차'].includes(ts.project_name)) {
+                            if (ts[dayCol] > 0) {
+                                ts[dayCol] = 0;
+                                updated = true;
+                            }
+                        }
+                    });
+
+                    if (action === 'add') {
+                        let targetRow = timesheets.find(ts => ts.employee === empName && ts.week_start === weekStartStr && ts.project_name === leaveType);
+                        if (targetRow) {
+                            targetRow[dayCol] = hours;
+                            updated = true;
+                        } else {
+                            const newRow = {
+                                employee: empName,
+                                department: "",
+                                week_start: weekStartStr,
+                                project_name: leaveType,
+                                code: 'LEAVE',
+                                mon: 0, tue: 0, wed: 0, thu: 0, fri: 0, sat: 0, sun: 0,
+                                created_at: new Date().toISOString()
+                            };
+                            newRow[dayCol] = hours;
+                            timesheets.push(newRow);
+                            updated = true;
+                        }
+                    }
+                });
+
+                if (updated) {
+                    await writeAtomic(dbFile, JSON.stringify(timesheets, null, 2));
+                    console.log(`[API] Synced Leave to Timesheet (${dbFile}) successfully.`);
+                }
+            }
+        };
+
+        if (oldRecord) await processRecord(oldRecord, 'remove');
+        if (newRecord) await processRecord(newRecord, 'add');
+    } catch (err) {
+        console.error('[API] Failed to sync leave to timesheet:', err);
+    }
+};
+
 // GET /api/weekly-schedule — 주간 일정 조회
 app.get('/api/weekly-schedule', (req, res) => {
     try {
@@ -787,6 +867,9 @@ app.post('/api/weekly-schedule', async (req, res) => {
         if (newRecord.week_start && !weeksCache.has(newRecord.week_start)) {
             weeksCache.add(newRecord.week_start);
         }
+
+        // --- 2-Way Sync ---
+        await syncLeaveToTimesheet(null, newRecord);
 
         res.json({ success: true, record: newRecord });
     } catch (e) {
@@ -880,6 +963,7 @@ app.put('/api/weekly-schedule/:id', async (req, res) => {
         const idx = records.findIndex(r => r.id === id);
         if (idx === -1) return res.status(404).json({ error: '일정을 찾을 수 없습니다.' });
 
+        const oldRecord = { ...records[idx] };
         records[idx] = { ...records[idx], ...updates };
         if (updates.start_date) {
             records[idx].week_start = getWeekStartStr(updates.start_date);
@@ -887,6 +971,10 @@ app.put('/api/weekly-schedule/:id', async (req, res) => {
         }
 
         await writeAtomic(SCHEDULE_FILE, JSON.stringify(records, null, 2));
+
+        // --- 2-Way Sync ---
+        await syncLeaveToTimesheet(oldRecord, records[idx]);
+
         res.json({ success: true, record: records[idx] });
     } catch (e) {
         console.error('[API] PUT /api/weekly-schedule/:id:', e);
@@ -909,44 +997,9 @@ app.delete('/api/weekly-schedule/:id', async (req, res) => {
         const filtered = records.filter(r => r.id && String(r.id).trim() !== String(id).trim());
         await writeAtomic(SCHEDULE_FILE, JSON.stringify(filtered, null, 2));
         
-        // --- 2-Way Sync: Remove from timesheets.json if it's a leave ---
-        if (recordToDelete.schedule_type === '휴가' && recordToDelete.assignees) {
-            try {
-                const timesheets = readJsonResilient(TIMESHEET_FILE);
-                const start = new Date(recordToDelete.start_date);
-                const end = recordToDelete.end_date ? new Date(recordToDelete.end_date) : new Date(start);
-                let updated = false;
+        // --- 2-Way Sync ---
+        await syncLeaveToTimesheet(recordToDelete, null);
 
-                for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-                    const dayOfDate = d.getDay();
-                    const diffToMon = dayOfDate === 0 ? -6 : 1 - dayOfDate;
-                    const weekStartObj = new Date(d);
-                    weekStartObj.setDate(d.getDate() + diffToMon);
-                    const weekStartStr = weekStartObj.toISOString().slice(0, 10);
-                    
-                    const dayNames = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
-                    const dayCol = dayNames[d.getDay()];
-
-                    timesheets.forEach(ts => {
-                        if (ts.employee === recordToDelete.assignees && 
-                            ts.week_start === weekStartStr && 
-                            ['연차', '반차', '오전반차', '오후반차'].includes(ts.project_name)) {
-                            if (ts[dayCol] > 0) {
-                                ts[dayCol] = 0;
-                                updated = true;
-                            }
-                        }
-                    });
-                }
-                
-                if (updated) {
-                    await writeAtomic(TIMESHEET_FILE, JSON.stringify(timesheets, null, 2));
-                    console.log(`[API] Synced Leave Deletion to Timesheet for ${recordToDelete.assignees}`);
-                }
-            } catch (err) {
-                console.error('[API] Failed to sync leave deletion to timesheet:', err);
-            }
-        }
         console.log(`[API] Schedule Delete Success: ${id}`);
         res.json({ success: true });
     } catch (e) {
