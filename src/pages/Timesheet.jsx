@@ -284,6 +284,14 @@ const Timesheet = ({ currentUser }) => {
 
                     // --- Weekly Schedule Leave Integration ---
                     if (wsResponse.ok) {
+                        // 주간 일정의 휴가 데이터를 유일한 기준으로 삼기 위해 timesheets.json에서 불러온 휴가 기록을 모두 초기화
+                        Object.keys(newDailyData).forEach(dateKey => {
+                            delete newDailyData[dateKey]['연차'];
+                            delete newDailyData[dateKey]['반차'];
+                            delete newDailyData[dateKey]['오전반차'];
+                            delete newDailyData[dateKey]['오후반차'];
+                        });
+
                         const allSchedules = await wsResponse.json();
                         const myLeaves = allSchedules.filter(s => 
                             s.schedule_type === '휴가' && 
