@@ -221,6 +221,28 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
         setFormData(prev => ({ ...prev, [fieldName]: newUsers.join(', ') }));
     };
 
+    const toggleGroup = (groupName) => {
+        let usersToAdd = [];
+        if (groupName === 'All') {
+            usersToAdd = (usersInfo || []).map(u => u.name);
+        } else {
+            usersToAdd = (usersInfo || []).filter(u => u.department === groupName).map(u => u.name);
+        }
+
+        const newUsers = new Set(selected);
+        const allSelected = usersToAdd.length > 0 && usersToAdd.every(name => selected.includes(name));
+        
+        if (allSelected) {
+            // Unselect all in group
+            usersToAdd.forEach(name => newUsers.delete(name));
+        } else {
+            // Select all in group
+            usersToAdd.forEach(name => newUsers.add(name));
+        }
+        
+        setFormData(prev => ({ ...prev, [fieldName]: Array.from(newUsers).join(', ') }));
+    };
+
     const groupedUsers = (usersInfo || []).reduce((acc, u) => {
         const dept = u.department || '기타';
         if (!acc[dept]) acc[dept] = [];
@@ -261,12 +283,15 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
                             <div className="text-xs font-bold text-gray-400 uppercase tracking-wider pl-1">조직 그룹</div>
                             <div className="flex flex-wrap gap-2">
                                {['All', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'].map(group => {
-                                  const isSelected = selected.includes(group);
+                                  const usersInGroup = group === 'All' 
+                                      ? (usersInfo || []) 
+                                      : (usersInfo || []).filter(u => u.department === group);
+                                  const isSelected = usersInGroup.length > 0 && usersInGroup.every(u => selected.includes(u.name));
                                   return (
                                     <button 
                                       key={group} 
                                       type="button"
-                                      onClick={(e) => { e.stopPropagation(); toggleUser(group); }}
+                                      onClick={(e) => { e.stopPropagation(); toggleGroup(group); }}
                                       className={`px-3 py-1.5 rounded-lg text-sm font-medium transition-all flex items-center ${isSelected ? 'bg-primary text-white shadow-md shadow-primary/20' : 'bg-gray-50 text-gray-600 hover:bg-gray-100 hover:text-gray-900 border border-gray-100'}`}
                                     >
                                       {group}
