@@ -31,6 +31,7 @@ const MeetingOverviewPanel = ({
   const [noticeLoading, setNoticeLoading] = useState(true);
   const [absentees, setAbsentees] = useState(new Set());
   const [meetingDateStr, setMeetingDateStr] = useState('');
+  const [activeTab, setActiveTab] = useState('기본정보');
 
   const [isInitialized, setIsInitialized] = useState(false);
 
@@ -151,7 +152,23 @@ const MeetingOverviewPanel = ({
   return (
     <div className="flex flex-col gap-6 animate-in fade-in duration-300">
       
+      {/* ─── Tabs ─── */}
+      <div className="flex bg-gray-200/60 p-1.5 rounded-xl gap-2 w-max">
+        {['기본정보', '공지사항'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveTab(tab)}
+            className={`px-8 py-2.5 rounded-lg text-base font-bold transition-all ${
+              activeTab === tab ? 'bg-white text-kh-green shadow-sm' : 'text-gray-500 hover:text-gray-800'
+            }`}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
       {/* ─── Basic Info Section ── */}
+      {activeTab === '기본정보' && (
       <section className="bg-white rounded-2xl shadow-sm border border-gray-200">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
@@ -219,8 +236,10 @@ const MeetingOverviewPanel = ({
           </table>
         </div>
       </section>
+      )}
 
       {/* ─── Notice Section ── */}
+      {activeTab === '공지사항' && (
       <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
         <div className="flex items-center justify-between px-6 py-4 border-b border-gray-100">
           <h2 className="text-base font-bold text-gray-800 flex items-center gap-2">
@@ -276,6 +295,7 @@ const MeetingOverviewPanel = ({
           )}
         </div>
       </section>
+      )}
     </div>
   );
 };
