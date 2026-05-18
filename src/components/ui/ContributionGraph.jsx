@@ -78,7 +78,7 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
 
             if (LEAVE_LABELS.includes(cat)) {
                 if (cat === '연차') hasLeave = '연차';
-                else if (!hasLeave) hasLeave = '반차'; // 반차/오전반차/오후반차
+                else if (!hasLeave) hasLeave = cat;
             } else {
                 workTotal += hrs;
                 if (hrs > workMaxHrs) { workMaxHrs = hrs; workDominant = cat; }
@@ -99,22 +99,24 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
                 return { backgroundColor: '#C7D2FE' };
             }
 
-            // 반차 + work — split cell (top: work color, bottom: amber)
-            if (hasLeave === '반차' && workTotal > 0) {
-                const workPalette = resolveColor(workDominant);
-                let shadeIdx;
-                if (workTotal <= 2) shadeIdx = 1;
-                else if (workTotal <= 4) shadeIdx = 2;
-                else shadeIdx = 3;
-                const workColor = workPalette.shades[shadeIdx];
-                return {
-                    background: `linear-gradient(to bottom, ${workColor} 50%, #FBBF24 50%)`,
-                };
-            }
+            // 반차 계열 (오전/오후 분리)
+            if (['반차', '오전반차', '오후반차'].includes(hasLeave)) {
+                let workColor = '#F3F4F6'; // Default empty background
+                if (workTotal > 0) {
+                    const workPalette = resolveColor(workDominant);
+                    let shadeIdx;
+                    if (workTotal <= 2) shadeIdx = 1;
+                    else if (workTotal <= 4) shadeIdx = 2;
+                    else shadeIdx = 3;
+                    workColor = workPalette.shades[shadeIdx];
+                }
 
-            // 반차 only (no work logged) — solid amber
-            if (hasLeave === '반차') {
-                return { backgroundColor: '#FBBF24' };
+                if (hasLeave === '오전반차') {
+                    return { background: `linear-gradient(to bottom, #FBBF24 50%, ${workColor} 50%)` };
+                } else {
+                    // '오후반차' or '반차' (legacy defaults to bottom)
+                    return { background: `linear-gradient(to bottom, ${workColor} 50%, #FBBF24 50%)` };
+                }
             }
 
             // Normal work — show work color
@@ -260,8 +262,12 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
                     <span>연차</span>
                 </div>
                 <div className="flex items-center gap-1">
+                    <div className="w-2 h-2 rounded-[1px]" style={{ background: 'linear-gradient(to bottom, #FBBF24 50%, #9E9E9E 50%)' }} />
+                    <span>오전반차</span>
+                </div>
+                <div className="flex items-center gap-1">
                     <div className="w-2 h-2 rounded-[1px]" style={{ background: 'linear-gradient(to bottom, #9E9E9E 50%, #FBBF24 50%)' }} />
-                    <span>반차</span>
+                    <span>오후반차</span>
                 </div>
                 <span className="mx-1 text-gray-200">|</span>
                 <div className="flex items-center gap-1">
