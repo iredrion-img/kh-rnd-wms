@@ -91,19 +91,19 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
     return (
       <table className="w-full text-sm text-left schedule-table">
         <thead className="text-xs text-gray-500 uppercase">
-          <tr>
+          <tr className="divide-x divide-gray-200">
             <th className="px-4 py-3 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-20 whitespace-nowrap text-center">구분</th>
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-28 whitespace-nowrap text-center">수행인원</th>
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-28 whitespace-nowrap text-center">시작예정</th>
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-28 whitespace-nowrap text-center">종료예정</th>
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">상세내용</th>
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-32 whitespace-nowrap text-center">비고</th>
-            {!hideActions && <th className="px-4 py-3 w-24 text-right rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
+            {!hideActions && <th className="px-4 py-3 w-24 text-center rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {tasks.map(t => (
-            <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
+            <tr key={t.id} className="hover:bg-gray-50/50 transition-colors divide-x divide-gray-200">
               <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-center">{t.schedule_type}</td>
               <td className="px-4 py-3 text-gray-600 font-bold text-center">{formatAssignees(t.assignees)}</td>
               <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-center">{t.start_date}</td>
@@ -111,7 +111,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
               <td className="px-4 py-3 font-medium whitespace-pre-wrap">{t.content}</td>
               <td className="px-4 py-3 text-gray-500 whitespace-pre-wrap">{t.location}</td>
               {!hideActions && (
-                <td className="px-4 py-3 text-right whitespace-nowrap">
+                <td className="px-4 py-3 text-center whitespace-nowrap">
                   <button onClick={() => onEdit(t)} className="p-1 text-gray-400 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
                   <button onClick={() => onDelete(t)} className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-1"><Trash2 className="w-4 h-4" /></button>
                 </td>
@@ -129,14 +129,14 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
       <table className="w-full text-sm text-left project-table">
         <thead className="text-xs text-gray-500 uppercase">
           <tr className="divide-x divide-gray-200">
-            <th className="px-4 py-3 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">분류 코드</th>
-            <th className="px-4 py-3 min-w-[200px] sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">프로젝트명</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">수행방식</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">BIM용역비</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">설계담당부서</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">담당자</th>
-            <th className="px-4 py-3 min-w-[200px] sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">수행현황</th>
-            {!hideActions && <th className="px-4 py-3 w-24 text-right rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
+            <th className="px-4 py-3 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">분류 코드</th>
+            <th className="px-4 py-3 min-w-[200px] sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">프로젝트명</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">수행방식</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">BIM용역비</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">설계담당부서</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">담당자</th>
+            <th className="px-4 py-3 min-w-[200px] sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">수행현황</th>
+            {!hideActions && <th className="px-4 py-3 w-24 text-center rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
@@ -150,7 +150,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
               <td className="px-4 py-3 font-bold text-center">{formatAssignees(t.manager)}</td>
               <td className="px-4 py-3 whitespace-pre-wrap">{t.status_detail}</td>
                 {!hideActions && (
-                  <td className="px-4 py-3 text-right whitespace-nowrap">
+                  <td className="px-4 py-3 text-center whitespace-nowrap">
                     <button onClick={() => onEdit(t)} className="p-1 text-gray-400 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
                     <button onClick={() => onDelete(t)} className="p-1 text-gray-400 hover:text-red-500 transition-colors ml-1"><Trash2 className="w-4 h-4" /></button>
                   </td>
@@ -174,23 +174,23 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
   return (
     <table className={`w-full text-sm text-left weekly-tasks-table ${!showMeetingResult ? 'has-no-meeting-result' : ''}`}>
       <thead className="text-xs text-gray-500 uppercase">
-        <tr>
-          {!isNotice && <th className="px-3 py-3 w-28 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">업무코드</th>}
-          {!isNotice && <th className="px-3 py-3 w-32 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">수행인원</th>}
-          {!isNotice && <th className="px-3 py-3 w-24 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">진행 상태</th>}
-          <th className="px-3 py-3 w-28 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">시작일</th>
-          <th className="px-3 py-3 w-28 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">마감일</th>
-          {showMeetingResult && <th className="px-3 py-3 w-48 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap">공유회의/결과보고</th>}
-          <th className={`pl-7 pr-3 py-3 min-w-[300px] sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] ${isNotice ? 'rounded-tl-lg' : ''}`}>주요내용</th>
-          {!hideActions && <th className="px-3 py-3 w-20 text-right rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
+        <tr className="divide-x divide-gray-200">
+          {!isNotice && <th className="px-3 py-3 w-28 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">업무코드</th>}
+          {!isNotice && <th className="px-3 py-3 w-32 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">수행인원</th>}
+          {!isNotice && <th className="px-3 py-3 w-24 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">진행 상태</th>}
+          <th className="px-3 py-3 w-28 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">시작일</th>
+          <th className="px-3 py-3 w-28 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">마감일</th>
+          {showMeetingResult && <th className="px-3 py-3 w-48 text-center sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">공유회의/결과보고</th>}
+          <th className={`px-3 py-3 min-w-[300px] sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] ${isNotice ? 'rounded-tl-lg' : ''} text-center`}>주요내용</th>
+          {!hideActions && <th className="px-3 py-3 w-20 text-center rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
         </tr>
       </thead>
       <tbody className="divide-y divide-gray-100">
         {tasks.map(t => {
           return (
-            <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
-              {!isNotice && <td className="px-3 py-3 text-xs text-gray-400 font-mono">{t.task_code}</td>}
-              {!isNotice && <td className="px-3 py-3 text-gray-600 font-bold leading-tight">{formatAssignees(t.assignees)}</td>}
+            <tr key={t.id} className="hover:bg-gray-50/50 transition-colors divide-x divide-gray-200">
+              {!isNotice && <td className="px-3 py-3 text-xs text-gray-400 font-mono text-center">{t.task_code}</td>}
+              {!isNotice && <td className="px-3 py-3 text-gray-600 font-bold leading-tight text-center">{formatAssignees(t.assignees)}</td>}
               
               {!isNotice && <td className="px-3 py-3 text-center">
                 <span className={`px-2 py-1 text-[11px] font-bold rounded-md border whitespace-nowrap ${STATUS_COLORS[t.status] || STATUS_COLORS['보류']}`}>
@@ -214,7 +214,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
               <td className="pl-7 pr-3 py-3 text-gray-900 whitespace-pre-wrap font-medium">{t.content}</td>
 
               {!hideActions && (
-                <td className="px-3 py-3 text-right whitespace-nowrap">
+                <td className="px-3 py-3 text-center whitespace-nowrap">
                   <button onClick={() => onEdit(t)} className="p-1.5 text-gray-400 hover:text-primary transition-colors"><Pencil className="w-4 h-4" /></button>
                   <button 
                     onClick={(e) => { 
