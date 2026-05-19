@@ -479,8 +479,7 @@ const WeeklyMeeting = ({ currentUser }) => {
         <div className="flex items-center gap-3">
           <FileSpreadsheet className="w-6 h-6 text-primary" />
           <div>
-            <h1 className="text-lg font-bold text-gray-900 leading-tight">주간공정회의록</h1>
-            <p className="text-xs text-gray-400">팀별 주간 업무 현황을 관리하고 공유합니다.</p>
+            <h1 className="text-lg font-bold text-gray-900 leading-tight">주간공정회의</h1>
           </div>
         </div>
         <div className="flex items-center gap-4">
