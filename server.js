@@ -708,9 +708,24 @@ app.put('/api/weekly-tasks/:id', async (req, res) => {
         const { id } = req.params;
         const updates = req.body;
         const year = updates.start_date ? updates.start_date.slice(0, 4) : String(new Date().getFullYear());
-        const file = getWeeklyTasksFile(year);
-        const records = readJsonResilient(file);
-        const idx = records.findIndex(r => r.id === id);
+        let file = getWeeklyTasksFile(year);
+        let records = readJsonResilient(file);
+        let idx = records.findIndex(r => r.id === id);
+        
+        // Fallback: If not found in the file determined by start_date, check the current year's file
+        if (idx === -1 && year !== String(new Date().getFullYear())) {
+            const currentYear = String(new Date().getFullYear());
+            const currentFile = getWeeklyTasksFile(currentYear);
+            const currentRecords = readJsonResilient(currentFile);
+            const currentIdx = currentRecords.findIndex(r => r.id === id);
+            
+            if (currentIdx !== -1) {
+                file = currentFile;
+                records = currentRecords;
+                idx = currentIdx;
+            }
+        }
+
         if (idx === -1) return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
 
         records[idx] = { ...records[idx], ...updates };
