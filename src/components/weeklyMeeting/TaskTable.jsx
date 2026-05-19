@@ -97,7 +97,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-28 whitespace-nowrap text-center">시작예정</th>
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-28 whitespace-nowrap text-center">종료예정</th>
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">상세내용</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-56 whitespace-nowrap text-center">비고</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-44 whitespace-nowrap text-center">비고</th>
             {!hideActions && <th className="px-4 py-3 w-24 text-center rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
           </tr>
         </thead>
