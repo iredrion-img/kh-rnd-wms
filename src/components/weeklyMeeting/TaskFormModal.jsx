@@ -359,6 +359,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
             <option value="TFT">TFT</option>
             <option value="행정">행정</option>
             <option value="휴가">휴가</option>
+            <option value="공가">공가</option>
             <option value="세미나">세미나</option>
             <option value="교육">교육</option>
             <option value="대외활동">대외활동</option>

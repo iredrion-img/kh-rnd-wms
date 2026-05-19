@@ -707,16 +707,49 @@ app.put('/api/weekly-tasks/:id', async (req, res) => {
     try {
         const { id } = req.params;
         const updates = req.body;
-        const year = updates.start_date ? updates.start_date.slice(0, 4) : String(new Date().getFullYear());
-        const file = getWeeklyTasksFile(year);
-        const records = readJsonResilient(file);
-        const idx = records.findIndex(r => r.id === id);
-        if (idx === -1) return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
+        let file = '';
+        let records = [];
+        let idx = -1;
+
+        // 조회할 연도 목록 (기본적으로 올해, 작년, 재작년 검색)
+        const currentYear = String(new Date().getFullYear());
+        const yearsToCheck = [currentYear, '2025', '2024'];
+
+        // 만약 업데이트 데이터에 start_date가 있다면 해당 연도를 우선 검색
+        if (updates.start_date) {
+            const prioritizedYear = updates.start_date.slice(0, 4);
+            const pIdx = yearsToCheck.indexOf(prioritizedYear);
+            if (pIdx !== -1) {
+                yearsToCheck.splice(pIdx, 1);
+            }
+            yearsToCheck.unshift(prioritizedYear);
+        }
+
+        for (const y of yearsToCheck) {
+            const f = getWeeklyTasksFile(y);
+            const r = readJsonResilient(f);
+            const i = r.findIndex(item => item.id === id);
+            
+            console.log(`[API] Checking file ${f} for id ${id}: found=${i !== -1}`);
+            
+            if (i !== -1) {
+                file = f;
+                records = r;
+                idx = i;
+                break;
+            }
+        }
+
+        if (idx === -1) {
+            console.log(`[API] Task not found in any file. Returning 404.`);
+            return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
+        }
 
         records[idx] = { ...records[idx], ...updates };
         if (updates.start_date) records[idx].week_start = getWeekStartStr(updates.start_date);
 
         await writeAtomic(file, JSON.stringify(records, null, 2));
+        console.log(`[API] Task updated successfully in ${file}.`);
         res.json({ success: true, task: records[idx] });
     } catch (e) {
         console.error('[API] PUT /api/weekly-tasks/:id:', e);
@@ -728,19 +761,42 @@ app.put('/api/weekly-tasks/:id', async (req, res) => {
 app.delete('/api/weekly-tasks/:id', async (req, res) => {
     try {
         const { id } = req.params;
-        const year = req.query.year || String(new Date().getFullYear());
-        const file = getWeeklyTasksFile(year);
-        const records = readJsonResilient(file);
+        const currentYear = String(new Date().getFullYear());
+        const yearsToCheck = [currentYear, '2025', '2024'];
         
-        const filtered = records.filter(r => r.id && String(r.id).trim() !== String(id).trim());
-        
-        if (filtered.length === records.length) {
-            console.log(`[API] Task Delete Failed: ID ${id} not found.`);
+        if (req.query.year) {
+            const pIdx = yearsToCheck.indexOf(req.query.year);
+            if (pIdx !== -1) {
+                yearsToCheck.splice(pIdx, 1);
+            }
+            yearsToCheck.unshift(req.query.year);
+        }
+
+        let file = '';
+        let records = [];
+        let idx = -1;
+
+        for (const y of yearsToCheck) {
+            const f = getWeeklyTasksFile(y);
+            const r = readJsonResilient(f);
+            const i = r.findIndex(item => String(item.id).trim() === String(id).trim());
+            
+            if (i !== -1) {
+                file = f;
+                records = r;
+                idx = i;
+                break;
+            }
+        }
+
+        if (idx === -1) {
+            console.log(`[API] Task Delete Failed: ID ${id} not found in any file.`);
             return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
         }
         
+        const filtered = records.filter(r => String(r.id).trim() !== String(id).trim());
         await writeAtomic(file, JSON.stringify(filtered, null, 2));
-        console.log(`[API] Task Delete Success: ${id}`);
+        console.log(`[API] Task Delete Success: ${id} from ${file}`);
         res.json({ success: true });
     } catch (e) {
         console.error('[API] DELETE /api/weekly-tasks Error:', e);
