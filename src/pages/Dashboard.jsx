@@ -12,7 +12,6 @@ import { CATEGORIES, CATEGORY_COLORS, GRADIENT_ENDS, GlassTooltip, CustomLegend 
 import WeeklyChartBoard from '../components/dashboard/WeeklyChartBoard';
 import MonthlyChartBoard from '../components/dashboard/MonthlyChartBoard';
 import YearlyChartBoard from '../components/dashboard/YearlyChartBoard';
-import StatusBoard from '../components/dashboard/StatusBoard';
 import ManpowerAnalysis from '../components/dashboard/ManpowerAnalysis';
 
 /* ═══════════════════════════════════════════
@@ -265,7 +264,6 @@ const Dashboard = ({ currentUser }) => {
     const [showStaffDetail, setShowStaffDetail] = useState(false);
     const [filterDept, setFilterDept] = useState('전체');
     const [activeDonutIdx, setActiveDonutIdx] = useState(-1);
-    const [showStatusBoard, setShowStatusBoard] = useState(false);
 
     const activeViewMode = viewMode;
 
@@ -530,12 +528,6 @@ const Dashboard = ({ currentUser }) => {
                         className="whitespace-nowrap px-[clamp(0.75rem,1vw,1.5rem)] py-[clamp(0.4rem,0.6vh,0.75rem)] bg-gradient-to-r from-blue-500 to-blue-600 text-white rounded-xl text-[clamp(0.7rem,0.9vw,1rem)] font-bold hover:shadow-lg transition-all flex items-center justify-center shadow-sm"
                     >
                         맨아워 분석
-                    </button>
-                    <button
-                        onClick={() => setShowStatusBoard(true)}
-                        className="whitespace-nowrap px-[clamp(0.75rem,1vw,1.5rem)] py-[clamp(0.4rem,0.6vh,0.75rem)] bg-gradient-to-r from-kh-green to-kh-green/80 text-white rounded-xl text-[clamp(0.7rem,0.9vw,1rem)] font-bold hover:shadow-lg transition-all flex items-center justify-center shadow-sm"
-                    >
-                        현황판
                     </button>
                     <button onClick={() => setShowOvertimeModal(true)} className="p-[clamp(0.4rem,0.6vh,0.75rem)] bg-red-50 text-red-600 rounded-xl font-bold hover:bg-red-100 transition-colors">
                         <Users size={20} />
@@ -810,14 +802,7 @@ const Dashboard = ({ currentUser }) => {
                 </div>
             </section>
 
-            {/* ═══ 현황판 (Status Board) 팝업 모달 ═══ */}
-            {showStatusBoard && (
-                <StatusBoard
-                    currentUser={currentUser}
-                    isModal={true}
-                    onClose={() => setShowStatusBoard(false)}
-                />
-            )}
+
 
             {/* ═══ Overtime Modal ═══ */}
             {showOvertimeModal && (

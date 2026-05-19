@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LayoutDashboard, Clock, Users, FileBarChart, CheckSquare, LogOut, UserPlus, ChevronRight, User, Settings, Edit2, Trash2, X, ChevronLeft, LogIn, MoreHorizontal, MessageSquare } from 'lucide-react';
+import { LayoutDashboard, Clock, Users, FileBarChart, CheckSquare, LogOut, UserPlus, ChevronRight, User, Settings, Edit2, Trash2, X, ChevronLeft, LogIn, MoreHorizontal, MessageSquare, ClipboardList } from 'lucide-react';
 
 const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLoginAttempt, onLogout, onAddEmployee, onUpdateEmployee, onDeleteEmployee }) => {
     // Modal States
@@ -22,6 +22,7 @@ const Sidebar = ({ activeTab, onTabChange, currentUser, employees, onLogin, onLo
 
     const menuItems = [
         { id: 'dashboard', label: '대시보드', subLabel: 'Dashboard', icon: LayoutDashboard },
+        { id: 'status', label: '현황판', subLabel: 'Status Board', icon: ClipboardList },
         { id: 'weekly', label: '주간공정회의', subLabel: 'Weekly Meeting', icon: Users },
         { id: 'timesheet', label: '업무 기록', subLabel: 'Timesheet', icon: Clock },
     ];
