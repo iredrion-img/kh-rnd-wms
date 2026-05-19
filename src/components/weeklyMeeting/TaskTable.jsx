@@ -108,7 +108,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
               <td className="px-4 py-3 text-gray-600 font-bold text-center">{formatAssignees(t.assignees)}</td>
               <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-center">{t.start_date}</td>
               <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-center">{t.end_date}</td>
-              <td className="px-4 py-3 font-medium">{t.content}</td>
+              <td className="px-4 py-3 font-medium whitespace-pre-wrap">{t.content}</td>
               <td className="px-4 py-3 text-gray-500 whitespace-pre-wrap">{t.location}</td>
               {!hideActions && (
                 <td className="px-4 py-3 text-right whitespace-nowrap">
