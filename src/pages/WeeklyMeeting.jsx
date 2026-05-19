@@ -830,7 +830,7 @@ const WeeklyMeeting = ({ currentUser }) => {
             .is-fullscreen-mode .schedule-table th:nth-child(3), .is-fullscreen-mode .schedule-table td:nth-child(3) { width: 10rem !important; } /* 시작예정 */
             .is-fullscreen-mode .schedule-table th:nth-child(4), .is-fullscreen-mode .schedule-table td:nth-child(4) { width: 10rem !important; } /* 종료예정 */
             .is-fullscreen-mode .schedule-table th:nth-child(5), .is-fullscreen-mode .schedule-table td:nth-child(5) { width: auto !important; } /* 상세내용 (Flex) */
-            .is-fullscreen-mode .schedule-table th:nth-child(6), .is-fullscreen-mode .schedule-table td:nth-child(6) { width: 12rem !important; } /* 비고 */
+            .is-fullscreen-mode .schedule-table th:nth-child(6), .is-fullscreen-mode .schedule-table td:nth-child(6) { width: 22rem !important; } /* 비고 */
 
             .is-fullscreen-mode .attendance-tag { padding: 0.6rem 1.2rem !important; font-size: 1.2rem !important; border-width: 2px !important; }
             .is-fullscreen-mode aside button span { font-size: 1.2rem !important; font-weight: 700 !important; }
