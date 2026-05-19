@@ -5,13 +5,14 @@ import Dashboard from './pages/Dashboard';
 import Timesheet from './pages/Timesheet';
 import Login from './pages/Login';
 import WeeklyMeeting from './pages/WeeklyMeeting';
+import StatusBoard from './components/dashboard/StatusBoard';
 import { Trash2 } from 'lucide-react';
 
 
 function App() {
   const getInitialTab = () => {
     const hash = window.location.hash.replace('#', '');
-    if (['dashboard', 'weekly', 'timesheet'].includes(hash)) return hash;
+    if (['dashboard', 'status', 'weekly', 'timesheet'].includes(hash)) return hash;
     return localStorage.getItem('kh_active_tab') || 'dashboard';
   };
   const [activeTab, setActiveTab] = useState(getInitialTab);
@@ -170,7 +171,7 @@ function App() {
   React.useEffect(() => {
     const handleHashChange = () => {
       const hash = window.location.hash.replace('#', '');
-      if (['dashboard', 'weekly', 'timesheet'].includes(hash) && hash !== activeTab) {
+      if (['dashboard', 'status', 'weekly', 'timesheet'].includes(hash) && hash !== activeTab) {
         setActiveTab(hash);
       }
     };
@@ -193,6 +194,8 @@ function App() {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard currentUser={currentUser} />;
+      case 'status':
+        return <StatusBoard currentUser={currentUser} isModal={false} />;
       case 'weekly':
         return <WeeklyMeeting currentUser={currentUser} />;
       case 'timesheet':
