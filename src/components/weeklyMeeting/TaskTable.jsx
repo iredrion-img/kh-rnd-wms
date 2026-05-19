@@ -92,22 +92,22 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
       <table className="w-full text-sm text-left schedule-table">
         <thead className="text-xs text-gray-500 uppercase">
           <tr>
-            <th className="px-4 py-3 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap">구분</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap">수행인원</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap">시작예정</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap">종료예정</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">상세내용</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-32 whitespace-nowrap">비고</th>
+            <th className="px-4 py-3 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap text-center">구분</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap text-center">수행인원</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap text-center">시작예정</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap text-center">종료예정</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">상세내용</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-32 whitespace-nowrap text-center">비고</th>
             {!hideActions && <th className="px-4 py-3 w-24 text-right rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-gray-100">
           {tasks.map(t => (
             <tr key={t.id} className="hover:bg-gray-50/50 transition-colors">
-              <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap">{t.schedule_type}</td>
-              <td className="px-4 py-3 text-gray-600 font-bold">{formatAssignees(t.assignees)}</td>
-              <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{t.start_date}</td>
-              <td className="px-4 py-3 text-gray-500 whitespace-nowrap">{t.end_date}</td>
+              <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-center">{t.schedule_type}</td>
+              <td className="px-4 py-3 text-gray-600 font-bold text-center">{formatAssignees(t.assignees)}</td>
+              <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-center">{t.start_date}</td>
+              <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-center">{t.end_date}</td>
               <td className="px-4 py-3 font-medium">{t.content}</td>
               <td className="px-4 py-3 text-gray-500 whitespace-pre-wrap">{t.location}</td>
               {!hideActions && (
