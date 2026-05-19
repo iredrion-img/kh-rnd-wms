@@ -29,7 +29,7 @@ const resolveColor = (catName) => {
     return CATEGORY_COLORS['Etc'];
 };
 
-const LEAVE_LABELS = ['연차', '반차', '오전반차', '오후반차'];
+const LEAVE_LABELS = ['연차', '반차', '오전반차', '오후반차', '공휴일'];
 
 /* ═══════════════════════════════════════════
    2026 Korean Public Holidays
@@ -78,6 +78,7 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
 
             if (LEAVE_LABELS.includes(cat)) {
                 if (cat === '연차') hasLeave = '연차';
+                else if (cat === '공휴일') hasLeave = '공휴일';
                 else if (!hasLeave) hasLeave = cat;
             } else {
                 workTotal += hrs;
@@ -89,11 +90,16 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
 
     /* ─── Pick color: dominant category color with intensity by hours ─── */
     const getCellStyle = (dateStr) => {
-        const isHoliday = !!KOREAN_HOLIDAYS_2026[dateStr];
         const { total, dominant, hasLeave, workDominant, workTotal } = getDayInfo(dateStr);
+        const isHoliday = !!KOREAN_HOLIDAYS_2026[dateStr] || hasLeave === '공휴일';
 
         // If there's data
         if (total > 0) {
+            // 공휴일 수동 설정 시 빨간 빗금 처리
+            if (hasLeave === '공휴일') {
+                return { backgroundColor: '#FEE2E2', backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 2px, #FECACA 2px, #FECACA 3px)' };
+            }
+
             // 연차 (full day leave) — soft lavender
             if (hasLeave === '연차') {
                 return { backgroundColor: '#C7D2FE' };
@@ -211,10 +217,10 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
                                                         <div className="font-semibold text-gray-200 mb-1">
                                                             {format(date, 'M월 d일 (EEE)', { locale: ko })}
                                                         </div>
-                                                        {KOREAN_HOLIDAYS_2026[dateStr] && (
+                                                        {(KOREAN_HOLIDAYS_2026[dateStr] || hasLeave === '공휴일') && (
                                                             <div className="flex items-center gap-1.5 py-0.5 mb-1 text-red-300">
                                                                 <span>🔴</span>
-                                                                <span className="font-semibold">{KOREAN_HOLIDAYS_2026[dateStr]}</span>
+                                                                <span className="font-semibold">{KOREAN_HOLIDAYS_2026[dateStr] || '공휴일'}</span>
                                                             </div>
                                                         )}
                                                         {tooltipItems ? (
