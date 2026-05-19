@@ -350,7 +350,6 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           <label className="block text-sm font-medium text-gray-700 mb-1">구분 *</label>
           <select name="schedule_type" value={formData.schedule_type || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
             <option value="">선택</option>
-            <option value="합사">합사</option>
             <option value="업무협의">업무협의</option>
             <option value="프로젝트">프로젝트</option>
             <option value="부서지원">부서지원</option>
@@ -358,11 +357,12 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
             <option value="매뉴얼작성">매뉴얼작성</option>
             <option value="TFT">TFT</option>
             <option value="행정">행정</option>
-            <option value="휴가">휴가</option>
-            <option value="공가">공가</option>
+            <option value="대외활동">대외활동</option>
             <option value="세미나">세미나</option>
             <option value="교육">교육</option>
-            <option value="대외활동">대외활동</option>
+            <option value="공가">공가</option>
+            <option value="휴가">휴가</option>
+            <option value="합사">합사</option>
             <option value="외출">외출</option>
             <option value="기타">기타</option>
           </select>
