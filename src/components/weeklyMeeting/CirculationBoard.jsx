@@ -175,6 +175,34 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
     saveToBackend({ customForm: newForm });
   };
 
+  const handleRenameColumn = (idx, oldName) => {
+    const newName = prompt("수정할 컬럼 이름을 입력하세요:", oldName);
+    if (!newName || newName.trim() === '' || newName === oldName) return;
+    
+    // 1. Update columns in customForm
+    const nextColumns = [...customForm.columns];
+    nextColumns[idx] = newName.trim();
+    const nextForm = { ...customForm, columns: nextColumns };
+    
+    // 2. Update customData values keys to preserve data
+    const nextData = customData.map(item => {
+      const nextValues = { ...item.values };
+      if (oldName in nextValues) {
+        nextValues[newName.trim()] = nextValues[oldName];
+        delete nextValues[oldName];
+      }
+      return { ...item, values: nextValues };
+    });
+    
+    setCustomForm(nextForm);
+    localStorage.setItem(CUSTOM_FORM_KEY, JSON.stringify(nextForm));
+    
+    setCustomData(nextData);
+    localStorage.setItem(CUSTOM_DATA_KEY, JSON.stringify(nextData));
+    
+    saveToBackend({ customForm: nextForm, customData: nextData });
+  };
+
   const handleSurveyToggle = (id) => {
     const next = surveyData.map(item => item.id === id ? { ...item, status: !item.status } : item);
     setSurveyData(next);
@@ -359,9 +387,9 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
           <table className="w-full text-sm text-left circulation-table">
             <thead className="bg-gray-50/50 text-gray-500 font-bold border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 w-20">성명</th>
+                <th className="px-8 py-3 w-28 text-center">성명</th>
                 <th className="px-6 py-3 w-32 text-center">{surveyInfo.statusColName || '이수여부'}</th>
-                <th className="px-6 py-3 min-w-[200px]">비고 (사유 등)</th>
+                <th className="px-6 py-3 min-w-[200px] text-center">비고 (사유 등)</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100">
@@ -372,9 +400,12 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
                   </tr>
                   {surveyData.filter(r => r.team === team).map((row) => (
                     <tr key={row.id} className="hover:bg-blue-50/30 transition-colors">
-                      <td className="px-6 py-3 font-bold text-gray-800 pl-8 flex items-center gap-2 whitespace-nowrap text-left name-cell">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0"></div>
-                        {row.name}<span className="ml-1 text-xs font-medium text-gray-400">{row.rank}</span>
+                      <td className="px-8 py-3 font-bold text-gray-800 whitespace-nowrap text-left name-cell">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0"></div>
+                          <span>{row.name}</span>
+                          <span className="text-xs font-medium text-gray-400">{row.rank}</span>
+                        </div>
                       </td>
                       <td className="px-6 py-3 text-center">
                         <button 
@@ -436,20 +467,37 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
         </div>
 
         {customForm.isEditingConfig && (
-          <div className="px-6 py-3 bg-yellow-50 border-b border-yellow-100 flex items-center gap-4">
+          <div className="px-6 py-3 bg-yellow-50 border-b border-yellow-100 flex items-center gap-4 flex-wrap">
             <span className="text-sm font-bold text-yellow-800">컬럼 관리:</span>
             {customForm.columns.map((col, idx) => (
-              <div key={idx} className="flex items-center gap-1 bg-white px-2 py-1 rounded border border-yellow-200 text-sm text-gray-800">
+              <div key={idx} className="flex items-center gap-2.5 bg-white px-2.5 py-1 rounded border border-yellow-200 text-sm text-gray-800 shadow-sm">
                 <span>{col}</span>
-                <button 
-                  onClick={() => updateCustomForm({...customForm, columns: customForm.columns.filter((_, i) => i !== idx)})}
-                  className="text-red-400 hover:text-red-600 ml-1"><Trash2 size={12} /></button>
+                <div className="flex items-center gap-1 border-l border-gray-200 pl-1.5 ml-1">
+                  <button 
+                    onClick={() => handleRenameColumn(idx, col)}
+                    className="text-blue-500 hover:text-blue-700 p-0.5"
+                    title="이름 수정"
+                  >
+                    <Edit2 size={12} />
+                  </button>
+                  <button 
+                    onClick={() => {
+                      if (window.confirm(`'${col}' 컬럼과 해당 컬럼의 모든 입력 데이터를 삭제하시겠습니까?`)) {
+                        updateCustomForm({...customForm, columns: customForm.columns.filter((_, i) => i !== idx)});
+                      }
+                    }}
+                    className="text-red-400 hover:text-red-600 p-0.5"
+                    title="삭제"
+                  >
+                    <Trash2 size={12} />
+                  </button>
+                </div>
               </div>
             ))}
             <button 
               onClick={() => {
                 const newCol = prompt("새 컬럼 이름");
-                if (newCol) updateCustomForm({...customForm, columns: [...customForm.columns, newCol]});
+                if (newCol && newCol.trim() !== '') updateCustomForm({...customForm, columns: [...customForm.columns, newCol.trim()]});
               }}
               className="text-sm text-blue-600 font-bold flex items-center gap-1 ml-2"><Plus size={14}/> 추가</button>
           </div>
@@ -459,9 +507,9 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
           <table className="w-full text-sm text-left circulation-table">
             <thead className="bg-white text-gray-500 font-bold border-b border-gray-200">
               <tr>
-                <th className="px-6 py-3 w-20">성명</th>
+                <th className="px-8 py-3 w-28 text-center">성명</th>
                 {customForm.columns.map(col => (
-                  <th key={col} className="px-6 py-3 min-w-[150px] border-l border-gray-100">{col}</th>
+                  <th key={col} className="px-6 py-3 min-w-[150px] border-l border-gray-100 text-center">{col}</th>
                 ))}
               </tr>
             </thead>
@@ -473,9 +521,11 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
                   </tr>
                   {customData.filter(r => r.team === team).map(row => (
                     <tr key={row.id} className="hover:bg-gray-50/50 transition-colors">
-                      <td className="px-6 py-3 font-bold text-gray-800 pl-8 flex items-center gap-2 whitespace-nowrap text-left name-cell">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0"></div>
-                        {row.name}
+                      <td className="px-8 py-3 font-bold text-gray-800 whitespace-nowrap text-left name-cell">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0"></div>
+                          <span>{row.name}</span>
+                        </div>
                       </td>
                       {customForm.columns.map(col => (
                         <td key={col} className="p-0 border-l border-gray-100">
@@ -569,7 +619,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
                 <th colSpan={augustDays.length} className="sticky top-0 bg-orange-50 border-b border-gray-200 p-2 text-center text-orange-800 font-black tracking-widest z-40">8월</th>
               </tr>
               <tr className="z-50">
-                <th className="sticky left-0 top-[41px] z-[60] bg-white border-b border-r border-gray-200 px-4 py-2 w-[120px] min-w-[120px] max-w-[120px] font-bold text-gray-500">성명</th>
+                <th className="sticky left-0 top-[41px] z-[60] bg-white border-b border-r border-gray-200 px-6 py-2 w-[120px] min-w-[120px] max-w-[120px] font-bold text-gray-500 text-center">성명</th>
                 {allSummerDays.map((day, i) => (
                   <th key={i} className={`sticky top-[41px] border-b border-r border-gray-200 w-[36px] min-w-[36px] max-w-[36px] text-center p-1 overflow-hidden z-40 ${day.isWeekend ? 'bg-red-50' : 'bg-gray-50'}`}>
                     <div className={`text-[10px] ${day.isWeekend ? 'text-red-400' : 'text-gray-400'}`}>{day.dayOfWeek}</div>
@@ -588,9 +638,11 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
                   </tr>
                   {USERS.filter(u => u.team === team).map((user) => (
                     <tr key={user.name} className="hover:bg-gray-50/50 group">
-                      <td className="sticky left-0 z-20 bg-white border-b border-r border-gray-200 px-4 py-2 text-sm text-gray-800 font-bold whitespace-nowrap pl-6 flex items-center gap-2 text-left name-cell shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
-                        <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0"></div>
-                        {user.name}
+                      <td className="sticky left-0 z-20 bg-white border-b border-r border-gray-200 px-6 py-2 text-sm text-gray-800 font-bold whitespace-nowrap text-left name-cell shadow-[2px_0_5px_-2px_rgba(0,0,0,0.05)]">
+                        <div className="flex items-center gap-2">
+                          <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0"></div>
+                          <span>{user.name}</span>
+                        </div>
                       </td>
                       {allSummerDays.map((day, i) => {
                         const vac = vacations.find(v => v.name === user.name && v.date === day.dateStr);

@@ -266,7 +266,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                 return (
                  <tr key={i}>
                   <Td className="text-center font-mono text-[9px] border-l-0">{p.project_code || '-'}</Td>
-                  <Td className="text-[9px] font-bold text-primary break-all">{p.project_name}</Td>
+                  <Td className="text-[9px] font-bold text-gray-800 break-all">{p.project_name}</Td>
                   <Td className="text-center text-[9px] whitespace-pre-wrap leading-tight">{methodStr || '-'}</Td>
                   <Td className="text-center text-[9px]">{p.bim_cost || '-'}</Td>
                   <Td className="text-center text-[9px]">{p.dept || '-'}</Td>
