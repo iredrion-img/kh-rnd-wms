@@ -60,7 +60,8 @@ const Timesheet = ({ currentUser }) => {
         { id: 'vacation', label: '연차', icon: Palmtree, color: 'bg-emerald-500', hex: '#10b981ad' },
         { id: 'half_am', label: '오전반차', icon: Sun, color: 'bg-amber-400', hex: '#fbbf24ad' },
         { id: 'half_pm', label: '오후반차', icon: Sunset, color: 'bg-amber-400', hex: '#fbbf24ad' },
-        { id: 'half', label: '반차', icon: Sun, color: 'bg-amber-500', hex: '#f59e0bad', hideFromUI: true }
+        { id: 'half', label: '반차', icon: Sun, color: 'bg-amber-500', hex: '#f59e0bad', hideFromUI: true },
+        { id: 'holiday', label: '공휴일', icon: CalendarIcon, color: 'bg-red-400', hex: '#fca5a5ad' }
     ];
 
     const workCategories = [
@@ -85,12 +86,15 @@ const Timesheet = ({ currentUser }) => {
     const handleLeaveToggle = (type) => {
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
         const currentDayData = dailyData[dateKey] || {};
-        const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차', '오전반차', '오후반차'].includes(k));
+        const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차', '오전반차', '오후반차', '공휴일'].includes(k));
         const currentWorkTotal = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
 
-        if (type === 'full') {
+        if (type === 'full' || type === 'holiday') {
             if (currentWorkTotal > 0) {
-                if (!window.confirm('연차(8h)를 설정하시겠습니까? 다른 모든 업무 입력이 초기화됩니다.')) {
+                const message = type === 'full' 
+                    ? '연차(8h)를 설정하시겠습니까? 다른 모든 업무 입력이 초기화됩니다.'
+                    : '공휴일(8h)로 설정하시겠습니까? 다른 모든 업무 입력이 초기화됩니다.';
+                if (!window.confirm(message)) {
                     return;
                 }
             }
@@ -110,11 +114,14 @@ const Timesheet = ({ currentUser }) => {
             delete currentDayData['반차'];
             delete currentDayData['오전반차'];
             delete currentDayData['오후반차'];
+            delete currentDayData['공휴일'];
 
             if (type === 'full') {
                 return { ...prev, [dateKey]: { '연차': 8 } };
+            } else if (type === 'holiday') {
+                return { ...prev, [dateKey]: { '공휴일': 8 } };
             } else if (type === 'half_am' || type === 'half_pm') {
-                const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차', '오전반차', '오후반차'].includes(k));
+                const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차', '오전반차', '오후반차', '공휴일'].includes(k));
                 const currentWorkTotal = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
 
                 if (currentWorkTotal > 4) {
@@ -137,9 +144,9 @@ const Timesheet = ({ currentUser }) => {
             const currentDayData = { ...(prev[dateKey] || {}) };
             const currentHours = currentDayData[categoryLabel] || 0;
 
-            // Check if Vacation is active
-            if (currentDayData['연차'] > 0) {
-                alert('연차 중에는 업무를 기록할 수 없습니다. 휴가 설정을 번경해주세요.');
+            // Check if Vacation or Holiday is active
+            if (currentDayData['연차'] > 0 || currentDayData['공휴일'] > 0) {
+                alert('연차 및 공휴일 중에는 업무를 기록할 수 없습니다. 휴가 설정을 변경해주세요.');
                 return prev;
             }
 
@@ -148,7 +155,7 @@ const Timesheet = ({ currentUser }) => {
             const dailyMax = isHalfDayActive ? 4 : 24;
 
             // Calculate current TOTAL work (excluding leaves)
-            const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차', '오전반차', '오후반차'].includes(k));
+            const workLabels = Object.keys(currentDayData).filter(k => !['연차', '반차', '오전반차', '오후반차', '공휴일'].includes(k));
             const currentTotalWork = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
 
             // We are changing THIS category. 
@@ -308,6 +315,9 @@ const Timesheet = ({ currentUser }) => {
                             } else if (isHalf) {
                                 leaveType = '반차';
                                 leaveHours = 4;
+                            } else if (leave.content === '공휴일') {
+                                leaveType = '공휴일';
+                                leaveHours = 8;
                             }
 
                             const start = new Date(leave.start_date);
@@ -323,17 +333,18 @@ const Timesheet = ({ currentUser }) => {
                                 delete newDailyData[dStr]['반차'];
                                 delete newDailyData[dStr]['오전반차'];
                                 delete newDailyData[dStr]['오후반차'];
+                                delete newDailyData[dStr]['공휴일'];
                                 
                                 if (leaveHours === 4) {
                                     newDailyData[dStr][leaveType] = 4;
                                     // If half-day is active, cap other work hours to 4
-                                    const workLabels = Object.keys(newDailyData[dStr]).filter(k => !['연차', '반차', '오전반차', '오후반차'].includes(k));
+                                    const workLabels = Object.keys(newDailyData[dStr]).filter(k => !['연차', '반차', '오전반차', '오후반차', '공휴일'].includes(k));
                                     const workTotal = workLabels.reduce((sum, k) => sum + (newDailyData[dStr][k] || 0), 0);
                                     if (workTotal > 4) {
                                         workLabels.forEach(k => delete newDailyData[dStr][k]);
                                     }
                                 } else {
-                                    newDailyData[dStr] = { '연차': 8 }; // Full day wipes all other works
+                                    newDailyData[dStr] = { [leaveType]: 8 }; // Full day wipes all other works
                                 }
                             }
                         });
@@ -385,7 +396,7 @@ const Timesheet = ({ currentUser }) => {
                 return {
                     id: index + 1,
                     project: cat.label,
-                    code: ['연차', '반차', '오전반차', '오후반차'].includes(cat.label) ? 'LEAVE' : '',
+                    code: ['연차', '반차', '오전반차', '오후반차', '공휴일'].includes(cat.label) ? 'LEAVE' : '',
                     hours: hours
                 };
             });
@@ -419,11 +430,13 @@ const Timesheet = ({ currentUser }) => {
                 const halfLeave = dailyData[dateKey]?.['반차'] || 0;
                 const halfAmLeave = dailyData[dateKey]?.['오전반차'] || 0;
                 const halfPmLeave = dailyData[dateKey]?.['오후반차'] || 0;
+                const holidayLeave = dailyData[dateKey]?.['공휴일'] || 0;
                 
                 if (fullLeave > 0) leaveDataToSync.push({ date: dateKey, type: '연차' });
                 else if (halfLeave > 0) leaveDataToSync.push({ date: dateKey, type: '반차' });
                 else if (halfAmLeave > 0) leaveDataToSync.push({ date: dateKey, type: '오전반차' });
                 else if (halfPmLeave > 0) leaveDataToSync.push({ date: dateKey, type: '오후반차' });
+                else if (holidayLeave > 0) leaveDataToSync.push({ date: dateKey, type: '공휴일' });
             });
 
             const syncResponse = await fetch('/api/weekly-schedule/sync-timesheet-leaves', {
@@ -705,17 +718,18 @@ const Timesheet = ({ currentUser }) => {
                         <div className="flex items-center gap-3">
                             <span className="text-sm font-medium text-gray-400">휴가 설정</span>
                         <div className="flex bg-gray-100 rounded-lg p-1">
-                            {['없음', '오전반차', '오후반차', '연차'].map(t => {
+                            {['없음', '오전반차', '오후반차', '연차', '공휴일'].map(t => {
                                 const isActive =
                                     t === '연차' ? getHours(selectedDate, '연차') > 0 :
                                     t === '오전반차' ? getHours(selectedDate, '오전반차') > 0 :
                                     t === '오후반차' ? getHours(selectedDate, '오후반차') > 0 :
-                                    (getHours(selectedDate, '연차') === 0 && getHours(selectedDate, '반차') === 0 && getHours(selectedDate, '오전반차') === 0 && getHours(selectedDate, '오후반차') === 0);
+                                    t === '공휴일' ? getHours(selectedDate, '공휴일') > 0 :
+                                    (getHours(selectedDate, '연차') === 0 && getHours(selectedDate, '반차') === 0 && getHours(selectedDate, '오전반차') === 0 && getHours(selectedDate, '오후반차') === 0 && getHours(selectedDate, '공휴일') === 0);
 
                                 return (
                                     <button
                                         key={t}
-                                        onClick={() => handleLeaveToggle(t === '연차' ? 'full' : t === '오전반차' ? 'half_am' : t === '오후반차' ? 'half_pm' : 'none')}
+                                        onClick={() => handleLeaveToggle(t === '연차' ? 'full' : t === '오전반차' ? 'half_am' : t === '오후반차' ? 'half_pm' : t === '공휴일' ? 'holiday' : 'none')}
                                         className={`px-4 py-1.5 rounded-md text-sm font-bold transition-all ${isActive ? 'bg-white text-kh-green shadow-sm' : 'text-gray-400 hover:text-gray-600'}`}
                                     >
                                         {t}

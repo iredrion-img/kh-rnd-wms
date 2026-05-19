@@ -376,6 +376,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
               <option value="연차">연차</option>
               <option value="오전반차">오전반차</option>
               <option value="오후반차">오후반차</option>
+              <option value="공휴일">공휴일</option>
             </select>
           </div>
         ) : formData.schedule_type === '공가' ? (
