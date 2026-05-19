@@ -347,7 +347,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
     <>
       <div className="grid grid-cols-2 gap-4">
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">업무분야 *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">구분 *</label>
           <select name="schedule_type" value={formData.schedule_type || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary">
             <option value="">선택</option>
             <option value="합사">합사</option>
@@ -388,7 +388,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       
       {formData.schedule_type !== '휴가' && (
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">상세업무 *</label>
+          <label className="block text-sm font-medium text-gray-700 mb-1">상세내용 *</label>
           <input type="text" name="content" value={formData.content || ''} onChange={handleChange} required className="w-full rounded-lg border-gray-300 border p-2 focus:ring-primary focus:border-primary" />
         </div>
       )}
@@ -757,7 +757,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 mt-[-10vh] max-h-[85vh]">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
           <h2 className="text-xl font-bold flex flex-col gap-1">
-            <span className="text-gray-900">{task ? '업무 수정' : '업무 추가'}</span>
+            <span className="text-gray-900">{isSchedule ? (task ? '일정 수정' : '일정 등록') : (task ? '업무 수정' : '업무 추가')}</span>
             <span className="text-xs text-primary font-medium">{team}</span>
           </h2>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
