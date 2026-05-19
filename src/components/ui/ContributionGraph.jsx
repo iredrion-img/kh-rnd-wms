@@ -200,7 +200,7 @@ const ContributionGraph = ({ dailyData = {}, year = 2026, onDateClick }) => {
                                             if (!date) return <div key={dIndex} className="w-full aspect-square" />;
 
                                             const dateStr = format(date, 'yyyy-MM-dd');
-                                            const { total, dominant } = getDayInfo(dateStr);
+                                            const { total, dominant, hasLeave } = getDayInfo(dateStr);
                                             const tooltipItems = getTooltipContent(dateStr);
 
                                             return (
