@@ -111,7 +111,21 @@ const WeeklyMeeting = ({ currentUser }) => {
         finalData = finalData.filter(s => {
           const type = s.schedule_type || '';
           const cnt = s.content || '';
-          return !cnt.includes('외출') && type !== '합사' && type !== '외출';
+          
+          if (type === '외출' || cnt.includes('외출')) return false;
+
+          if (type === '합사' && currentWeek) {
+            const reqStart = new Date(currentWeek);
+            reqStart.setHours(0, 0, 0, 0);
+            
+            const schStart = new Date(s.start_date);
+            schStart.setHours(0, 0, 0, 0);
+            
+            // 합사 시작일이 조회 주간의 월요일보다 이전이면 이번 주가 아님 (첫 주에만 노출)
+            if (schStart < reqStart) return false;
+          }
+
+          return true;
         });
 
         const orderMap = {
@@ -285,7 +299,20 @@ const WeeklyMeeting = ({ currentUser }) => {
       filteredSchedules = filteredSchedules.filter(s => {
         const type = s.schedule_type || '';
         const cnt = s.content || '';
-        return !cnt.includes('외출') && type !== '합사' && type !== '외출';
+        
+        if (type === '외출' || cnt.includes('외출')) return false;
+
+        if (type === '합사' && currentWeek) {
+          const reqStart = new Date(currentWeek);
+          reqStart.setHours(0, 0, 0, 0);
+          
+          const schStart = new Date(s.start_date);
+          schStart.setHours(0, 0, 0, 0);
+          
+          if (schStart < reqStart) return false;
+        }
+
+        return true;
       });
       const scheduleOrder = {
         '업무협의': 1, '프로젝트': 2, '부서지원': 3, 'TFT': 4, '대외활동': 5,
