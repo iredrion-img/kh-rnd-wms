@@ -787,10 +787,13 @@ const WeeklyMeeting = ({ currentUser }) => {
               padding: 1.25rem 0.75rem !important; 
               line-height: 2 !important;
             }
-            .is-fullscreen-mode .overview-table th, .is-fullscreen-mode .overview-table td,
+            .is-fullscreen-mode .overview-table th, .is-fullscreen-mode .overview-table td {
+              padding: 1.5rem 1rem !important;
+              line-height: 2 !important;
+            }
             .is-fullscreen-mode .overview-nested-table th, .is-fullscreen-mode .overview-nested-table td {
-              padding: 0.5rem 0.75rem !important;
-              line-height: 1.4 !important;
+              padding: 1rem 1rem !important;
+              line-height: 1.8 !important;
             }
             .is-fullscreen-mode .w-32 { width: 10rem !important; }
             .is-fullscreen-mode .w-40 { width: 12rem !important; }
