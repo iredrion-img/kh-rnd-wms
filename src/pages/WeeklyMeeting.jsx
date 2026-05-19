@@ -847,7 +847,7 @@ const WeeklyMeeting = ({ currentUser }) => {
               background-color: #eff6ff !important; 
               border-bottom-color: #dbeafe !important;
             }
-            .is-fullscreen-mode table.circulation-table tr td.name-cell { text-align: left !important; padding-left: 1.5rem !important; }
+            .is-fullscreen-mode table.circulation-table tr td.name-cell { text-align: left !important; padding-left: 1.5rem !important; padding-right: 1.5rem !important; }
             
             /* Override colors for Circulation Board dark headers */
             .is-fullscreen-mode .circulation-dark-header,
