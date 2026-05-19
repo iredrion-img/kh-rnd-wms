@@ -283,7 +283,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
   };
 
   return (
-    <div className={`flex flex-col gap-6 pb-10 animate-in fade-in duration-300 ${isFullscreenMode ? 'px-4' : ''}`}>
+    <div className={`flex flex-col gap-4 animate-in fade-in duration-300 h-full overflow-hidden pb-4 ${isFullscreenMode ? 'px-4' : ''}`}>
       
       <div className="flex justify-between items-end border-b border-gray-200">
         <div className="flex">
@@ -311,7 +311,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
       </div>
 
       {activeTab === TABS[0] && (
-      <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1 min-h-0">
         <div className="bg-slate-800 px-6 py-4 flex justify-between items-center text-white circulation-dark-header">
           <div className="flex items-center gap-4 flex-1">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -383,7 +383,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        <div className="overflow-auto flex-1 min-h-0">
           <table className="w-full text-sm text-left circulation-table">
             <thead className="bg-gray-50/50 text-gray-500 font-bold border-b border-gray-200">
               <tr>
@@ -438,7 +438,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
       )}
 
       {activeTab === TABS[1] && (
-      <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+      <section className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden flex flex-col flex-1 min-h-0">
         <div className="bg-slate-800 px-6 py-4 flex justify-between items-center text-white circulation-dark-header">
           {customForm.isEditingConfig ? (
             <div className="flex-1 flex items-center gap-4">
@@ -503,7 +503,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
           </div>
         )}
 
-        <div className="overflow-x-auto">
+        <div className="overflow-auto flex-1 min-h-0">
           <table className="w-full text-sm text-left circulation-table">
             <thead className="bg-white text-gray-500 font-bold border-b border-gray-200">
               <tr>
@@ -549,7 +549,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
       )}
 
       {activeTab === TABS[2] && (
-      <section ref={printRef} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden print-section">
+      <section ref={printRef} className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden print-section flex flex-col flex-1 min-h-0">
         <div className="bg-slate-800 px-6 py-4 flex justify-between items-center text-white circulation-dark-header">
           <h3 className="text-xl font-bold !text-white flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center">
@@ -610,7 +610,7 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
           }
         `}</style>
 
-        <div className="overflow-auto max-h-[70vh] border-t border-gray-100 relative">
+        <div className="overflow-auto border-t border-gray-100 relative flex-1 min-h-0">
           <table className="w-max min-w-full text-sm border-separate border-spacing-0 circulation-table vacation-table">
             <thead className="sticky top-0 z-40 bg-white">
               <tr className="z-50">

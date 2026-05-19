@@ -554,7 +554,7 @@ const WeeklyMeeting = ({ currentUser }) => {
               />
             </div>
           ) : isCirculation ? (
-            <div className="flex-1 overflow-auto"><CirculationBoard currentWeek={currentWeek} currentUser={currentUser} isFullscreenMode={false} /></div>
+            <div className="flex-1 flex flex-col overflow-hidden"><CirculationBoard currentWeek={currentWeek} currentUser={currentUser} isFullscreenMode={false} /></div>
           ) : (
             <div className="flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 flex flex-col overflow-hidden">
               <div className="flex justify-between items-center px-6 py-4 border-b border-gray-100">
@@ -696,7 +696,7 @@ const WeeklyMeeting = ({ currentUser }) => {
                     />
                   </div>
                ) : isCirculation ? (
-                  <div className="flex-1 overflow-auto"><CirculationBoard currentWeek={currentWeek} currentUser={currentUser} isFullscreenMode={true} /></div>
+                  <div className="flex-1 flex flex-col overflow-hidden"><CirculationBoard currentWeek={currentWeek} currentUser={currentUser} isFullscreenMode={true} /></div>
                ) : (
                   <div className="flex-1 bg-white rounded-3xl shadow-xl border border-gray-200 flex flex-col overflow-hidden">
                     <div className="flex justify-between items-center px-10 py-6 border-b border-gray-100">
