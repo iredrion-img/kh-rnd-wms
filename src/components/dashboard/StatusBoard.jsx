@@ -158,7 +158,7 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
         else if (type === '교육' || type === '세미나' || content.match(/공가|출산|예비군|경조사/)) {
            results['공가/교육'].push(entry);
         }
-        else if ((loc && !loc.includes('사내') && !loc.includes('본사') && type !== '기타') || content.includes('외근') || content.includes('출장')) {
+        else if ((type && !['합사', '휴가', '세미나', '교육', '외출', '기타'].includes(type)) || content.includes('외근') || content.includes('출장')) {
            results['외근/출장'].push(entry);
         }
       });

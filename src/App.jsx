@@ -9,9 +9,12 @@ import { Trash2 } from 'lucide-react';
 
 
 function App() {
-  const [activeTab, setActiveTab] = useState(() => {
+  const getInitialTab = () => {
+    const hash = window.location.hash.replace('#', '');
+    if (['dashboard', 'weekly', 'timesheet'].includes(hash)) return hash;
     return localStorage.getItem('kh_active_tab') || 'dashboard';
-  });
+  };
+  const [activeTab, setActiveTab] = useState(getInitialTab);
   const [isChatModalOpen, setChatModalOpen] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [userToDelete, setUserToDelete] = useState(null);
@@ -155,6 +158,26 @@ function App() {
     }
   };
 
+  // Sync hash with activeTab changes
+  React.useEffect(() => {
+    if (activeTab && activeTab !== 'chatbot') {
+      window.location.hash = activeTab;
+      localStorage.setItem('kh_active_tab', activeTab);
+    }
+  }, [activeTab]);
+
+  // Sync activeTab with browser back/forward buttons
+  React.useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.replace('#', '');
+      if (['dashboard', 'weekly', 'timesheet'].includes(hash) && hash !== activeTab) {
+        setActiveTab(hash);
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, [activeTab]);
+
   // Intercept tab changes: chatbot opens modal, others switch page
   const handleTabChange = (tab) => {
     if (tab === 'chatbot') {
@@ -163,7 +186,6 @@ function App() {
     } else {
       setChatModalOpen(false);
       setActiveTab(tab);
-      localStorage.setItem('kh_active_tab', tab);
     }
   };
 
