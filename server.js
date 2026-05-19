@@ -712,6 +712,8 @@ app.put('/api/weekly-tasks/:id', async (req, res) => {
         let records = readJsonResilient(file);
         let idx = records.findIndex(r => r.id === id);
         
+        console.log(`[API] PUT /api/weekly-tasks/${id}: year=${year}, file=${file}, found=${idx !== -1}`);
+
         // Fallback: If not found in the file determined by start_date, check the current year's file
         if (idx === -1 && year !== String(new Date().getFullYear())) {
             const currentYear = String(new Date().getFullYear());
@@ -719,6 +721,8 @@ app.put('/api/weekly-tasks/:id', async (req, res) => {
             const currentRecords = readJsonResilient(currentFile);
             const currentIdx = currentRecords.findIndex(r => r.id === id);
             
+            console.log(`[API] Fallback check: currentYear=${currentYear}, currentFile=${currentFile}, found=${currentIdx !== -1}`);
+
             if (currentIdx !== -1) {
                 file = currentFile;
                 records = currentRecords;
@@ -726,12 +730,16 @@ app.put('/api/weekly-tasks/:id', async (req, res) => {
             }
         }
 
-        if (idx === -1) return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
+        if (idx === -1) {
+            console.log(`[API] Task not found in any file. Returning 404.`);
+            return res.status(404).json({ error: '업무를 찾을 수 없습니다.' });
+        }
 
         records[idx] = { ...records[idx], ...updates };
         if (updates.start_date) records[idx].week_start = getWeekStartStr(updates.start_date);
 
         await writeAtomic(file, JSON.stringify(records, null, 2));
+        console.log(`[API] Task updated successfully in ${file}.`);
         res.json({ success: true, task: records[idx] });
     } catch (e) {
         console.error('[API] PUT /api/weekly-tasks/:id:', e);
