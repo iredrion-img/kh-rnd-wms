@@ -92,10 +92,10 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
       <table className="w-full text-sm text-left schedule-table">
         <thead className="text-xs text-gray-500 uppercase">
           <tr>
-            <th className="px-4 py-3 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap text-center">구분</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap text-center">수행인원</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap text-center">시작예정</th>
-            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] whitespace-nowrap text-center">종료예정</th>
+            <th className="px-4 py-3 rounded-tl-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-20 whitespace-nowrap text-center">구분</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-28 whitespace-nowrap text-center">수행인원</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-28 whitespace-nowrap text-center">시작예정</th>
+            <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-28 whitespace-nowrap text-center">종료예정</th>
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] text-center">상세내용</th>
             <th className="px-4 py-3 sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)] w-32 whitespace-nowrap text-center">비고</th>
             {!hideActions && <th className="px-4 py-3 w-24 text-right rounded-tr-lg sticky top-0 bg-gray-50 z-10 shadow-[0_1px_0_rgba(200,200,200,0.5)]">관리</th>}
