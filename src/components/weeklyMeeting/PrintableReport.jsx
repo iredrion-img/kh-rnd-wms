@@ -62,6 +62,16 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
           return 1 + Math.round(((d.getTime() - week1.getTime()) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
         };
 
+        const getPrintDateTime = () => {
+          const now = new Date();
+          const y = now.getFullYear();
+          const m = String(now.getMonth() + 1).padStart(2, '0');
+          const d = String(now.getDate()).padStart(2, '0');
+          const hh = String(now.getHours()).padStart(2, '0');
+          const mm = String(now.getMinutes()).padStart(2, '0');
+          return `${y}.${m}.${d} ${hh}:${mm}`;
+        };
+
         const yearText = weekLabel ? weekLabel.split('-')[0] : '';
         const weekNum = getISOWeek(weekLabel);
 
@@ -73,7 +83,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                 R&D 센터 주간공정회의록
                 {weekNum && <span className="text-lg ml-2 text-gray-700">({yearText}년 {weekNum}주차)</span>}
               </h1>
-              <span className="text-xs text-gray-600 font-bold">{meetingDate || weekLabel}</span>
+              <span className="text-[10px] text-gray-400 font-medium">{getPrintDateTime()}</span>
             </div>
           </>
         );
