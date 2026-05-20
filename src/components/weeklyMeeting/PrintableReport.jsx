@@ -5,8 +5,26 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
 
   const { weekLabel, meetingDate, attendanceData, tasks, projects, schedules } = reportData;
 
-  // 필터링 유틸 (내용이나 과업명이 없는 빈 줄 데이터 방어)
-  const filterByTeam = (teamName) => tasks.filter(t => t.team === teamName && (t.content || t.task_code));
+  // 필터링 및 정렬 유틸 (화면과 100% 동일한 정렬 규칙 적용)
+  const statusOrder = { '진행 중': 1, '완료': 2, '보류': 3 };
+  const sortTasks = (taskList) => {
+    return [...taskList].sort((a, b) => {
+      const codeA = a.task_code || 'ZZZ';
+      const codeB = b.task_code || 'ZZZ';
+      if (codeA !== codeB) {
+        return codeA.localeCompare(codeB, 'ko', { numeric: true });
+      }
+      const stA = statusOrder[a.status] || 99;
+      const stB = statusOrder[b.status] || 99;
+      if (stA !== stB) return stA - stB;
+      return (a.start_date || '').localeCompare(b.start_date || '');
+    });
+  };
+
+  const filterByTeam = (teamName) => {
+    const filtered = tasks.filter(t => t.team === teamName && (t.content || t.task_code));
+    return sortTasks(filtered);
+  };
 
   const noticeTasks = filterByTeam('공지사항');
   const commonTasks = filterByTeam('공통업무&행정');
@@ -16,7 +34,25 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
   const aiTasks = filterByTeam('AI 응용팀');
   const researchTasks = filterByTeam('연구과제');
   
-  const validProjects = projects?.filter(p => p.project_name && p.project_name.trim().length > 0) || [];
+  // 프로젝트 화면과 동일하게 정렬 (카테고리 -> 코드 오름차순)
+  const catOrder = { 'AI': 1, 'BIM': 2, 'R&D': 3 };
+  const rawProjects = projects?.filter(p => p.project_name && p.project_name.trim().length > 0) || [];
+  const normalizedProjects = rawProjects.map(p => {
+    const newP = { ...p };
+    if (newP.project_code) {
+      newP.project_code = newP.project_code.replace(/\s*-\s*/g, '-');
+    }
+    return newP;
+  });
+  const validProjects = normalizedProjects.sort((a, b) => {
+    const catA = catOrder[a.category || '기타'] || 99;
+    const catB = catOrder[b.category || '기타'] || 99;
+    if (catA !== catB) return catA - catB;
+    const codeA = a.project_code || a.sub_no || '';
+    const codeB = b.project_code || b.sub_no || '';
+    return codeA.localeCompare(codeB, 'ko', { numeric: true });
+  });
+  
   const validSchedules = schedules?.filter(s => s.content && s.content.trim().length > 0) || [];
 
   // 공통 테이블 헤더/셀 스타일 (인쇄 최적화)
