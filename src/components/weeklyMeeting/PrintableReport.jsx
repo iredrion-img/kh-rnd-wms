@@ -73,7 +73,7 @@ const PrintableReport = forwardRef(({ reportData }, ref) => {
                 R&D 센터 주간공정회의록
                 {weekNum && <span className="text-lg ml-2 text-gray-700">({yearText}년 {weekNum}주차)</span>}
               </h1>
-              <span className="text-xs text-gray-600 font-bold">{weekLabel}</span>
+              <span className="text-xs text-gray-600 font-bold">{meetingDate || weekLabel}</span>
             </div>
           </>
         );
