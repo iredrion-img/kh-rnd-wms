@@ -48,8 +48,11 @@
     "bim_cost": "6.9억",
     "dept": "수도부",
     "manager": "최형태, 박도해",
-    "status_detail": "[현대건설] 3/19 낙찰",
-    "created_at": "2026-04-24"
+    "status_detail": "[현대건설] 업무수행중",
+    "created_at": "2026-04-24",
+    "method_base": "직접수행",
+    "method_detail": "",
+    "team": "프로젝트 추진 및 수행 현황"
   },
   {
     "id": "17770134636349x8mc_p4",
@@ -74,8 +77,11 @@
     "bim_cost": "1.5억",
     "dept": "수도부",
     "manager": "김기윤",
-    "status_detail": "[K-water] 수행중",
-    "created_at": "2026-04-24"
+    "status_detail": "[K-water] 수행중(~2026.8)",
+    "created_at": "2026-04-24",
+    "method_base": "직접수행",
+    "method_detail": "",
+    "team": "프로젝트 추진 및 수행 현황"
   },
   {
     "id": "1777013463634fdrlw_p6",
@@ -100,8 +106,11 @@
     "bim_cost": "3.4억(예정)",
     "dept": "수도부",
     "manager": "최형태, 김기윤",
-    "status_detail": "K-water과 협의중",
-    "created_at": "2026-04-24"
+    "status_detail": "[K-water] 발주처 BIM계약 관련 협의중",
+    "created_at": "2026-04-24",
+    "method_base": "미정",
+    "method_detail": "",
+    "team": "프로젝트 추진 및 수행 현황"
   },
   {
     "id": "1777013463634msm24_p8",
@@ -112,9 +121,12 @@
     "method": "외주 (한국인프라)",
     "bim_cost": "1.1억",
     "dept": "지반터널부",
-    "manager": "이동근",
-    "status_detail": "[한국도로공사] 수행중",
-    "created_at": "2026-04-24"
+    "manager": "이동근, 강병주",
+    "status_detail": "[한국도로공사] 수행중(~2026.8)",
+    "created_at": "2026-04-24",
+    "method_base": "외주",
+    "method_detail": "(한국인프라)",
+    "team": "프로젝트 추진 및 수행 현황"
   },
   {
     "id": "1777013463634kz6kg_p9",
@@ -125,9 +137,12 @@
     "method": "수행예정 (2026)",
     "bim_cost": "2.0억(예정)",
     "dept": "철도구조부",
-    "manager": "이동근",
-    "status_detail": "관련자료수집중",
-    "created_at": "2026-04-24"
+    "manager": "이동근, 임규민",
+    "status_detail": "[다이꽝민]관련자료수집중",
+    "created_at": "2026-04-24",
+    "method_base": "수행예정",
+    "method_detail": "(2026)",
+    "team": "프로젝트 추진 및 수행 현황"
   },
   {
     "id": "1777013463634744ns_p10",
@@ -152,8 +167,11 @@
     "bim_cost": "미정",
     "dept": "도로공항부",
     "manager": "김동찬",
-    "status_detail": "단가 BIM 업무 준비",
-    "created_at": "2026-04-24"
+    "status_detail": "[현대건설] 수행준비중(BIM 기초작업)",
+    "created_at": "2026-04-24",
+    "method_base": "추진중",
+    "method_detail": "",
+    "team": "프로젝트 추진 및 수행 현황"
   },
   {
     "id": "17770134636346go7m_p12",

@@ -29,7 +29,7 @@
       "team": "스마트 기술 개발팀",
       "name": "임문구",
       "rank": "부장",
-      "status": false,
+      "status": true,
       "note": ""
     },
     {
@@ -109,7 +109,7 @@
       "team": "인프라 BIM팀",
       "name": "김기윤",
       "rank": "부장",
-      "status": false,
+      "status": true,
       "note": ""
     },
     {
@@ -125,7 +125,7 @@
       "team": "인프라 BIM팀",
       "name": "김동찬",
       "rank": "차장",
-      "status": false,
+      "status": true,
       "note": ""
     },
     {
@@ -149,7 +149,7 @@
       "team": "AI 응용팀",
       "name": "김동욱",
       "rank": "이사대우",
-      "status": false,
+      "status": true,
       "note": ""
     },
     {
