@@ -32,6 +32,7 @@ weekly_tasks_*.json
 weekly_schedule.json
 projects.json
 users.json
+users_backup_*.json
 backups/
 scratch/
 
