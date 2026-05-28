@@ -68,6 +68,7 @@ const WeeklyMeeting = ({ currentUser }) => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [taskToDelete, setTaskToDelete] = useState(null);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [highlightedTaskId, setHighlightedTaskId] = useState(null);
 
   // PDF 출력 관련 상태
   const [isPrinting, setIsPrinting] = useState(false);
@@ -84,7 +85,27 @@ const WeeklyMeeting = ({ currentUser }) => {
 
   useEffect(() => {
     if (!isOverview && !isCirculation) fetchTasks();
+    setHighlightedTaskId(null); // Clear highlight when menu or week changes
   }, [activeMenu, currentWeek]);
+
+  // Context menu handler for clearing highlight with right click
+  useEffect(() => {
+    if (!isFullscreenMode) {
+      setHighlightedTaskId(null); // Clear highlight when exiting fullscreen
+      return;
+    }
+    const handleContextMenu = (e) => {
+      setHighlightedTaskId(prev => {
+        if (prev) {
+          e.preventDefault(); // Prevent browser context menu only if we are clearing a highlight
+          return null;
+        }
+        return prev;
+      });
+    };
+    window.addEventListener('contextmenu', handleContextMenu);
+    return () => window.removeEventListener('contextmenu', handleContextMenu);
+  }, [isFullscreenMode]);
 
   const fetchAvailableWeeks = async () => {
     try {
@@ -615,6 +636,9 @@ const WeeklyMeeting = ({ currentUser }) => {
                     onDelete={handleDeleteTask}
                     currentUser={currentUser}
                     isAdmin={isAdmin}
+                    isFullscreenMode={false}
+                    highlightedTaskId={highlightedTaskId}
+                    onHighlight={setHighlightedTaskId}
                   />
                 )}
               </div>
@@ -759,6 +783,9 @@ const WeeklyMeeting = ({ currentUser }) => {
                           currentUser={currentUser}
                           isAdmin={isAdmin}
                           hideActions={isFullscreenMode}
+                          isFullscreenMode={true}
+                          highlightedTaskId={highlightedTaskId}
+                          onHighlight={setHighlightedTaskId}
                         />
                       )}
                     </div>
