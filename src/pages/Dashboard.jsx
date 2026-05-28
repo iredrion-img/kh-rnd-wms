@@ -408,7 +408,9 @@ const Dashboard = ({ currentUser }) => {
         });
 
         // ── Stats ──
-        const totalHours = filteredData.reduce((s, i) => s + parseFloat(i.total || 0), 0);
+        // 연차·반차·공휴일은 실제 근무 시간이 아니므로 총 근무 시간에서 제외
+        const LEAVE_TYPES = new Set(['연차', '반차', '공휴일']);
+        const totalHours = filteredData.reduce((s, i) => LEAVE_TYPES.has(i.project_name) ? s : s + parseFloat(i.total || 0), 0);
         const strategicHours = filteredData.reduce((s, i) => { const c = getCategory(i.project_name); return (c === 'AI' || c === 'BIM' || c === 'Smart R&D') ? s + parseFloat(i.total || 0) : s; }, 0);
         const strategicRatio = totalHours > 0 ? Math.round((strategicHours / totalHours) * 100) : 0;
 
