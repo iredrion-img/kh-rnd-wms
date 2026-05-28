@@ -78,6 +78,8 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
   }, [isProject, isSchedule, task]);
 
   useEffect(() => {
+    if (initialized.current) return;
+
     if (task) {
       let base = '';
       let detail = '';
@@ -96,8 +98,19 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
          base = extractedBases.map(item => item.base).join(', ');
          detail = tempStr.replace(/^[, ]+/, '').replace(/[, ]+$/, '').trim();
       }
-      setFormData({ ...task, method_base: base, method_detail: detail });
-    } else if (!initialized.current) {
+
+      const authDataStr = localStorage.getItem('kh_current_user');
+      const currentUserLocal = authDataStr ? JSON.parse(authDataStr) : null;
+      const initialAssignees = currentUser?.name || currentUserLocal?.name || '';
+
+      setFormData({ 
+        ...task, 
+        method_base: base, 
+        method_detail: detail,
+        assignees: task.assignees !== undefined ? task.assignees : initialAssignees
+      });
+      initialized.current = true;
+    } else {
       // currentUser prop 우선, 없으면 localStorage fallback
       const authDataStr = localStorage.getItem('kh_current_user');
       const currentUserLocal = authDataStr ? JSON.parse(authDataStr) : null;
@@ -126,7 +139,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
       }
       initialized.current = true;
     }
-  }, [task, team, currentWeek]);
+  }, [task, team, currentWeek, isProject, isSchedule, currentUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
