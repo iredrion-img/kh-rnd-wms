@@ -390,7 +390,6 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
               <option value="연차">연차</option>
               <option value="오전반차">오전반차</option>
               <option value="오후반차">오후반차</option>
-              <option value="공휴일">공휴일</option>
             </select>
           </div>
         ) : formData.schedule_type === '공가' ? (
@@ -774,7 +773,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
       <div className="w-full max-w-2xl bg-white rounded-2xl shadow-xl overflow-hidden flex flex-col animate-in zoom-in-95 duration-200 mt-[-10vh] max-h-[85vh]">
         <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between bg-gray-50/50">
           <h2 className="text-xl font-bold flex flex-col gap-1">
-            <span className="text-gray-900">{isSchedule ? (task ? '일정 수정' : '일정 등록') : (task ? '업무 수정' : '업무 추가')}</span>
+            <span className="text-gray-900">{isSchedule ? ((task && task.id) ? '일정 수정' : '일정 등록') : ((task && task.id) ? '업무 수정' : '업무 추가')}</span>
             <span className="text-xs text-primary font-medium">{team}</span>
           </h2>
           <button onClick={onClose} className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-colors">
@@ -806,7 +805,7 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
               취소
             </button>
             <button type="submit" form="task-form" className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-kh-green to-kh-green/80 rounded-lg hover:shadow-lg hover:brightness-110 transition-all">
-              {task ? '저장' : '추가'}
+              {(task && task.id) ? '저장' : '추가'}
             </button>
           </div>
         </div>
