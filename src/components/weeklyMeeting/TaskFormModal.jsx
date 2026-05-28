@@ -31,7 +31,7 @@ const MIDDLE_CATEGORIES = {
 
 
 
-const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimesheet }) => {
+const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isFromTimesheet, currentUser }) => {
   const [formData, setFormData] = useState({});
   const currentTeam = formData.team || team;
   const isProject = currentTeam === '프로젝트 추진 및 수행 현황';
@@ -98,9 +98,10 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
       }
       setFormData({ ...task, method_base: base, method_detail: detail });
     } else if (!initialized.current) {
+      // currentUser prop 우선, 없으면 localStorage fallback
       const authDataStr = localStorage.getItem('kh_current_user');
       const currentUserLocal = authDataStr ? JSON.parse(authDataStr) : null;
-      const initialAssignees = currentUserLocal?.name || '';
+      const initialAssignees = currentUser?.name || currentUserLocal?.name || '';
 
       const now = new Date();
       const offset = now.getTimezoneOffset() * 60000; 
@@ -774,13 +775,27 @@ const TaskFormModal = ({ team, task, onClose, onSave, currentWeek, isFromTimeshe
           </form>
         </div>
 
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 rounded-b-2xl">
-          <button type="button" onClick={onClose} className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
-            취소
-          </button>
-          <button type="submit" form="task-form" className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-kh-green to-kh-green/80 rounded-lg hover:shadow-lg hover:brightness-110 transition-all">
-            {task ? '저장' : '추가'}
-          </button>
+        <div className="px-6 py-4 bg-gray-50 border-t border-gray-100 flex items-center justify-between gap-3 rounded-b-2xl">
+          {/* 삭제 버튼: 수정 모드 + onDelete 콜백이 있을 때만 표시 */}
+          <div>
+            {task && task.id && onDelete && (
+              <button
+                type="button"
+                onClick={() => onDelete(task)}
+                className="px-5 py-2 text-sm font-medium text-red-600 bg-white border border-red-200 rounded-lg hover:bg-red-50 hover:border-red-400 transition-colors"
+              >
+                삭제
+              </button>
+            )}
+          </div>
+          <div className="flex gap-3">
+            <button type="button" onClick={onClose} className="px-5 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors">
+              취소
+            </button>
+            <button type="submit" form="task-form" className="px-5 py-2 text-sm font-medium text-white bg-gradient-to-r from-kh-green to-kh-green/80 rounded-lg hover:shadow-lg hover:brightness-110 transition-all">
+              {task ? '저장' : '추가'}
+            </button>
+          </div>
         </div>
       </div>
     </div>

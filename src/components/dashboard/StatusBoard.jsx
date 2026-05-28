@@ -39,6 +39,7 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
   const [addingCategory, setAddingCategory] = useState(null); // 새 일정 추가 카테고리
+  const [taskToDelete, setTaskToDelete] = useState(null);     // 삭제 확인 대상
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [orderTarget, setOrderTarget] = useState(() => localStorage.getItem('kh_order_target') || '6,200');
   const [collectionTarget, setCollectionTarget] = useState(() => localStorage.getItem('kh_collection_target') || '4,500');
@@ -131,6 +132,25 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
     });
     setEditingTask(null);
     setRefreshTrigger(p => p + 1);
+  };
+
+  // ── 현황판 모달에서 삭제 요청 시 확인 모달 열기 ──
+  const handleDeleteRequest = (task) => {
+    setTaskToDelete(task);
+    setEditingTask(null); // 수정 모달 먼저 닫기
+  };
+
+  // ── 삭제 확인 후 실제 삭제 ──
+  const handleConfirmDelete = async () => {
+    if (!taskToDelete?.id) return;
+    try {
+      await fetch(`/api/weekly-schedule/${taskToDelete.id}`, { method: 'DELETE' });
+    } catch (e) {
+      console.error('[StatusBoard] delete error:', e);
+    } finally {
+      setTaskToDelete(null);
+      setRefreshTrigger(p => p + 1);
+    }
   };
 
   // ── 신규 일정 추가 저장 (현황판 → 주간일정 + 타임시트 연동) ──
@@ -395,6 +415,7 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
           task={editingTask}
           onClose={() => setEditingTask(null)}
           onSave={handleSaveEdit}
+          onDelete={handleDeleteRequest}
           currentWeek={getISOWeekString(new Date())}
           currentUser={currentUser}
           isFromTimesheet={true}
@@ -416,6 +437,41 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
           currentUser={currentUser}
           isFromTimesheet={true}
         />
+      )}
+
+      {/* 삭제 확인 모달 */}
+      {taskToDelete && (
+        <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-150">
+          <div className="bg-white rounded-2xl shadow-2xl p-6 w-full max-w-sm mx-4 animate-in zoom-in-95 duration-150">
+            <div className="flex flex-col items-center text-center gap-3">
+              <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center">
+                <span className="text-red-500 text-2xl">🗑️</span>
+              </div>
+              <h3 className="text-lg font-bold text-gray-900">일정 삭제</h3>
+              <p className="text-sm text-gray-500 leading-relaxed">
+                <span className="font-semibold text-gray-700">
+                  {taskToDelete.assignees || taskToDelete.name}
+                </span>
+                {' '}님의 일정을 삭제하시겠습니까?<br />
+                <span className="text-xs text-gray-400">이 작업은 되돌릴 수 없습니다.</span>
+              </p>
+              <div className="flex gap-3 w-full mt-1">
+                <button
+                  onClick={() => setTaskToDelete(null)}
+                  className="flex-1 py-2.5 px-4 rounded-xl font-medium text-gray-600 bg-gray-100 hover:bg-gray-200 transition-colors text-sm"
+                >
+                  취소
+                </button>
+                <button
+                  onClick={handleConfirmDelete}
+                  className="flex-1 py-2.5 px-4 rounded-xl font-bold text-white bg-red-500 hover:bg-red-600 transition-colors shadow-md shadow-red-200 text-sm"
+                >
+                  삭제하기
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );
