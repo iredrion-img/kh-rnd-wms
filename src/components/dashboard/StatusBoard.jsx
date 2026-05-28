@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Maximize2, Minimize2, RefreshCw, X, Pencil } from 'lucide-react';
+import { Maximize2, Minimize2, RefreshCw, X, Pencil, PlusCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import TaskFormModal from '../weeklyMeeting/TaskFormModal';
@@ -12,12 +12,33 @@ const getISOWeekString = (d = new Date()) => {
   return `${d.getUTCFullYear()}-W${weekNo.toString().padStart(2, '0')}`;
 };
 
+// 현황판 카테고리 → TaskFormModal 기본값 매핑
+const CATEGORY_DEFAULTS = {
+  '외근/출장': { schedule_type: '업무협의', content: '' },
+  '공가/교육': { schedule_type: '교육',     content: '' },
+  '휴가':      { schedule_type: '휴가',     content: '' },
+  '반차':      { schedule_type: '휴가',     content: '오전반차' },
+  '합사':      { schedule_type: '합사',     content: '' },
+  '외출':      { schedule_type: '외출',     content: '외출' },
+};
+
+// 오늘 날짜의 week_start(월요일) 계산 (YYYY-MM-DD)
+const getTodayWeekStart = () => {
+  const today = new Date();
+  const dayOfWeek = today.getDay();
+  const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+  const monday = new Date(today);
+  monday.setDate(today.getDate() + diffToMon);
+  return monday.toISOString().slice(0, 10);
+};
+
 const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
   const [schedules, setSchedules] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [editingTask, setEditingTask] = useState(null);
+  const [addingCategory, setAddingCategory] = useState(null); // 새 일정 추가 카테고리
   const [refreshTrigger, setRefreshTrigger] = useState(0);
   const [orderTarget, setOrderTarget] = useState(() => localStorage.getItem('kh_order_target') || '6,200');
   const [collectionTarget, setCollectionTarget] = useState(() => localStorage.getItem('kh_collection_target') || '4,500');
@@ -41,12 +62,11 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
   const fetchData = useCallback(async () => {
     try {
       const today = new Date();
-      // Use the week_start (Monday) of the current week for the API query
-      const dayOfWeek = today.getDay(); // 0=Sun, 1=Mon ... 6=Sat
+      const dayOfWeek = today.getDay();
       const diffToMon = (dayOfWeek === 0) ? -6 : 1 - dayOfWeek;
       const monday = new Date(today);
       monday.setDate(today.getDate() + diffToMon);
-      const weekStr = monday.toISOString().slice(0, 10); // 'YYYY-MM-DD'
+      const weekStr = monday.toISOString().slice(0, 10);
 
       const [usersRes, schedRes] = await Promise.all([
         fetch('/api/users'),
@@ -99,6 +119,7 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
     return () => document.removeEventListener('fullscreenchange', handleFsChange);
   }, []);
 
+  // ── 기존 일정 수정 저장 (기존 로직 유지) ──
   const handleSaveEdit = async (taskData) => {
     let url = '/api/weekly-schedule';
     if (editingTask && editingTask.id) url += `/${editingTask.id}`;
@@ -112,6 +133,42 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
     setRefreshTrigger(p => p + 1);
   };
 
+  // ── 신규 일정 추가 저장 (현황판 → 주간일정 + 타임시트 연동) ──
+  const handleSaveNew = async (taskData) => {
+    try {
+      // 1. 주간공정회의 주간일정에 저장
+      await fetch('/api/weekly-schedule', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...taskData, team: '주간일정' }),
+      });
+
+      // 2. 휴가/반차 카테고리인 경우 → 타임시트에도 자동 등록
+      if (addingCategory === '휴가' || addingCategory === '반차') {
+        const assigneeList = (taskData.assignees || '')
+          .split(',').map(s => s.trim()).filter(Boolean);
+        const hours = addingCategory === '반차' ? 4 : 8;
+        const projectName = addingCategory === '반차' ? '반차' : '연차';
+        const targetDate = taskData.start_date;
+
+        if (targetDate && assigneeList.length > 0) {
+          await Promise.all(assigneeList.map(emp =>
+            fetch('/api/timesheets/leave', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ employee: emp, date: targetDate, hours, project_name: projectName }),
+            })
+          ));
+        }
+      }
+    } catch (e) {
+      console.error('[StatusBoard] handleSaveNew error:', e);
+    } finally {
+      setAddingCategory(null);
+      setRefreshTrigger(p => p + 1);
+    }
+  };
+
   const handleEditClick = (task) => {
     const originalTask = schedules.find(s => s.id === task.id);
     if(originalTask) {
@@ -119,13 +176,13 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
     }
   };
 
-  // Parsing logic
+  // Parsing logic (기존 유지)
   const categorized = useMemo(() => {
     const results = {
       '외근/출장': [],
       '공가/교육': [],
       '휴가': [],
-      '반차': [], // items will have .period = '오전' or '오후'
+      '반차': [],
       '합사': [],
       '외출': []
     };
@@ -133,7 +190,6 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
     schedules.forEach(sch => {
       const type = sch.schedule_type || '';
       const content = sch.content || '';
-      const loc = sch.location || '';
       const assignees = sch.assignees ? sch.assignees.split(',').map(s=>s.trim()).filter(Boolean) : [];
 
       assignees.forEach(name => {
@@ -146,9 +202,7 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
            results['합사'].push(entry);
         }
         else if (type === '휴가') {
-           // 오전반차/오후반차 키워드 먼저 체크 (완전 매칭 우선)
            if (content === '오전반차' || content === '오후반차' || content.includes('반차') || content.includes('오전') || content.includes('오후')) {
-              // 오후 포함 여부로 구분 (기본값: 오전반차)
               entry.period = (content.includes('오후') || content === '오후반차') ? '오후' : '오전';
               results['반차'].push(entry);
            } else {
@@ -175,11 +229,24 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
 
   const todayStr = format(new Date(), 'yyyy. MM. dd eeee', { locale: ko });
 
-  const renderSection = (title, items, borderClass, textClass, isHalf = false) => (
+  // ── 섹션 렌더링 (헤더에 [+] 버튼 추가) ──
+  const renderSection = (title, items, borderClass, textClass) => (
     <div className={`border-2 ${borderClass} rounded-2xl flex flex-col bg-white overflow-hidden shadow-sm h-full`}>
       <div className={`px-4 py-3 flex justify-between items-center border-b ${borderClass}`}>
         <h3 className={`font-bold ${textClass}`}>{title}</h3>
-        <span className={`font-semibold ${textClass} bg-white px-2 py-0.5 rounded-full border ${borderClass} text-sm`}>{items.length} 인</span>
+        <div className="flex items-center gap-2">
+          <span className={`font-semibold ${textClass} bg-white px-2 py-0.5 rounded-full border ${borderClass} text-sm`}>
+            {items.length} 인
+          </span>
+          {/* ── 신규 등록 버튼 ── */}
+          <button
+            onClick={() => setAddingCategory(title)}
+            className={`${textClass} opacity-50 hover:opacity-100 transition-opacity`}
+            title={`${title} 일정 추가`}
+          >
+            <PlusCircle size={18} />
+          </button>
+        </div>
       </div>
       <div className="flex-1 p-2 grid gap-2 auto-rows-max overflow-y-auto min-h-[150px]">
         {items.map((item, idx) => (
@@ -321,12 +388,30 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
           </div>
       </div>
 
+      {/* 기존 일정 수정 모달 */}
       {editingTask && (
         <TaskFormModal
           team="주간일정"
           task={editingTask}
           onClose={() => setEditingTask(null)}
           onSave={handleSaveEdit}
+          currentWeek={getISOWeekString(new Date())}
+          currentUser={currentUser}
+          isFromTimesheet={true}
+        />
+      )}
+
+      {/* 신규 일정 추가 모달 */}
+      {addingCategory && CATEGORY_DEFAULTS[addingCategory] && (
+        <TaskFormModal
+          team="주간일정"
+          task={{
+            ...CATEGORY_DEFAULTS[addingCategory],
+            start_date: format(new Date(), 'yyyy-MM-dd'),
+            end_date: format(new Date(), 'yyyy-MM-dd'),
+          }}
+          onClose={() => setAddingCategory(null)}
+          onSave={handleSaveNew}
           currentWeek={getISOWeekString(new Date())}
           currentUser={currentUser}
           isFromTimesheet={true}

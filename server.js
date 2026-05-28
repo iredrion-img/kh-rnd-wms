@@ -370,6 +370,78 @@ app.post('/api/timesheets', async (req, res) => {
     }
 });
 
+// ─────────────────────────────────────────────────────────────────────────────
+// POST /api/timesheets/leave
+// 현황판에서 휴가/반차 등록 시 타임시트에도 자동 반영하는 전용 엔드포인트
+// Body: { employee, department, date (YYYY-MM-DD), hours, project_name }
+// ─────────────────────────────────────────────────────────────────────────────
+app.post('/api/timesheets/leave', async (req, res) => {
+    try {
+        const { employee, department, date, hours, project_name } = req.body;
+        if (!employee || !date || !hours || !project_name) {
+            return res.status(400).json({ error: '필수 항목이 누락되었습니다.' });
+        }
+
+        // 해당 날짜의 월요일(week_start) 계산
+        const d = new Date(date);
+        const dayOfWeek = d.getDay(); // 0=일, 1=월 ... 6=토
+        const diffToMon = dayOfWeek === 0 ? -6 : 1 - dayOfWeek;
+        const monday = new Date(d);
+        monday.setDate(d.getDate() + diffToMon);
+        const weekStart = monday.toISOString().slice(0, 10);
+
+        // 요일 컬럼 매핑 (0=sun, 1=mon ... 6=sat)
+        const dayColMap = { 0: 'sun', 1: 'mon', 2: 'tue', 3: 'wed', 4: 'thu', 5: 'fri', 6: 'sat' };
+        const dayCol = dayColMap[dayOfWeek];
+
+        const year = weekStart.split('-')[0];
+        const dbFile = getDbFile(year);
+        if (!fs.existsSync(dbFile)) fs.writeFileSync(dbFile, '[]');
+
+        let records = readJsonResilient(dbFile);
+
+        // 사용자 정보에서 department 보완
+        let resolvedDept = department;
+        if (!resolvedDept) {
+            const users = readJsonResilient(USERS_FILE);
+            const found = users.find(u => u.name === employee);
+            if (found) resolvedDept = found.department || '';
+        }
+
+        // 동일 직원/주차/project_name 행이 있으면 해당 요일 컬럼만 업데이트, 없으면 신규 추가
+        const existingIdx = records.findIndex(
+            r => r.employee === employee && r.week_start === weekStart && r.project_name === project_name
+        );
+
+        const DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+
+        if (existingIdx !== -1) {
+            records[existingIdx][dayCol] = String(parseFloat(records[existingIdx][dayCol] || 0) + parseFloat(hours));
+            records[existingIdx].total = String(
+                DAYS.reduce((sum, k) => sum + parseFloat(records[existingIdx][k] || 0), 0)
+            );
+        } else {
+            const newRow = {
+                employee,
+                department: resolvedDept,
+                project_name,
+                project_code: 'LEAVE',
+                mon: '0', tue: '0', wed: '0', thu: '0', fri: '0', sat: '0', sun: '0',
+                total: String(hours),
+                week_start: weekStart
+            };
+            newRow[dayCol] = String(hours);
+            records.push(newRow);
+        }
+
+        await writeAtomic(dbFile, JSON.stringify(records, null, 2));
+        res.json({ success: true, message: '타임시트에 휴가가 등록되었습니다.' });
+    } catch (error) {
+        console.error('[timesheets/leave] Error:', error);
+        res.status(500).json({ error: '타임시트 저장 실패' });
+    }
+});
+
 // =============================================
 // --- ANALYTICS API ---
 // =============================================
