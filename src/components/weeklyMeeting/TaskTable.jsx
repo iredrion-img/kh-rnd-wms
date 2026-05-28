@@ -15,7 +15,7 @@ const STATUS_COLORS = {
   '타절': 'bg-red-100 text-red-700 border-red-200',
 };
 
-const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideActions }) => {
+const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideActions, isFullscreenMode, highlightedTaskId, onHighlight }) => {
   const isProject = team === '프로젝트 추진 및 수행 현황';
   const isSchedule = team === '주간일정';
   const isNotice = team === '공지사항';
@@ -103,7 +103,11 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
         </thead>
         <tbody className="divide-y divide-gray-100">
           {tasks.map(t => (
-            <tr key={t.id} className="hover:bg-gray-50/50 transition-colors divide-x divide-gray-200">
+            <tr 
+              key={t.id} 
+              onClick={() => isFullscreenMode && onHighlight && onHighlight(t.id)}
+              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === t.id ? 'bg-blue-50 hover:bg-blue-100/50' : 'bg-white hover:bg-gray-50/50'}`}
+            >
               <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-center">{t.schedule_type}</td>
               <td className="px-4 py-3 text-gray-600 font-bold text-center">{formatAssignees(t.assignees)}</td>
               <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-center">{t.start_date}</td>
@@ -141,7 +145,11 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
         </thead>
         <tbody className="divide-y divide-gray-100">
           {tasks.map(t => (
-            <tr key={t.id} className="hover:bg-gray-50/50 transition-colors divide-x divide-gray-200">
+            <tr 
+              key={t.id} 
+              onClick={() => isFullscreenMode && onHighlight && onHighlight(t.id)}
+              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === t.id ? 'bg-blue-50 hover:bg-blue-100/50' : 'bg-white hover:bg-gray-50/50'}`}
+            >
               <td className="px-4 py-3 text-gray-500 font-mono text-xs font-bold bg-gray-50/30 text-center">{t.project_code || t.sub_no}</td>
               <td className="px-4 py-3 font-bold whitespace-pre-wrap text-gray-900">{t.project_name}</td>
               <td className="px-4 py-3 text-center">{formatMethod(t.method)}</td>
@@ -188,7 +196,11 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
       <tbody className="divide-y divide-gray-100">
         {tasks.map(t => {
           return (
-            <tr key={t.id} className="hover:bg-gray-50/50 transition-colors divide-x divide-gray-200">
+            <tr 
+              key={t.id} 
+              onClick={() => isFullscreenMode && onHighlight && onHighlight(t.id)}
+              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === t.id ? 'bg-blue-50 hover:bg-blue-100/50' : 'bg-white hover:bg-gray-50/50'}`}
+            >
               {!isNotice && <td className="px-3 py-3 text-xs text-gray-400 font-mono text-center">{t.task_code}</td>}
               {!isNotice && <td className="px-3 py-3 text-gray-600 font-bold leading-tight text-center">{formatAssignees(t.assignees)}</td>}
               
