@@ -352,7 +352,10 @@ const Dashboard = ({ currentUser }) => {
             if (!departmentMap[dept]) { departmentMap[dept] = { total: 0, members: new Set() }; CATEGORIES.forEach(c => departmentMap[dept][c] = 0); }
             members.forEach(name => {
                 if (!staffMap[name]) { staffMap[name] = { total: 0, department: dept }; CATEGORIES.forEach(c => staffMap[name][c] = 0); }
-                staffMap[name].department = staffMap[name].department || dept;
+                // TEAM_MEMBER_ORDER가 권위적인 소속 정보: 빈 문자열이나 '미소속'인 경우 올바른 팀명으로 덮어씀
+                if (!staffMap[name].department || staffMap[name].department === '미소속') {
+                    staffMap[name].department = dept;
+                }
                 departmentMap[dept].members.add(name);
             });
         });
