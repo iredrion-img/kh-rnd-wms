@@ -7,7 +7,8 @@
     "dev": "vite",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "sync:csv": "node scripts/sync_json_to_csv.cjs"
   },
   "dependencies": {
     "@langchain/community": "^1.1.21",
