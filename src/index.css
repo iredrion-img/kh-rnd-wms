@@ -22,3 +22,9 @@
     font-size: clamp(12px, 0.8vw + 0.5vh, 18px);
   }
 }
+
+/* ── 전체화면 모드 행 하이라이트: 글자색 파란색 강제 적용 ── */
+tr.highlighted-row td,
+tr.highlighted-row td * {
+  color: #1d4ed8 !important; /* blue-700 */
+}

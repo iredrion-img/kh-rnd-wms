@@ -118,7 +118,11 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
         </thead>
         <tbody className="divide-y divide-gray-100">
           {tasks.map(t => (
-            <tr key={t.id} className="hover:bg-gray-50/50 transition-colors divide-x divide-gray-200">
+            <tr 
+              key={t.id} 
+              onClick={() => isFullscreenMode && onHighlight && onHighlight(prev => prev === String(t.id) ? null : String(t.id))}
+              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === String(t.id) ? 'bg-blue-100 hover:bg-blue-200/50 highlighted-row' : 'bg-white hover:bg-gray-50/50'}`}
+            >
               <td className="px-4 py-3 text-gray-500 font-mono text-xs font-bold bg-gray-50/30 text-center">{t.project_code || t.sub_no}</td>
               <td className="px-4 py-3 font-bold text-primary whitespace-pre-wrap">{t.project_name}</td>
               <td className="px-4 py-3 text-center">{formatMethod(t.method)}</td>
