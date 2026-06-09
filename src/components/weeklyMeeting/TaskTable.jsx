@@ -106,7 +106,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
             <tr 
               key={t.id} 
               onClick={() => isFullscreenMode && onHighlight && onHighlight(prev => prev === String(t.id) ? null : String(t.id))}
-              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === String(t.id) ? 'bg-blue-50 hover:bg-blue-100/50' : 'bg-white hover:bg-gray-50/50'}`}
+              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === String(t.id) ? 'bg-blue-50 hover:bg-blue-100/50 highlighted-row' : 'bg-white hover:bg-gray-50/50'}`}
             >
               <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-center">{t.schedule_type}</td>
               <td className="px-4 py-3 text-gray-600 font-bold text-center">{formatAssignees(t.assignees)}</td>
@@ -148,7 +148,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
             <tr 
               key={t.id} 
               onClick={() => isFullscreenMode && onHighlight && onHighlight(prev => prev === String(t.id) ? null : String(t.id))}
-              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === String(t.id) ? 'bg-blue-50 hover:bg-blue-100/50' : 'bg-white hover:bg-gray-50/50'}`}
+              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === String(t.id) ? 'bg-blue-50 hover:bg-blue-100/50 highlighted-row' : 'bg-white hover:bg-gray-50/50'}`}
             >
               <td className="px-4 py-3 text-gray-500 font-mono text-xs font-bold bg-gray-50/30 text-center">{t.project_code || t.sub_no}</td>
               <td className="px-4 py-3 font-bold whitespace-pre-wrap text-gray-900">{t.project_name}</td>
@@ -199,7 +199,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
             <tr 
               key={t.id} 
               onClick={() => isFullscreenMode && onHighlight && onHighlight(prev => prev === String(t.id) ? null : String(t.id))}
-              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === String(t.id) ? 'bg-blue-50 hover:bg-blue-100/50' : 'bg-white hover:bg-gray-50/50'}`}
+              className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === String(t.id) ? 'bg-blue-50 hover:bg-blue-100/50 highlighted-row' : 'bg-white hover:bg-gray-50/50'}`}
             >
               {!isNotice && <td className="px-3 py-3 text-xs text-gray-400 font-mono text-center">{t.task_code}</td>}
               {!isNotice && <td className="px-3 py-3 text-gray-600 font-bold leading-tight text-center">{formatAssignees(t.assignees)}</td>}
