@@ -102,15 +102,10 @@ const performBackup = () => {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 10); // YYYY-MM-DD
         console.log(`[Backup] Starting backup ${timestamp}...`);
 
-        // Backup users
-        if (fs.existsSync(USERS_FILE)) {
-            fs.copyFileSync(USERS_FILE, path.join(BACKUP_DIR, `${timestamp}_users.json`));
-        }
-
-        // Backup all database_*.json files
+        // Backup all relevant JSON files (database, users, circulation, projects, meeting, weekly)
         const files = fs.readdirSync(__dirname);
         files.forEach(file => {
-            if (file.startsWith('database_') && file.endsWith('.json')) {
+            if (file.endsWith('.json') && !file.startsWith('package') && file !== 'jsconfig.json') {
                 fs.copyFileSync(path.join(__dirname, file), path.join(BACKUP_DIR, `${timestamp}_${file}`));
             }
         });
