@@ -404,7 +404,6 @@ const CirculationBoard = ({ currentWeek, currentUser, isFullscreenMode }) => {
                         <div className="flex items-center gap-2">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-200 shrink-0"></div>
                           <span>{row.name}</span>
-                          <span className="text-xs font-medium text-gray-400">{row.rank}</span>
                         </div>
                       </td>
                       <td className="px-6 py-3 text-center">
