@@ -4,7 +4,7 @@ const path = require('path');
 const ROOT_DIR = path.join(__dirname, '..');
 const CIRCULATION_JSON = path.join(ROOT_DIR, 'circulation_data.json');
 
-// 간단한 CSV 파서 (쌍따옴표 처리 등)
+// 정교한 CSV 파서 (쌍따옴표 내 콤마 무시, 타입 변환 처리)
 function parseCsv(csvText) {
     const lines = csvText.trim().split(/\r?\n/);
     if (lines.length < 2) return [];
@@ -13,13 +13,38 @@ function parseCsv(csvText) {
     const result = [];
 
     for (let i = 1; i < lines.length; i++) {
-        // 따옴표 내부의 콤마를 무시하기 위한 정규식
-        const row = lines[i].match(/(".*?"|[^",\s]+)(?=\s*,|\s*$)/g) || lines[i].split(',');
+        const text = lines[i];
+        const row = [];
+        let current = '';
+        let inQuotes = false;
+        
+        for (let j = 0; j < text.length; j++) {
+            const char = text[j];
+            if (char === '"') {
+                if (inQuotes && text[j+1] === '"') {
+                    current += '"';
+                    j++;
+                } else {
+                    inQuotes = !inQuotes;
+                }
+            } else if (char === ',' && !inQuotes) {
+                row.push(current);
+                current = '';
+            } else {
+                current += char;
+            }
+        }
+        row.push(current);
         
         const obj = {};
         headers.forEach((header, index) => {
             let val = row[index] !== undefined ? row[index] : '';
-            val = val.trim().replace(/^"|"$/g, ''); // 따옴표 제거
+            val = val.trim();
+            // 타입 복원 로직
+            if (val === 'true') val = true;
+            else if (val === 'false') val = false;
+            else if (!isNaN(val) && val !== '') val = Number(val);
+            
             obj[header] = val;
         });
         result.push(obj);
