@@ -111,7 +111,7 @@ const performBackup = () => {
         });
 
         // Update last backup marker
-        fs.writeFileSync(path.join(BACKUP_DIR, '.last_backup'), new Date().toISOString().slice(0, 7)); // YYYY-MM
+        fs.writeFileSync(path.join(BACKUP_DIR, '.last_backup'), new Date().toISOString().slice(0, 10)); // YYYY-MM-DD
         return true;
     } catch (error) {
         console.error('[Backup] Failed:', error);
@@ -119,21 +119,22 @@ const performBackup = () => {
     }
 };
 
-// Startup Check: Monthly Backup
+// Startup Check: Daily Backup
 const checkStartupBackup = () => {
     const markerFile = path.join(BACKUP_DIR, '.last_backup');
-    const currentMonth = new Date().toISOString().slice(0, 7); // YYYY-MM
-    let lastMonth = '';
+    const currentDay = new Date().toISOString().slice(0, 10); // YYYY-MM-DD
 
-    if (fs.existsSync(markerFile)) {
-        lastMonth = fs.readFileSync(markerFile, 'utf8').trim();
-    }
-
-    if (currentMonth !== lastMonth) {
-        console.log(`[Startup] New month detected (${currentMonth}). Running monthly backup...`);
+    if (!fs.existsSync(markerFile)) {
+        console.log(`[Startup] No backup found. Running initial backup...`);
         performBackup();
     } else {
-        console.log(`[Startup] Monthly backup already performed for ${currentMonth}.`);
+        const lastBackup = fs.readFileSync(markerFile, 'utf8').trim();
+        if (currentDay !== lastBackup) {
+            console.log(`[Startup] New day detected (${currentDay}). Running daily backup...`);
+            performBackup();
+        } else {
+            console.log(`[Startup] Daily backup already performed for ${currentDay}.`);
+        }
     }
 };
 
