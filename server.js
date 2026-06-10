@@ -102,11 +102,18 @@ const performBackup = () => {
         const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, 10); // YYYY-MM-DD
         console.log(`[Backup] Starting backup ${timestamp}...`);
 
+        // Create daily subfolder
+        const dailyBackupDir = path.join(BACKUP_DIR, timestamp);
+        if (!fs.existsSync(dailyBackupDir)) {
+            fs.mkdirSync(dailyBackupDir);
+        }
+
         // Backup all relevant JSON files (database, users, circulation, projects, meeting, weekly)
         const files = fs.readdirSync(__dirname);
         files.forEach(file => {
             if (file.endsWith('.json') && !file.startsWith('package') && file !== 'jsconfig.json') {
-                fs.copyFileSync(path.join(__dirname, file), path.join(BACKUP_DIR, `${timestamp}_${file}`));
+                // Save files inside the daily subfolder without the date prefix
+                fs.copyFileSync(path.join(__dirname, file), path.join(dailyBackupDir, file));
             }
         });
 
