@@ -140,6 +140,11 @@ const checkStartupBackup = () => {
 
 checkStartupBackup();
 
+// 주기적으로 날짜 변경을 확인하여 백업 수행 (매 1시간마다 확인)
+setInterval(() => {
+    checkStartupBackup();
+}, 60 * 60 * 1000);
+
 // --- RAG VECTOR STORE INITIALIZATION ---
 // initializeVectorStore(currentDb); // Legacy in-memory VectorStore (fallback)
 
