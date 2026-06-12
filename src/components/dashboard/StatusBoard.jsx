@@ -243,7 +243,28 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
 
   const totalUsersCount = users.length > 0 ? users.length : 20;
   const uniqueOutUsers = new Set();
-  Object.values(categorized).forEach(arr => arr.forEach(item => uniqueOutUsers.add(item.name)));
+  
+  // 현재 시간이 13:30 이후인지 판단 (현인원 계산용)
+  const now = new Date();
+  const isAfternoon = now.getHours() > 13 || (now.getHours() === 13 && now.getMinutes() >= 30);
+
+  Object.entries(categorized).forEach(([category, arr]) => {
+    arr.forEach(item => {
+      if (category === '반차') {
+        const period = item.period; // '오전' 또는 '오후'
+        if (period === '오전' && isAfternoon) {
+          // 13:30 이후: 오전 반차자는 출근함 (차감하지 않음)
+          return;
+        }
+        if (period === '오후' && !isAfternoon) {
+          // 13:30 이전: 오후 반차자는 아직 근무 중 (차감하지 않음)
+          return;
+        }
+      }
+      uniqueOutUsers.add(item.name);
+    });
+  });
+
   const outUsersNum = uniqueOutUsers.size;
   const presentUsersNum = totalUsersCount - outUsersNum;
 
