@@ -225,7 +225,38 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    onSave(formData);
+    const finalData = { ...formData };
+    
+    // Add display_assignees and display_manager for cleaner table display
+    const getTags = (selectedList) => {
+       if (!selectedList || selectedList.length === 0) return '';
+       let tags = [];
+       let remaining = new Set(selectedList);
+       const GROUPS = ['스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'];
+       const normalizeDept = (dept) => (dept || '').replace(/\s+/g, '');
+       
+       const allUsers = (usersInfo || []).map(u => u.name);
+       if (allUsers.length > 0 && allUsers.every(name => remaining.has(name))) return 'All';
+       
+       GROUPS.forEach(group => {
+           const groupUsers = (usersInfo || []).filter(u => normalizeDept(u.department) === normalizeDept(group)).map(u => u.name);
+           if (groupUsers.length > 0 && groupUsers.every(name => remaining.has(name))) {
+               tags.push(group);
+               groupUsers.forEach(name => remaining.delete(name));
+           }
+       });
+       remaining.forEach(name => tags.push(name));
+       return tags.join(', ');
+    };
+    
+    if (finalData.assignees) {
+        finalData.display_assignees = getTags(finalData.assignees.split(',').map(s=>s.trim()).filter(Boolean));
+    }
+    if (finalData.manager) {
+        finalData.display_manager = getTags(finalData.manager.split(',').map(s=>s.trim()).filter(Boolean));
+    }
+    
+    onSave(finalData);
   };
 
   const hasNote = team === '스마트 기술 개발팀';
@@ -265,6 +296,31 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
         setFormData(prev => ({ ...prev, [fieldName]: Array.from(newUsers).join(', ') }));
     };
 
+    const getDisplayTags = (selectedNames) => {
+       if (!showGroups || selectedNames.length === 0) return selectedNames;
+       let tags = [];
+       let remaining = new Set(selectedNames);
+       const GROUPS = ['스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'];
+       
+       const allUsers = (usersInfo || []).map(u => u.name);
+       if (allUsers.length > 0 && allUsers.every(name => remaining.has(name))) {
+           return ['All'];
+       }
+
+       GROUPS.forEach(group => {
+           const groupUsers = (usersInfo || []).filter(u => normalizeDept(u.department) === normalizeDept(group)).map(u => u.name);
+           if (groupUsers.length > 0 && groupUsers.every(name => remaining.has(name))) {
+               tags.push(group);
+               groupUsers.forEach(name => remaining.delete(name));
+           }
+       });
+
+       remaining.forEach(name => tags.push(name));
+       return tags;
+    };
+
+    const displayTags = getDisplayTags(selected);
+
     const groupedUsers = (usersInfo || []).reduce((acc, u) => {
         const dept = u.department || '기타';
         if (!acc[dept]) acc[dept] = [];
@@ -279,12 +335,19 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
            className="w-full rounded-lg border-gray-300 border p-2 min-h-[42px] cursor-pointer bg-white flex flex-wrap gap-1.5 items-center focus-within:ring-1 focus-within:ring-primary focus-within:border-primary transition-all"
            onClick={() => setOpen(!isOpen)}
         >
-           {selected.length === 0 ? (
+           {displayTags.length === 0 ? (
               <span className="text-gray-400 text-sm py-0.5 px-1">선택</span>
            ) : (
-              selected.map(name => (
-                 <span key={name} className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 hover:bg-primary/20 transition-colors" onClick={(e) => { e.stopPropagation(); toggleUser(name); }}>
-                    {name}
+              displayTags.map(tag => (
+                 <span key={tag} className="bg-primary/10 text-primary text-xs font-bold px-2.5 py-1 rounded-md flex items-center gap-1 hover:bg-primary/20 transition-colors" onClick={(e) => { 
+                     e.stopPropagation(); 
+                     if (['All', '스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'].includes(tag)) {
+                         toggleGroup(tag);
+                     } else {
+                         toggleUser(tag);
+                     }
+                 }}>
+                    {tag}
                     <X className="w-3 h-3 ml-0.5" />
                  </span>
               ))

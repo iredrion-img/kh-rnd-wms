@@ -109,7 +109,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
               className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === String(t.id) ? 'bg-blue-50 hover:bg-blue-100/50 highlighted-row' : 'bg-white hover:bg-gray-50/50'}`}
             >
               <td className="px-4 py-3 font-medium text-gray-900 whitespace-nowrap text-center">{t.schedule_type}</td>
-              <td className="px-4 py-3 text-gray-600 font-bold text-center">{formatAssignees(t.assignees)}</td>
+              <td className="px-4 py-3 text-gray-600 font-bold text-center">{formatAssignees(t.display_assignees || t.assignees)}</td>
               <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-center">{t.start_date}</td>
               <td className="px-4 py-3 text-gray-500 whitespace-nowrap text-center">{t.end_date}</td>
               <td className="px-4 py-3 font-medium whitespace-pre-wrap">{t.content}</td>
@@ -155,7 +155,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
               <td className="px-4 py-3 text-center">{formatMethod(t.method)}</td>
               <td className="px-4 py-3 whitespace-nowrap text-center">{t.bim_cost}</td>
               <td className="px-4 py-3 text-center">{t.dept}</td>
-              <td className="px-4 py-3 font-bold text-center">{formatAssignees(t.manager)}</td>
+              <td className="px-4 py-3 font-bold text-center">{formatAssignees(t.display_manager || t.manager)}</td>
               <td className="px-4 py-3 whitespace-pre-wrap">{t.status_detail}</td>
                 {!hideActions && (
                   <td className="px-4 py-3 text-center whitespace-nowrap">
@@ -202,7 +202,7 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
               className={`transition-colors divide-x divide-gray-200 ${isFullscreenMode ? 'cursor-pointer' : ''} ${isFullscreenMode && highlightedTaskId === String(t.id) ? 'bg-blue-50 hover:bg-blue-100/50 highlighted-row' : 'bg-white hover:bg-gray-50/50'}`}
             >
               {!isNotice && <td className="px-3 py-3 text-xs text-gray-400 font-mono text-center">{t.task_code}</td>}
-              {!isNotice && <td className="px-3 py-3 text-gray-600 font-bold leading-tight text-center">{formatAssignees(t.assignees)}</td>}
+              {!isNotice && <td className="px-3 py-3 text-gray-600 font-bold leading-tight text-center">{formatAssignees(t.display_assignees || t.assignees)}</td>}
               
               {!isNotice && <td className="px-3 py-3 text-center">
                 <span className={`px-2 py-1 text-[11px] font-bold rounded-md border whitespace-nowrap ${STATUS_COLORS[t.status] || STATUS_COLORS['보류']}`}>
