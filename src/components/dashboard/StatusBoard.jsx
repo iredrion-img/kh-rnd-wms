@@ -304,7 +304,31 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
     }, {});
 
     Object.values(groupedById).forEach(group => {
+        const sch = group[0];
         const names = group.map(i => i.name);
+        
+        // Use database saved display string if available (bulletproof)
+        if (sch.display_assignees) {
+            const displayTags = sch.display_assignees.split(',').map(s=>s.trim()).filter(Boolean);
+            displayTags.forEach(tag => {
+                let count = 1;
+                if (tag === 'All') count = users.length;
+                else {
+                    const normalizeDept = (dept) => (dept || '').replace(/\s+/g, '');
+                    const teamUsers = users.filter(u => normalizeDept(u.department) === normalizeDept(tag));
+                    if (teamUsers.length > 0) count = teamUsers.length;
+                }
+                visualItems.push({
+                   ...sch,
+                   name: count > 1 ? `${tag} (${count}인)` : tag,
+                   isGroup: count > 1,
+                   originalId: sch.id
+                });
+            });
+            return;
+        }
+
+        // Fallback to dynamic condensation for old tasks
         const condensedNames = getCondensedTags(names);
         
         if (condensedNames.length < names.length && condensedNames.length > 0) {

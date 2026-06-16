@@ -987,7 +987,7 @@ app.get('/api/weekly-schedule', (req, res) => {
 // POST /api/weekly-schedule — 일정 등록
 app.post('/api/weekly-schedule', async (req, res) => {
     try {
-        const { schedule_type, content, start_date, end_date, location, assignees } = req.body;
+        const { schedule_type, content, start_date, end_date, location, assignees, display_assignees, display_manager } = req.body;
         if (!content) return res.status(400).json({ error: '내용은 필수입니다.' });
         const records = readJsonResilient(SCHEDULE_FILE);
         const id = Date.now().toString();
@@ -996,7 +996,8 @@ app.post('/api/weekly-schedule', async (req, res) => {
         const now = new Date().toISOString().slice(0, 10);
         const newRecord = { id, schedule_type: schedule_type || '', content, start_date: start_date || '',
             end_date: end_date || '', location: location || '', assignees: assignees || '',
-            week_start: weekStart, year, created_at: now };
+            display_assignees: display_assignees || '', display_manager: display_manager || '',
+            week_start: weekStart, year, created_at: now, team: req.body.team || '', manager: req.body.manager || '' };
         const updated = [...records, newRecord];
         await writeAtomic(SCHEDULE_FILE, JSON.stringify(updated, null, 2));
         
