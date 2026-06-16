@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Pencil, Trash2 } from 'lucide-react';
 
 const PRIORITY_COLORS = {
@@ -19,6 +19,18 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
   const isProject = team === '프로젝트 추진 및 수행 현황';
   const isSchedule = team === '주간일정';
   const isNotice = team === '공지사항';
+
+  const [usersInfo, setUsersInfo] = useState([]);
+  
+  useEffect(() => {
+    fetch('/api/users')
+      .then(res => res.json())
+      .then(data => {
+        if (Array.isArray(data)) setUsersInfo(data);
+      })
+      .catch(err => console.error('Failed to fetch users in TaskTable', err));
+  }, []);
+
 
   if (!tasks || tasks.length === 0) {
     return (
@@ -76,12 +88,37 @@ const TaskTable = ({ tasks, team, onEdit, onDelete, currentUser, isAdmin, hideAc
     return baseStr || method;
   };
 
+  const getCondensedTags = (namesList) => {
+     if (!namesList || namesList.length === 0 || usersInfo.length === 0) return namesList;
+     let tags = [];
+     let remaining = new Set(namesList);
+     const GROUPS = ['스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'];
+     const normalizeDept = (dept) => (dept || '').replace(/\s+/g, '');
+     
+     const allUsers = usersInfo.map(u => u.name);
+     if (allUsers.length > 0 && allUsers.every(name => remaining.has(name))) {
+         return ['All'];
+     }
+     
+     GROUPS.forEach(group => {
+         const groupUsers = usersInfo.filter(u => normalizeDept(u.department) === normalizeDept(group)).map(u => u.name);
+         if (groupUsers.length > 0 && groupUsers.every(name => remaining.has(name))) {
+             tags.push(group);
+             groupUsers.forEach(name => remaining.delete(name));
+         }
+     });
+     remaining.forEach(name => tags.push(name));
+     return tags;
+  };
+
   const formatAssignees = (assignees) => {
     if (!assignees) return '';
     const names = assignees.split(',').map(n => n.trim()).filter(Boolean);
+    const condensedNames = getCondensedTags(names);
+    
     const rows = [];
-    for (let i = 0; i < names.length; i += 2) {
-      rows.push(names.slice(i, i + 2).join(', '));
+    for (let i = 0; i < condensedNames.length; i += 2) {
+      rows.push(condensedNames.slice(i, i + 2).join(', '));
     }
     return rows.map((row, idx) => <div key={idx} className="whitespace-nowrap">{row}</div>);
   };
