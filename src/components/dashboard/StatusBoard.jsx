@@ -270,56 +270,114 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
 
   const todayStr = format(new Date(), 'yyyy. MM. dd eeee', { locale: ko });
 
+  const getCondensedTags = (namesList) => {
+     if (!namesList || namesList.length === 0 || users.length === 0) return namesList;
+     let tags = [];
+     let remaining = new Set(namesList);
+     const GROUPS = ['스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'];
+     const normalizeDept = (dept) => (dept || '').replace(/\s+/g, '');
+     
+     const allUsers = users.map(u => u.name);
+     if (allUsers.length > 0 && allUsers.every(name => remaining.has(name))) {
+         return ['All'];
+     }
+     
+     GROUPS.forEach(group => {
+         const groupUsers = users.filter(u => normalizeDept(u.department) === normalizeDept(group)).map(u => u.name);
+         if (groupUsers.length > 0 && groupUsers.every(name => remaining.has(name))) {
+             tags.push(group);
+             groupUsers.forEach(name => remaining.delete(name));
+         }
+     });
+     remaining.forEach(name => tags.push(name));
+     return tags;
+  };
+
   // ── 섹션 렌더링 (헤더에 [+] 버튼 추가) ──
-  const renderSection = (title, items, borderClass, textClass) => (
-    <div className={`border-2 ${borderClass} rounded-2xl flex flex-col bg-white overflow-hidden shadow-sm h-full`}>
-      <div className={`px-4 py-3 flex justify-between items-center border-b ${borderClass}`}>
-        <h3 className={`font-bold ${textClass}`}>{title}</h3>
-        <div className="flex items-center gap-2">
-          <span className={`font-semibold ${textClass} bg-white px-2 py-0.5 rounded-full border ${borderClass} text-sm`}>
-            {items.length} 인
-          </span>
-          {/* ── 신규 등록 버튼 ── */}
-          <button
-            onClick={() => setAddingCategory(title)}
-            className={`${textClass} opacity-50 hover:opacity-100 transition-opacity`}
-            title={`${title} 일정 추가`}
-          >
-            <PlusCircle size={18} />
-          </button>
+  const renderSection = (title, items, borderClass, textClass) => {
+    const visualItems = [];
+    const groupedById = items.reduce((acc, item) => {
+        const key = item.id || Math.random().toString();
+        if (!acc[key]) acc[key] = [];
+        acc[key].push(item);
+        return acc;
+    }, {});
+
+    Object.values(groupedById).forEach(group => {
+        const names = group.map(i => i.name);
+        const condensedNames = getCondensedTags(names);
+        
+        if (condensedNames.length < names.length && condensedNames.length > 0) {
+           condensedNames.forEach(cName => {
+               let count = 1;
+               if (cName === 'All') count = users.length;
+               else {
+                   const normalizeDept = (dept) => (dept || '').replace(/\s+/g, '');
+                   const teamUsers = users.filter(u => normalizeDept(u.department) === normalizeDept(cName));
+                   if (teamUsers.length > 0) count = teamUsers.length;
+               }
+               
+               visualItems.push({
+                   ...group[0],
+                   name: count > 1 ? `${cName} (${count}인)` : cName,
+                   isGroup: count > 1,
+                   originalId: group[0].id
+               });
+           });
+        } else {
+           visualItems.push(...group);
+        }
+    });
+
+    return (
+      <div className={`border-2 ${borderClass} rounded-2xl flex flex-col bg-white overflow-hidden shadow-sm h-full`}>
+        <div className={`px-4 py-3 flex justify-between items-center border-b ${borderClass}`}>
+          <h3 className={`font-bold ${textClass}`}>{title}</h3>
+          <div className="flex items-center gap-2">
+            <span className={`font-semibold ${textClass} bg-white px-2 py-0.5 rounded-full border ${borderClass} text-sm`}>
+              {items.length} 인
+            </span>
+            <button
+              onClick={() => setAddingCategory(title)}
+              className={`${textClass} opacity-50 hover:opacity-100 transition-opacity`}
+              title={`${title} 일정 추가`}
+            >
+              <PlusCircle size={18} />
+            </button>
+          </div>
+        </div>
+        <div className="flex-1 p-2 grid gap-2 auto-rows-max overflow-y-auto min-h-[150px]">
+          {visualItems.map((item, idx) => (
+            <div key={`${item.id}-${idx}`} 
+                 className={`p-2.5 rounded-xl border border-gray-100 bg-gray-50 flex flex-col gap-1 mx-1 hover:border-${borderClass.split('-')[1]}-300 transition-colors group cursor-pointer relative`}
+                 onClick={() => handleEditClick(item)}
+                 title="일정 수정하기"
+            >
+              <div className="flex justify-between items-start">
+                 <span className="font-bold text-gray-800 flex items-center gap-1.5">
+                    {item.name}
+                    {item.period && <span className="px-1.5 py-0.5 bg-gray-200 text-gray-700 rounded text-[10px]">{item.period}</span>}
+                 </span>
+                 <Pencil size={12} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </div>
+              
+              {(item.location || item.content) && (
+                 <div className="text-xs text-gray-600 flex flex-col gap-0.5 mt-0.5">
+                    {item.location && <span className="font-medium text-gray-700">{item.location}</span>}
+                    {item.content && <span className="truncate opacity-80">{item.content}</span>}
+                 </div>
+              )}
+            </div>
+          ))}
+          {visualItems.length === 0 && (
+            <div className="flex items-center justify-center h-full opacity-30">
+              <span className="text-sm font-medium">등록된 인원이 없습니다.</span>
+            </div>
+          )}
         </div>
       </div>
-      <div className="flex-1 p-2 grid gap-2 auto-rows-max overflow-y-auto min-h-[150px]">
-        {items.map((item, idx) => (
-          <div key={`${item.id}-${idx}`} 
-               className={`p-2.5 rounded-xl border border-gray-100 bg-gray-50 flex flex-col gap-1 mx-1 hover:border-${borderClass.split('-')[1]}-300 transition-colors group cursor-pointer relative`}
-               onClick={() => handleEditClick(item)}
-               title="일정 수정하기"
-          >
-            <div className="flex justify-between items-start">
-               <span className="font-bold text-gray-800 flex items-center gap-1.5">
-                  {item.name}
-                  {item.period && <span className="px-1.5 py-0.5 bg-gray-200 text-gray-700 rounded text-[10px]">{item.period}</span>}
-               </span>
-               <Pencil size={12} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </div>
-            
-            {(item.location || item.content) && (
-               <div className="text-xs text-gray-600 flex flex-col gap-0.5 mt-0.5">
-                  {item.location && <span className="font-medium text-gray-700">{item.location}</span>}
-                  {item.content && <span className="truncate opacity-80">{item.content}</span>}
-               </div>
-            )}
-          </div>
-        ))}
-        {items.length === 0 && (
-          <div className="flex items-center justify-center h-full opacity-30">
-            <span className="text-sm font-medium">등록된 인원이 없습니다.</span>
-          </div>
-        )}
-      </div>
-    </div>
-  );
+    );
+  };
 
   const mainContent = (
     <div className={`flex flex-col h-full bg-slate-50 transition-all ${isFullscreen ? 'p-8 gap-6' : 'p-6 gap-4'}`}>
