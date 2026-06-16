@@ -1275,11 +1275,11 @@ app.post('/api/rag-chat', async (req, res) => {
 });
 
 
-// --- GITHUB WEBHOOK AUTO-DEPLOY ---
+// --- GITHUB WEBHOOK AUTO-DEPLOY (DISABLED FOR MANUAL CONTROL) ---
 const DEPLOY_SECRET = 'kunhwa-wms-deploy-2026';
 let isDeploying = false;
 
-app.post('/api/webhook/deploy', (req, res) => {
+app.post('/api/webhook/deploy_DISABLED', (req, res) => {
     // Verify GitHub signature
     const signature = req.headers['x-hub-signature-256'];
     if (!signature) {
