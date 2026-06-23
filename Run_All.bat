@@ -39,4 +39,4 @@ echo ********************************************************
 echo.
 
 :: Start Localtunnel - exposing frontend port 3000
-call npx localtunnel --port 3000 --subdomain kh-wms-rnd
+call npx localtunnel --port 3000 --subdomain kunhwa-rnd-wms-2026-kh
