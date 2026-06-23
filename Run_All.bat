@@ -38,5 +38,5 @@ echo *  Frontend : http://localhost:3000 (UI)                *
 echo ********************************************************
 echo.
 
-:: Start Localtunnel - exposing frontend port 3000
-call npx localtunnel --port 3000 --subdomain kunhwa-rnd-wms-2026-kh
+:: Start ngrok - exposing frontend port 3000
+call npx ngrok http --domain=jesenia-indiscrete-laraine.ngrok-free.dev 3000
