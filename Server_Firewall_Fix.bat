@@ -26,13 +26,13 @@
     echo ====================================================
     
     echo [1/3] Opening Port 3000 (Frontend TCP)...
-    netsh advfirewall firewall add rule name="Kunhwa WMS Frontend" dir=in action=allow protocol=TCP localport=3000 profile=any force=yes
+    netsh advfirewall firewall add rule name="Kunhwa WMS Frontend" dir=in action=allow protocol=TCP localport=3000 profile=any
 
     echo [2/3] Opening Port 3001 (Backend TCP)...
-    netsh advfirewall firewall add rule name="Kunhwa WMS Server" dir=in action=allow protocol=TCP localport=3001 profile=any force=yes
+    netsh advfirewall firewall add rule name="Kunhwa WMS Server" dir=in action=allow protocol=TCP localport=3001 profile=any
 
     echo [3/3] Opening Port 5353 (UDP) for mDNS...
-    netsh advfirewall firewall add rule name="mDNS Responder" dir=in action=allow protocol=UDP localport=5353 profile=any force=yes
+    netsh advfirewall firewall add rule name="mDNS Responder" dir=in action=allow protocol=UDP localport=5353 profile=any
 
     echo.
     echo [Success] Firewall Configured!
