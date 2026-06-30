@@ -83,7 +83,13 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
       const todayScheds = (Array.isArray(schedData) ? schedData : []).filter(s => {
         const start = s.start_date || '9999-12-31';
         const end = s.end_date || s.start_date || '9999-12-31';
-        return start <= todayStr && todayStr <= end;
+        const isToday = start <= todayStr && todayStr <= end;
+        
+        // 장소에 'R&D센터'가 포함된 경우 현황판에서 제외 (공백, 대소문자 무시)
+        const loc = (s.location || '').replace(/\s+/g, '').toLowerCase();
+        const isRnDCenter = loc.includes('r&d센터');
+        
+        return isToday && !isRnDCenter;
       });
 
       setSchedules(todayScheds);
