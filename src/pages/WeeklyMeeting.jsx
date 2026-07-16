@@ -174,17 +174,18 @@ const WeeklyMeeting = ({ currentUser }) => {
           return codeA.localeCompare(codeB, 'ko', { numeric: true });
         });
       } else {
-        // 일반 팀별 업무 정렬: 1순위 업무코드 오름차순, 2순위 진행 상태 (진행 중 우선)
-        const statusOrder = { '진행 중': 1, '완료': 2, '보류': 3 };
+        // 일반 팀별 업무 정렬: 1순위 진행 상태, 2순위 업무코드 오름차순
+        const statusOrder = { '계획': 1, '진행 중': 2, '완료': 3, '보류': 4, '타절': 5 };
         finalData.sort((a, b) => {
+          const stA = statusOrder[a.status] || 99;
+          const stB = statusOrder[b.status] || 99;
+          if (stA !== stB) return stA - stB;
+
           const codeA = a.task_code || 'ZZZ';
           const codeB = b.task_code || 'ZZZ';
           if (codeA !== codeB) {
             return codeA.localeCompare(codeB, 'ko', { numeric: true });
           }
-          const stA = statusOrder[a.status] || 99;
-          const stB = statusOrder[b.status] || 99;
-          if (stA !== stB) return stA - stB;
           return (a.start_date || '').localeCompare(b.start_date || '');
         });
       }
