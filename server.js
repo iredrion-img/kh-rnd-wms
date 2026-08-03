@@ -187,6 +187,39 @@ app.use(bodyParser.json({
     }
 }));
 
+// --- HANA assistant: rebuild knowledge base + hot-reload on data change (debounced) ---
+const HANA_REBUILD_EXE = process.env.HANA_REBUILD_EXE || 'C:/Users/KH/kh-rnd-wms-hana/system/wms_rebuild.exe';
+const HANA_RELOAD_URL = process.env.HANA_RELOAD_URL || 'http://localhost:8000/reload';
+let _hanaTimer = null;
+const scheduleHanaRefresh = () => {
+    if (_hanaTimer) clearTimeout(_hanaTimer);
+    _hanaTimer = setTimeout(() => {
+        _hanaTimer = null;
+        // Rebuild wiki/graph from the LIVE data folder, then hot-reload the assistant
+        execFile(HANA_REBUILD_EXE, [__dirname], { windowsHide: true }, (err) => {
+            if (err) { console.error('[HANA] rebuild skipped:', err.message); return; }
+            if (typeof fetch === 'function') {
+                fetch(HANA_RELOAD_URL, { method: 'POST' })
+                    .then(() => console.log('[HANA] knowledge base refreshed'))
+                    .catch(() => {});
+            }
+        });
+    }, 8000); // debounce: run once, 8s after the last change (coalesces rapid edits)
+};
+// Trigger a refresh after any successful data-mutating API call
+app.use((req, res, next) => {
+    const mutating = req.method === 'POST' || req.method === 'PUT' || req.method === 'DELETE';
+    const dataPath = req.path.startsWith('/api/')
+        && !req.path.startsWith('/api/login')
+        && !req.path.startsWith('/api/rag')
+        && !req.path.startsWith('/api/webhook')
+        && !req.path.startsWith('/api/exclude');
+    if (mutating && dataPath) {
+        res.on('finish', () => { if (res.statusCode < 400) scheduleHanaRefresh(); });
+    }
+    next();
+});
+
 // --- EXCLUDED VALUES (Suggetion Cleaning) ---
 const EXCLUDED_VALUES_FILE = path.join(__dirname, 'excluded_values.json');
 
@@ -729,6 +762,7 @@ app.get('/api/weekly-tasks', (req, res) => {
             });
         }
         if (team) tasks = tasks.filter(t => t.team === team);
+        tasks = tasks.filter(t => !t.is_hidden);
 
         res.json(tasks);
     } catch (e) {
@@ -1149,7 +1183,7 @@ app.delete('/api/weekly-schedule/:id', async (req, res) => {
 app.get('/api/projects', (req, res) => {
     try {
         const projects = readJsonResilient(PROJECTS_FILE);
-        res.json(projects);
+        res.json(projects.filter(p => !p.is_hidden));
     } catch (e) {
         res.status(500).json({ error: '프로젝트 조회 실패' });
     }
