@@ -25,6 +25,19 @@ module.exports = {
       interpreter: "none",
       autorestart: true,
       watch: false
+    },
+    {
+      // HANA graph-RAG backend (port 8000) - runs server.py via Python (method A)
+      name: "wms-assistant",
+      script: "python",
+      args: "-m uvicorn server:app --port 8000",
+      interpreter: "none",
+      cwd: "C:/Users/KH/kh-rnd-wms-hana/system",
+      autorestart: true,
+      watch: false,
+      env: {
+        OLLAMA_MODEL: "qwen2.5:7b"
+      }
     }
   ]
 };

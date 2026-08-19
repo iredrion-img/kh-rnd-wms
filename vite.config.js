@@ -12,6 +12,12 @@ export default defineConfig({
       '/api': {
         target: 'http://localhost:3001',
         changeOrigin: true,
+      },
+      // HANA graph-RAG backend (8000) -> same-origin /assistant
+      '/assistant': {
+        target: 'http://localhost:8000',
+        changeOrigin: true,
+        rewrite: (path) => path.replace(/^\/assistant/, ''),
       }
     }
   },
