@@ -15,7 +15,7 @@ echo [2/3] Committing changes...
 git commit -m "Update: %mydate% %mytime%"
 
 echo [3/3] Pushing to Server (GitHub)...
-git push origin main
+git push origin feature/weekly-meeting
 
 echo.
 echo ====================================================
