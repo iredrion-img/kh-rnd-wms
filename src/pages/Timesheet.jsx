@@ -137,7 +137,7 @@ const Timesheet = ({ currentUser }) => {
     };
 
     // Handler for hour change (Work categories only)
-    const updateHours = (categoryLabel, change) => {
+    const updateHours = (categoryLabel, changeOrValue, isAbsolute = false) => {
         const dateKey = format(selectedDate, 'yyyy-MM-dd');
 
         setDailyData(prev => {
@@ -159,17 +159,15 @@ const Timesheet = ({ currentUser }) => {
             const currentTotalWork = workLabels.reduce((sum, k) => sum + (currentDayData[k] || 0), 0);
 
             // We are changing THIS category. 
-            // projectedWork = (Total - currentCat) + newCat
-            const projectedWork = (currentTotalWork - currentHours) + (currentHours + change);
+            let newHours = isAbsolute ? Math.max(0, changeOrValue) : Math.max(0, currentHours + changeOrValue);
+            
+            const projectedWork = (currentTotalWork - currentHours) + newHours;
 
             if (projectedWork > dailyMax) {
                 alert(isHalfDayActive ? '반차 시 업무시간은 최대 4시간입니다.' : '하루 24시간을 초과할 수 없습니다.');
-                return prev;
+                newHours = dailyMax - (currentTotalWork - currentHours);
+                if (newHours < 0) newHours = 0;
             }
-
-            if (projectedWork < 0) return prev; // Should not happen with min 0 check but safe
-
-            const newHours = Math.max(0, currentHours + change);
 
             // Update
             return {
@@ -749,6 +747,7 @@ const Timesheet = ({ currentUser }) => {
                             category={cat.label}
                             icon={cat.icon}
                             hours={getHours(selectedDate, cat.label)}
+                            onChange={(val) => updateHours(cat.label, val, true)}
                             onIncrease={() => updateHours(cat.label, 1)}
                             onDecrease={() => updateHours(cat.label, -1)}
                             colorClass={cat.color}

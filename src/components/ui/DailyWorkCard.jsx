@@ -1,7 +1,7 @@
 import React from 'react';
 import { Plus, Minus, Clock } from 'lucide-react';
 
-const DailyWorkCard = ({ category, hours, onIncrease, onDecrease, colorClass = "cat-ai", icon: Icon }) => {
+const DailyWorkCard = ({ category, hours, onChange, onIncrease, onDecrease, colorClass = "cat-ai", icon: Icon }) => {
     // Static mapping for Tailwind classes (enables literal strings for build-time scanning)
     const colorMap = {
         'cat-ai': { bg: 'bg-cat-ai', text: 'text-cat-ai', shadow: 'shadow-cat-ai/30' },
@@ -34,11 +34,21 @@ const DailyWorkCard = ({ category, hours, onIncrease, onDecrease, colorClass = "
                     <Minus size={24} />
                 </button>
 
-                <div className="text-center w-24">
-                    <span className={`text-4xl font-black ${hours > 0 ? activeColors.text : 'text-gray-300'}`}>
-                        {hours}
-                    </span>
-                    <span className="text-sm text-gray-400 ml-1 font-medium">h</span>
+                <div className="text-center w-24 flex items-center justify-center">
+                    <input
+                        type="number"
+                        min="0"
+                        max="24"
+                        value={hours || ''}
+                        placeholder="0"
+                        onChange={(e) => {
+                            let val = parseInt(e.target.value);
+                            if (isNaN(val)) val = 0;
+                            onChange && onChange(val);
+                        }}
+                        className={`w-16 text-center text-4xl font-black bg-transparent outline-none ${hours > 0 ? activeColors.text : 'text-gray-300'} placeholder:text-gray-200 hide-arrows`}
+                    />
+                    <span className="text-sm text-gray-400 font-medium">h</span>
                 </div>
 
                 <button
