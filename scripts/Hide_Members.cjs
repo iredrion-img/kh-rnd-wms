@@ -54,6 +54,10 @@ try {
             circData.surveyData = circData.surveyData.filter(u => !targets.includes(u.name));
             isUpdated = true;
         }
+        if (circData.vacations) {
+            circData.vacations = circData.vacations.filter(u => !targets.includes(u.name));
+            isUpdated = true;
+        }
         if (isUpdated) {
             fs.writeFileSync(circulationFile, JSON.stringify(circData, null, 2));
             console.log('[OK] Circulation Updated');
