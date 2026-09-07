@@ -45,8 +45,16 @@ try {
     const circulationFile = path.join(__dirname, '../circulation_data.json');
     if (fs.existsSync(circulationFile)) {
         let circData = JSON.parse(fs.readFileSync(circulationFile, 'utf8'));
+        let isUpdated = false;
         if (circData.customData) {
             circData.customData = circData.customData.filter(u => !targets.includes(u.name));
+            isUpdated = true;
+        }
+        if (circData.surveyData) {
+            circData.surveyData = circData.surveyData.filter(u => !targets.includes(u.name));
+            isUpdated = true;
+        }
+        if (isUpdated) {
             fs.writeFileSync(circulationFile, JSON.stringify(circData, null, 2));
             console.log('[OK] Circulation Updated');
         }
