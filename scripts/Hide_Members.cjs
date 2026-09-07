@@ -41,6 +41,16 @@ try {
         fs.writeFileSync(scheduleFile, JSON.stringify(schedules, null, 2));
         console.log('[OK] Schedule Updated');
     }
+
+    const circulationFile = path.join(__dirname, '../circulation_data.json');
+    if (fs.existsSync(circulationFile)) {
+        let circData = JSON.parse(fs.readFileSync(circulationFile, 'utf8'));
+        if (circData.customData) {
+            circData.customData = circData.customData.filter(u => !targets.includes(u.name));
+            fs.writeFileSync(circulationFile, JSON.stringify(circData, null, 2));
+            console.log('[OK] Circulation Updated');
+        }
+    }
 } catch (e) {
     console.error('Error:', e.message);
 }
