@@ -19,8 +19,6 @@ const USERS = [
   { team: '인프라 BIM팀', name: '이동근', rank: '이사대우' },
   { team: '인프라 BIM팀', name: '김기윤', rank: '부장' },
   { team: '인프라 BIM팀', name: '나기태', rank: '부장' },
-  { team: '인프라 BIM팀', name: '김동찬', rank: '차장' },
-  { team: '인프라 BIM팀', name: '강병주', rank: '과장' },
   { team: '인프라 BIM팀', name: '임규민', rank: '과장' },
   { team: 'AI 응용팀', name: '김동욱', rank: '이사대우' },
   { team: 'AI 응용팀', name: '장민욱', rank: '차장' },
