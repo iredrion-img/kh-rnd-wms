@@ -506,7 +506,7 @@ app.get('/api/analytics/manpower', (req, res) => {
         }
 
         const TEAM_ORDER = ['스마트 기술 개발팀', '디지털 기술 연구팀', '인프라 BIM팀', 'AI 응용팀'];
-        const EXCLUDED_EMPLOYEES = ['김영근', '최형태'];
+        const EXCLUDED_EMPLOYEES = [김동근, 최형식, 강병주, 김동찬, 임문구];
 
         const getNormalizedTeam = (raw) => {
             if (!raw) return null;
@@ -552,6 +552,20 @@ app.get('/api/analytics/manpower', (req, res) => {
         const byMonthMap = {};
         const byTeamMap = {};
         const byPersonMap = {};
+
+        if (fs.existsSync(USERS_FILE)) {
+            try {
+                const allUsers = JSON.parse(fs.readFileSync(USERS_FILE, 'utf8'));
+                allUsers.forEach(u => {
+                    if (!EXCLUDED_EMPLOYEES.includes(u.name)) {
+                        const normalizedTeam = getNormalizedTeam(u.team);
+                        if (normalizedTeam) {
+                            byPersonMap[u.name] = { name: u.name, team: normalizedTeam, total: 0, 'AI': 0, 'BIM': 0, 'Smart R&D': 0, 'Digital Technology': 0, '기타 (Etc)': 0 };
+                        }
+                    }
+                });
+            } catch (e) {}
+        }
 
         TEAM_ORDER.forEach(t => {
             byTeamMap[t] = { team: t, total: 0, 'AI': 0, 'BIM': 0, 'Smart R&D': 0, 'Digital Technology': 0, '기타 (Etc)': 0 };
