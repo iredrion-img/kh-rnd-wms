@@ -1,7 +1,7 @@
 const fs = require('fs');
 const path = require('path');
 
-const targets = ['강병주', '김동찬'];
+const targets = ['강병주', '김동찬', '임문구'];
 const usersFile = path.join(__dirname, '../users.json');
 const tasksFile = path.join(__dirname, '../weekly_tasks_2026.json');
 const projectsFile = path.join(__dirname, '../projects.json');

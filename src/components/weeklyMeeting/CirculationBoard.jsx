@@ -7,7 +7,6 @@ const TEAMS = ['R&D센터, 기술연구소', '스마트 기술 개발팀', '디�
 const USERS = [
   { team: 'R&D센터, 기술연구소', name: '김영근', rank: '부사장' },
   { team: 'R&D센터, 기술연구소', name: '최형태', rank: '이사' },
-  { team: '스마트 기술 개발팀', name: '임문구', rank: '부장' },
   { team: '스마트 기술 개발팀', name: '김진희', rank: '부장' },
   { team: '스마트 기술 개발팀', name: '김경훈', rank: '과장' },
   { team: '스마트 기술 개발팀', name: '강수민', rank: '대리' },
