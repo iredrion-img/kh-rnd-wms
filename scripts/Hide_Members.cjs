@@ -7,12 +7,21 @@ const tasksFile = path.join(__dirname, '../weekly_tasks_2026.json');
 const projectsFile = path.join(__dirname, '../projects.json');
 const scheduleFile = path.join(__dirname, '../weekly_schedule.json');
 
+const dbFile = path.join(__dirname, '../database_2026.json');
+
 try {
     if (fs.existsSync(usersFile)) {
         let users = JSON.parse(fs.readFileSync(usersFile, 'utf8'));
         users = users.filter(u => !targets.includes(u.name));
         fs.writeFileSync(usersFile, JSON.stringify(users, null, 2));
         console.log('[OK] users.json Updated');
+    }
+
+    if (fs.existsSync(dbFile)) {
+        let db = JSON.parse(fs.readFileSync(dbFile, 'utf8'));
+        db = db.filter(d => !targets.includes(d.employee));
+        fs.writeFileSync(dbFile, JSON.stringify(db, null, 2));
+        console.log('[OK] database_2026.json Updated');
     }
 
     if (fs.existsSync(tasksFile)) {
