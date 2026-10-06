@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { Maximize2, Minimize2, RefreshCw, X, Pencil, PlusCircle } from 'lucide-react';
+import { Maximize2, Minimize2, RefreshCw, X, Pencil, PlusCircle, ChevronLeft, ChevronRight } from 'lucide-react';
 import { format } from 'date-fns';
 import { ko } from 'date-fns/locale';
 import TaskFormModal from '../weeklyMeeting/TaskFormModal';
@@ -33,6 +33,7 @@ const getTodayWeekStart = () => {
 };
 
 const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
+  const [selectedDate, setSelectedDate] = useState(() => new Date());
   const [schedules, setSchedules] = useState([]);
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -62,11 +63,11 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
 
   const fetchData = useCallback(async () => {
     try {
-      const today = new Date();
-      const dayOfWeek = today.getDay();
+      const queryDate = selectedDate;
+      const dayOfWeek = queryDate.getDay();
       const diffToMon = (dayOfWeek === 0) ? -6 : 1 - dayOfWeek;
-      const monday = new Date(today);
-      monday.setDate(today.getDate() + diffToMon);
+      const monday = new Date(queryDate);
+      monday.setDate(queryDate.getDate() + diffToMon);
       const weekStr = monday.toISOString().slice(0, 10);
 
       const [usersRes, schedRes] = await Promise.all([
@@ -78,12 +79,12 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
 
       setUsers(Array.isArray(usersData) ? usersData : []);
       
-      const todayStr = format(today, 'yyyy-MM-dd');
+      const queryDateStr = format(queryDate, 'yyyy-MM-dd');
       
       const todayScheds = (Array.isArray(schedData) ? schedData : []).filter(s => {
         const start = s.start_date || '9999-12-31';
         const end = s.end_date || s.start_date || '9999-12-31';
-        const isToday = start <= todayStr && todayStr <= end;
+        const isToday = start <= queryDateStr && queryDateStr <= end;
         
         // 장소에 'R&D센터'가 포함된 경우 현황판에서 제외 (공백, 대소문자 무시)
         const loc = (s.location || '').replace(/\s+/g, '').toLowerCase();
@@ -98,7 +99,7 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
     } finally {
       setLoading(false);
     }
-  }, [refreshTrigger]);
+  }, [refreshTrigger, selectedDate]);
 
   useEffect(() => {
     fetchData();
@@ -274,7 +275,29 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
   const outUsersNum = uniqueOutUsers.size;
   const presentUsersNum = totalUsersCount - outUsersNum;
 
-  const todayStr = format(new Date(), 'yyyy. MM. dd eeee', { locale: ko });
+  const displayStr = format(selectedDate, 'yyyy. MM. dd eeee', { locale: ko });
+  const inputVal = format(selectedDate, 'yyyy-MM-dd');
+  
+  const handlePrevDay = () => {
+      setSelectedDate(prev => {
+          const next = new Date(prev);
+          next.setDate(next.getDate() - 1);
+          return next;
+      });
+  };
+  const handleNextDay = () => {
+      setSelectedDate(prev => {
+          const next = new Date(prev);
+          next.setDate(next.getDate() + 1);
+          return next;
+      });
+  };
+  const handleDateChange = (e) => {
+      const nextDate = new Date(e.target.value);
+      if (!isNaN(nextDate.getTime())) {
+          setSelectedDate(nextDate);
+      }
+  };
 
   const getCondensedTags = (namesList) => {
      if (!namesList || namesList.length === 0 || users.length === 0) return namesList;
@@ -417,7 +440,21 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
          <div className="flex items-center gap-3 shrink-0">
             <img src="/kh_rnd_new_logo.png" alt="KH R&D Center Logo" className="h-[clamp(2rem,3vw,3rem)] object-contain" />
             <div className="h-6 w-px bg-slate-300 mx-1 shrink-0"></div>
-            <h2 className="text-[clamp(1.25rem,1.8vw,1.5rem)] font-bold text-slate-700 whitespace-nowrap leading-none">{todayStr}</h2>
+            
+            <div className="flex items-center gap-2 bg-white px-2 py-1 border border-gray-200 rounded-lg shadow-sm">
+                <button onClick={handlePrevDay} className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-500"><ChevronLeft size={20} /></button>
+                <div className="relative flex flex-col items-center justify-center">
+                    <input 
+                        type="date" 
+                        value={inputVal}
+                        onChange={handleDateChange}
+                        className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
+                        style={{ zIndex: 10 }}
+                    />
+                    <h2 className="text-[clamp(1.1rem,1.5vw,1.25rem)] font-bold text-slate-700 whitespace-nowrap leading-none px-2">{displayStr}</h2>
+                </div>
+                <button onClick={handleNextDay} className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-500"><ChevronRight size={20} /></button>
+            </div>
          </div>
          
          <div className="flex flex-col items-end gap-2">
