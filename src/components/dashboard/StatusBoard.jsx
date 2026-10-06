@@ -457,6 +457,10 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
                     <h2 className="text-[clamp(1.1rem,1.5vw,1.25rem)] font-bold text-slate-700 whitespace-nowrap leading-none px-2">{displayStr}</h2>
                 </div>
                 <button onClick={handleNextDay} className="p-1 hover:bg-gray-100 rounded-md transition-colors text-gray-500"><ChevronRight size={20} /></button>
+                <div className="w-px h-4 bg-gray-200 mx-1"></div>
+                <button onClick={() => setSelectedDate(new Date())} className="px-2 py-1 text-[11px] font-bold bg-gray-100 text-gray-600 hover:bg-gray-200 rounded-md transition-colors whitespace-nowrap">
+                    오늘
+                </button>
             </div>
          </div>
          
