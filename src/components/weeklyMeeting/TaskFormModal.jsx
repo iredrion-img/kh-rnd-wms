@@ -183,13 +183,14 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
 
     if (isProject) {
         if (formData.category) {
-            const prefixRegex = new RegExp(`^${formData.category}\\s*-\\s*(?!\\s*$)`, 'i');
+            const escapedCategory = formData.category.replace(/[.*+?^${}()|[\\]\\\\]/g, '\\\\$&');
+            const prefixRegex = new RegExp(`^${escapedCategory}\\s*-\\s*(?!\\s*$)`, 'i');
             const matchingCodes = allTasks.map(t=>t.project_code || t.task_code).filter(c=>c&&prefixRegex.test(c));
             let maxNum = 0;
             matchingCodes.forEach(c => {
-                const match = c.trim().match(/\d+$/);
+                const match = c.match(/\d+/g);
                 if (match) {
-                    const num = parseInt(match[0], 10);
+                    const num = parseInt(match[match.length - 1], 10);
                     if (num > maxNum) maxNum = num;
                 }
             });
@@ -210,9 +211,9 @@ const TaskFormModal = ({ team, task, onClose, onSave, onDelete, currentWeek, isF
        const matchingCodes = allTasks.map(t=>t.task_code).filter(c => c && c.toUpperCase().startsWith(prefix));
        let maxNum = 0;
        matchingCodes.forEach(c => {
-           const m = c.trim().match(/\d+$/);
+           const m = c.match(/\d+/g);
            if (m) {
-               const num = parseInt(m[0], 10);
+               const num = parseInt(m[m.length - 1], 10);
                if (num > maxNum) maxNum = num;
            }
        });
