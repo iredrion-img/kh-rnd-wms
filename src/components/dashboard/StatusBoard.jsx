@@ -448,6 +448,9 @@ const StatusBoard = ({ currentUser, isModal = false, onClose = () => {} }) => {
                         type="date" 
                         value={inputVal}
                         onChange={handleDateChange}
+                        onClick={(e) => {
+                            try { e.target.showPicker(); } catch(err) {}
+                        }}
                         className="absolute inset-0 opacity-0 cursor-pointer w-full h-full"
                         style={{ zIndex: 10 }}
                     />
