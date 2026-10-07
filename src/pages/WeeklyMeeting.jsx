@@ -89,11 +89,11 @@ const WeeklyMeeting = ({ currentUser }) => {
       clearTimeout(timeout);
       timeout = setTimeout(() => {
         setIsMouseIdle(true);
-      }, 3000);
+      }, 2000);
     };
 
     window.addEventListener('mousemove', handleMouseMove);
-    timeout = setTimeout(() => setIsMouseIdle(true), 3000);
+    timeout = setTimeout(() => setIsMouseIdle(true), 2000);
 
     return () => {
       window.removeEventListener('mousemove', handleMouseMove);
@@ -677,6 +677,13 @@ const WeeklyMeeting = ({ currentUser }) => {
       {/* Modals & Overlays */}
       {isFullscreenMode && (
         <div className={`fixed inset-0 z-[9999] bg-white flex flex-col is-fullscreen-mode overflow-hidden ${isMouseIdle ? 'cursor-none' : ''}`}>
+          {isMouseIdle && (
+            <style>{`
+              .is-fullscreen-mode, .is-fullscreen-mode * {
+                cursor: none !important;
+              }
+            `}</style>
+          )}
           {/* Fullscreen Header */}
           <header className="flex-none flex justify-between items-center px-10 py-6 border-b-2 border-gray-100 bg-white shadow-sm">
             <div className="flex items-center gap-4">
